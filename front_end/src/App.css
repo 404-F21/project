@@ -1,0 +1,61 @@
+*{padding: 0;margin: 0;}
+body{
+    background-color: #DAE0E6!important;
+}
+.w1200{
+    width: 1200px;
+    margin: 0 auto;
+}
+.bgw{
+    background-color: #fff;
+}
+.p15{
+    padding: 0 15px;
+}
+.pl15{
+    padding-left: 15px;
+}
+.mt10{
+    margin-top: 10px;
+}
+.app{
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.appContent{
+    flex: 1;
+    
+}
+.pheader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    line-height: 50px;
+    padding: 0 30px;
+    background-color: #108ee9;
+}
+.pheader  img{
+    height: 40px
+}
+.pheader  a{
+    color: #fff;
+    font-size: 16px;
+    margin-left: 20px;
+}
+.pheader  a:hover{
+    color: #fff;
+}
+.logo{
+    margin-top: 50px;
+    text-align: center;
+    margin-bottom: 50px;
+}
+.changeLogin{
+    text-align: center;
+    margin-top: 10px;
+    
+}
+.changeLogin a{
+    color: #108ee9
+}

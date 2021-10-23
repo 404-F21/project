@@ -138,24 +138,24 @@ dmypy.json
 cython_debug/
 
 # https://raw.githubusercontent.com/sanity-io/example-frontend-vue-js/master/.gitignore
-# .DS_Store
-# node_modules/
-# /dist/
+.DS_Store
+node_modules/
+/dist/
 
 # local env files
-# .env.local
-# .env.*.local
+.env.local
+.env.*.local
 
 # Log files
-# npm-debug.log*
-# yarn-debug.log*
-# yarn-error.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 # Editor directories and files
-# .idea
-# .vscode
-# *.suo
-# *.ntvs*
-# *.njsproj
-# *.sln
-# *.sw*
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw*

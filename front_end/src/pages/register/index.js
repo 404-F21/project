@@ -14,14 +14,20 @@ const Register = (props) => {
     }
     return (
         <div className="bg">
-            <div className="login">
+            <div className="register">
                     <div className="logincon">
-                        <div style={{textAlign:'center',margin:'50px 0 30px'}}> 
+                        {/* <div style={{textAlign:'center',margin:'50px 0 30px'}}> 
                             <img src={require('../../assets/logo.png').default} alt="" />
-                        </div>
+                        </div> */}
                         <div className="loginform">
                             <div className='input'>
                                 <Input type="text" placeholder="username" name="username" />
+                            </div>
+                            <div className='input'>
+                                <Input type="text" placeholder="display name" name="displayName" />
+                            </div>
+                            <div className='input'>
+                                <Input type="text" placeholder="github url" name="githubUrl" />
                             </div>
                             <div className='input'>
                                 <Input type="password" onPressEnter={ ()=>{} } className="pwd" placeholder="password" name="pwd"  />

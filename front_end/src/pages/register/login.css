@@ -5,7 +5,7 @@
     display: flex;
     align-items: center;
 }
-.login {
+.register {
     width: 500px;
     height: 508px;
     overflow: hidden;
@@ -15,10 +15,10 @@
     display: flex;
 }
 
-.login .logincon {
+.register .logincon {
     margin: 0 auto;
 }
-.login .loginform input {
+.register .loginform input {
     box-shadow:none;
     outline: none;
     resize: none; 
@@ -31,7 +31,7 @@
     background-color: #F7F7F7;
     
 }
-.login .loginform .input{
+.register .loginform .input{
     overflow: hidden;
     padding-left: 70px;
     background-color: #F7F7F7;
@@ -40,20 +40,39 @@
     font-size: 14px;
     color: rgba(0, 0, 0, 0.74);
 }
-.login .loginform .input:nth-child(1) {
+.register .loginform .input:nth-child(1) {
     background-image: url(../../assets/profile.png);
     background-repeat: no-repeat;
     background-position: 30px center;
     background-size: 20px 20px;
 }
 
-.login .loginform .input:nth-child(2) {
+.register .loginform .input:nth-child(2) {
+    background-image: url(../../assets/display.png);
+    background-repeat: no-repeat;
+    background-position: 30px center;
+    background-size: 20px 20px;
+}
+.register .loginform .input:nth-child(3) {
+    background-image: url(../../assets/url.png);
+    background-repeat: no-repeat;
+    background-position: 30px center;
+    background-size: 20px 20px;
+}
+.register .loginform .input:nth-child(4) {
     background-image: url(../../assets/pwd.png);
     background-repeat: no-repeat;
     background-position: 30px center;
     background-size: 20px 20px;
 }
-.login .forgetpwd {
+.register .loginform .input:nth-child(5) {
+    background-image: url(../../assets/pwd.png);
+    background-repeat: no-repeat;
+    background-position: 30px center;
+    background-size: 20px 20px;
+}
+
+.register .forgetpwd {
     color: #A2A2A2;
     font-size: 12px;
     cursor: pointer;
@@ -63,7 +82,7 @@
     line-height: 30px;
 }
 
-.login .loginbtn {
+.register .loginbtn {
     display: block;
     background: #1D8DFD;
     width: 400px;

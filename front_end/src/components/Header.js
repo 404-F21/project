@@ -3,7 +3,7 @@ import { useSelector, useDispatch, connect } from 'react-redux';
 import { Link,useHistory } from 'react-router-dom'
 import { Input, Menu, Dropdown, } from 'antd';
 import { loginAction } from '../store/actions'
-import {CaretDownOutlined} from '@ant-design/icons';
+import {CaretDownOutlined,PlusOutlined} from '@ant-design/icons';
 const { Search } = Input;
 const Header = () => {
     const dispatch = useDispatch();
@@ -16,8 +16,7 @@ const Header = () => {
             </Menu.Item>
             <Menu.Item>
                 <a  onClick={() => {
-                        localStorage.removeItem('userinfo')
-                        dispatch(loginAction(null))
+                        dispatch({type:'logOut'})
                         history.replace('/')
                     }}>Log Out</a>
             </Menu.Item>
@@ -35,6 +34,7 @@ const Header = () => {
                 <Link to='/user'>UserPage</Link>
                 <Link to='/inbox'>Inbox</Link>
                 <Link to='/friends'>Friends</Link>
+                <Link to='/post'>Post <PlusOutlined style={{verticalAlign:'0.1em'}}/></Link>
                 <Dropdown overlay={menu} placement="bottomCenter" arrow>
                     <span>
                         <img style={{ width: 30, height: 30, borderRadius: 15, marginLeft: 20 }} src={require('../assets/user.jpg').default} alt="" />

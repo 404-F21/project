@@ -8,7 +8,6 @@ const Login = (props) => {
     const history = useHistory();
     const dispatch = useDispatch();
     const log = async () => {
-        localStorage.setItem('userinfo', JSON.stringify({ username: 'lili', token: 'abcdef' }))
         dispatch(loginAction({ username: 'lili', token: 'abcdef' }))
         history.replace('/')
     }

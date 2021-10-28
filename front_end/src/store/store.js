@@ -8,7 +8,11 @@ import thunk from 'redux-thunk';
 const loginReducer = (state=JSON.parse(localStorage.getItem('userinfo')),action)=>{
     switch (action.type) {
         case 'loginSuccess':
+            localStorage.setItem('userinfo',JSON.stringify(action.payload))
             return action.payload;
+        case 'logOut':
+            localStorage.removeItem('userinfo')
+            return null;
         default:
             return state;
     }

@@ -1,0 +1,98 @@
+.bg {
+    height: 100%;
+    width: 100%;
+    background:url(../../assets/bg.png) no-repeat 100%;
+    display: flex;
+    align-items: center;
+}
+.register {
+    width: 500px;
+    height: 508px;
+    overflow: hidden;
+    background: white;
+    border-radius: 10px;
+    margin: 0 auto;
+    display: flex;
+}
+
+.register .logincon {
+    margin: 0 auto;
+}
+.register .loginform input {
+    box-shadow:none;
+    outline: none;
+    resize: none; 
+    border: none; 
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color:rgba(0,0,0,0);
+    /* width: 200px; */
+    height: 45px;
+    display: block;
+    background-color: #F7F7F7;
+    
+}
+.register .loginform .input{
+    overflow: hidden;
+    padding-left: 70px;
+    background-color: #F7F7F7;
+    border-radius: 20px;
+    margin-top: 20px;
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.74);
+}
+.register .loginform .input:nth-child(1) {
+    background-image: url(../../assets/profile.png);
+    background-repeat: no-repeat;
+    background-position: 30px center;
+    background-size: 20px 20px;
+}
+
+.register .loginform .input:nth-child(2) {
+    background-image: url(../../assets/display.png);
+    background-repeat: no-repeat;
+    background-position: 30px center;
+    background-size: 20px 20px;
+}
+.register .loginform .input:nth-child(3) {
+    background-image: url(../../assets/url.png);
+    background-repeat: no-repeat;
+    background-position: 30px center;
+    background-size: 20px 20px;
+}
+.register .loginform .input:nth-child(4) {
+    background-image: url(../../assets/pwd.png);
+    background-repeat: no-repeat;
+    background-position: 30px center;
+    background-size: 20px 20px;
+}
+.register .loginform .input:nth-child(5) {
+    background-image: url(../../assets/pwd.png);
+    background-repeat: no-repeat;
+    background-position: 30px center;
+    background-size: 20px 20px;
+}
+
+.register .forgetpwd {
+    color: #A2A2A2;
+    font-size: 12px;
+    cursor: pointer;
+    float: right;
+    width: 23%;
+    height: 30px;
+    line-height: 30px;
+}
+
+.register .loginbtn {
+    display: block;
+    background: #1D8DFD;
+    width: 400px;
+    border-radius: 20px;
+    color: white;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    margin: 0 auto;
+    margin-top: 40px;
+    cursor: pointer;
+    box-shadow: 0 0 3px #1D8DFD;
+}

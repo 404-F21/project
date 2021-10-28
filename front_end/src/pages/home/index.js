@@ -26,12 +26,24 @@ class App extends Component {
         })
         .catch(console.log)
       }
+
     //const history = useHistory()
     render() {
         return (
             <div className='home w1200'>
                 <div className='today'>
                 </div>
+                <form action="http://127.0.0.1:8000/" method="post">
+                    <div>
+                        <center><label>Post title</label><br></br></center>
+                        <center><input name="title"></input></center>
+                    </div>
+                    <div>
+                        <center><label>Post text</label><br></br></center>
+                        <center><input name="post_text" size="100"></input></center>
+                    </div>
+                    <center><input type="submit"></input></center>
+                </form>
                 <center><h2 style={{ lineHeight: '50px' }}>Recent posts</h2></center>
                 <Contacts contacts = {this.state.contacts}/>
             </div>

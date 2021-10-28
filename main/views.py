@@ -18,7 +18,7 @@ def home(request):
     List all Posts in the database
     """
     if request.method == 'GET':
-        all_posts = Post.objects.all()
+        all_posts = Post.objects.filter(visibility="PUBLIC")
         post_serializer = PostSerializer(all_posts, many=True)
         data = post_serializer.data
         response = JsonResponse(data, safe=False)
@@ -26,20 +26,33 @@ def home(request):
         return response
     
     if request.method == 'POST':
-        #print(f"DATA: {request.data}")
-        #print(request.data['authorId'])
-        author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))[0]
-        print(author)
-        text = request.data['post_text']
-        title = request.data['title']
-        new_post = Post(authorId=author,post_text=text,title=title)
-        new_post.save()
-        return Response(request.data)
+
+        print(request.content_type)
+        print(request.body)
+        print(request.data)
+        print(request.content_type)
+        if request.content_type == "application/json":
+            author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))[0]
+            text = request.data['post_text']
+            title = request.data['title']
+            new_post = Post(authorId=author,post_text=text,title=title)
+            new_post.save()
+            
+        elif request.content_type == "application/x-www-form-urlencoded":
+            author = Author.objects.all()[0]
+            text = request.data['post_text']
+            title = request.data['title']
+            new_post = Post(authorId=author,post_text=text,title=title)
+            new_post.save()
+
+        #return Response(request.data)
+        return JsonResponse({"a":"b"})
 
 #        return HttpResponse(data)
         #return
     
 
+'''
 @api_view(['GET','POST'])
 def individual_post(request, pk):
     """
@@ -66,6 +79,7 @@ def individual_post(request, pk):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+'''
 @api_view(['GET'])
 def comment_list(request, pk):
     """

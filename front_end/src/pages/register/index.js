@@ -4,12 +4,22 @@ import { useHistory,Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { loginAction } from '../../store/actions'
 import { Input, Modal } from 'antd';
+
+
+
 const Register = (props) => {
     const history = useHistory();
     const dispatch = useDispatch();
+    /*
     const log = async () => {
         localStorage.setItem('userinfo', JSON.stringify({ username: 'lili', token: 'abcdef' }))
         dispatch(loginAction({ username: 'lili', token: 'abcdef' }))
+        history.replace('/')
+    }
+    */
+    const log = async () => {
+        localStorage.setItem('userinfo', JSON.stringify({ username: "NathanD" }))
+        //dispatch(loginAction({ username: 'lili', token: 'abcdef' }))
         history.replace('/')
     }
     return (
@@ -19,10 +29,7 @@ const Register = (props) => {
                         {/* <div style={{textAlign:'center',margin:'50px 0 30px'}}> 
                             <img src={require('../../assets/logo.png').default} alt="" />
                         </div> */}
-                        <div className="loginform">
-                            <div className='input'>
-                                <Input type="text" placeholder="username" name="username" />
-                            </div>
+                        <form action="http://127.0.0.1:8000/register/" method="post">
                             <div className='input'>
                                 <Input type="text" placeholder="display name" name="displayName" />
                             </div>
@@ -36,11 +43,11 @@ const Register = (props) => {
                                 <Input type="password" onPressEnter={ ()=>{} } className="pwd" placeholder="confirm password" name="pwd"  />
                             </div>
                             {/* <div className="forgetpwd" onClick={ ()=>{} }>forget password？</div> */}
-                            <div className="loginbtn" onClick={ log }>Sign Up</div>
+                            <center><input type="submit" onClick={ ()=> {}}></input></center>
                             {/* <div className='changeLogin'>
                                 <Link to='/login'>to Login</Link>
                             </div> */}
-                        </div>
+                        </form>
                     </div>
             </div>
         </div>

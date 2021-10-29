@@ -1,9 +1,11 @@
 from django.db import models
 import uuid
-from django.contrib.auth.models import User, AbstractBaseUser
+from django.contrib.auth.models import User
 from django.db.models.deletion import CASCADE
 from django.utils import timezone
-from django.utils.translation import gettext_lazy
+from django.utils.translation import gettext_lazy as _
+from django.contrib.auth import authenticate
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 
 class Author(models.Model):
@@ -11,7 +13,7 @@ class Author(models.Model):
     '''
     Login information
     '''
-    #email = models.EmailField(gettext_lazy())
+    password = models.CharField(max_length=25, default = "", blank=True)
     '''
     Public information
     '''

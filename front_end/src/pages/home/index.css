@@ -1,0 +1,26 @@
+.today{
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+.today img{
+    height: 200px;
+}
+.welcome{
+    margin-top: 10px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 20px;
+    line-height: 45px;
+    /* border-bottom: 1px solid #ccc; */
+}
+.posts-box {
+    display: flex;
+    justify-content: space-between;
+}
+.posts{
+    width: 800px;
+}
+.top-news{
+    width: 350px;
+}

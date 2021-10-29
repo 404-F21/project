@@ -1,0 +1,21 @@
+.indi{
+    margin-top: 20px;
+    height: 100vh;
+}
+.user-title{
+    display: flex;
+    padding: 10px 0;
+}
+.user-title .username{
+    margin-left: 10px;
+    line-height: 30px;
+}
+.user-title .username p:last-child{
+    color: #aaa;
+    margin-top: 3px;
+}
+.comments{
+}
+.reply{
+    border-left: 1px solid #ccc;
+}

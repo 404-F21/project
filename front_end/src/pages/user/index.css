@@ -1,0 +1,33 @@
+.user{
+    width: 800px;
+    margin: 0 auto;
+}
+.user .am-navbar-right a{
+    color: #fff;
+    font-size: 16px;
+    margin-left: 20px;
+}
+.userinfo{
+    padding: 30px 15px;
+    margin-top: 10px;
+    display: flex;
+}
+.userimg{
+    width: 80px;
+    border-radius: 50%;
+    margin-right: 30px;
+}
+.edit{
+    flex: 1;
+    text-align: right;
+}
+.like{
+    /* position: relative; */
+    padding-top: 10px;
+    margin-top: 10px;
+    /* display: flex;
+    justify-content: flex-end */
+}
+.posts{
+    /* margin-top: 10px; */
+}

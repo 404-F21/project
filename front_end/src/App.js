@@ -27,7 +27,7 @@ const App = () => {
             <Route path='/user' component={User} />
             <Route path='/inbox' component={Inbox} />
             <Route path='/friends' component={Friends} />
-            <Route path='/individualpost' component={IndividualPost} />
+            <Route path='/individualpost/:id' component={IndividualPost} />
             <Route path='/editinfo' component={EditInfo} />
           </div>
         </div>

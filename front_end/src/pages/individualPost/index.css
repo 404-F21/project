@@ -19,3 +19,29 @@
 .reply{
     border-left: 1px solid #ccc;
 }
+.comment-input{
+    margin-top: 20px;
+    display: flex;
+    gap: 20px;
+}
+.top-news{
+    padding: 10px;
+    box-sizing: border-box;
+}
+.comment-list { 
+    margin: 20px 0;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+}
+.comment-item{
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 10px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #f1f1f1;
+}
+.like-btn{
+    cursor: pointer;
+    user-select: none;
+}

@@ -5,10 +5,11 @@ from rest_framework.parsers import JSONParser
 from rest_framework.views import APIView
 from rest_framework import mixins
 from rest_framework import generics
-from main.models import Author, Comment, Post
+from main.models import Author, Comment, Post, LikePost
 from main.serializers import AuthorSerializer, CommentSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.db.models import F
 import uuid
 from uuid import UUID
 import json
@@ -24,7 +25,6 @@ class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
         post_serializer = PostSerializer(all_posts, many=True)
         data = post_serializer.data
         response = JsonResponse(data, safe=False)
-        response['Access-Control-Allow-Origin'] = 'http://localhost:3000'
         return response
 
     def post(self, request, format=None):
@@ -52,10 +52,28 @@ class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
 
 class Register(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
     def post(self, request, format=None):
-        author = Author(displayName = request.data['displayName'])
+        author = Author(
+            displayName = request.data['displayName'],
+            password = request.data["password"],
+        )
         author.save()
         ser = AuthorSerializer(author)
         return HttpResponse(AuthorSerializer.data)
+
+@api_view(['POST'])
+def login(request):
+    name = request.data['displayName']
+    pwd = request.data['password']
+    author = Author.objects.filter(displayName = name, password = pwd)
+    if len(author):
+        # TODO generate a token response it to client
+        return HttpResponse(json.dumps({
+            'succ': True,
+            'id': str(author[0].id),
+        }))
+    return HttpResponse(json.dumps({
+        'succ': False
+    }))
 
 @api_view(['GET'])
 def individual_post(request, pk):
@@ -70,7 +88,27 @@ def individual_post(request, pk):
         combined_data = []
         post_serializer = PostSerializer(post.first())
         return JsonResponse(post_serializer.data)
-'''
+
+@api_view(['POST'])
+def like_post(request, pk):
+    post = Post.objects.filter(postId=uuid.UUID(pk))
+    author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))
+    # check if already exists 
+    likes = LikePost.objects.filter(postId=post[0], authorId=author[0])
+    if len(likes):
+        # already liked can not like again
+        return HttpResponse(json.dumps({
+            'succ': False
+        }))
+    likepost = LikePost(postId=post[0], authorId=author[0])
+    likepost.save()
+    # let likecount update with itself + 1
+    post.update(likeCount=F('likeCount') + 1)
+    return HttpResponse(json.dumps({
+        'succ': True,
+        'count': post[0].likeCount
+    }))
+
 @api_view(['GET','POST'])
 def comment_list(request, pk):
     """
@@ -82,14 +120,28 @@ def comment_list(request, pk):
         serializer = CommentSerializer(comments, many=True)
         return JsonResponse(serializer.data, safe=False)
 
+    """
+    Create a Comment of a Post
+    """
     # post will be used to comment on a Post
-    elif request.method == 'POST':
-        serializer = PostSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.saver()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'POST':
+        post = Post.objects.filter(postId=uuid.UUID(request.data['postId']))
+        author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))
+        comment = Comment(
+            postId = post[0],
+            authorId = author[0],
+            text = request.data['text']
+        )
+        post.update(commentCount=F('commentCount') + 1)
+        comment.save()
+        return HttpResponse(str(comment))
+        # serializer = PostSerializer(data=request.data['post'])
+        # if serializer.is_valid():
+        #     serializer.saver()
+        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+'''
 @api_view(['GET'])
 def author_page(request, pk):
     """

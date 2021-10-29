@@ -33,14 +33,14 @@ class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
         #print(request.data)
         #print(request.content_type)
         if request.content_type == "application/json":
-            author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))[0]
+            author = Author.objects.filter(id=uuid.UUID(request.data['authorId'])).first()
             text = request.data['post_text']
             title = request.data['title']
             new_post = Post(authorId=author,post_text=text,title=title)
             new_post.save()
             
         elif request.content_type == "application/x-www-form-urlencoded":
-            author = Author.objects.all()[0]
+            author = Author.objects.all().first()
             text = request.data['post_text']
             title = request.data['title']
             new_post = Post(authorId=author,post_text=text,title=title)
@@ -68,7 +68,7 @@ def individual_post(request, pk):
         except Post.DoesNotExist:
             return HttpResponse(status=404)
         combined_data = []
-        post_serializer = PostSerializer(post[0])
+        post_serializer = PostSerializer(post.first())
         return JsonResponse(post_serializer.data)
 '''
 @api_view(['GET','POST'])
@@ -97,9 +97,9 @@ def author_page(request, pk):
     """
     if request.method == 'GET':
         author = Author.objects.filter(displayName=pk)
-        author_serializer = AuthorSerializer(author[0])
+        author_serializer = AuthorSerializer(author.first())
         combined_data = []
-        posts = Post.objects.filter(authorId=author[0].id)
+        posts = Post.objects.filter(authorId=author.first().id)
         post_serializer = PostSerializer(posts, many=True)
         combined_data.append(author_serializer.data)
         combined_data.append(post_serializer.data)
@@ -120,9 +120,9 @@ def all_authors(request, pk):
     """
     if request.method == 'GET':
         author = Author.objects.filter(displayName=pk)
-        author_serializer = AuthorSerializer(author[0])
+        author_serializer = AuthorSerializer(author.first())
         combined_data = []
-        posts = Post.objects.filter(authorId=author[0].id)
+        posts = Post.objects.filter(authorId=author.first().id)
         post_serializer = PostSerializer(posts, many=True)
         combined_data.append(author_serializer.data)
         combined_data.append(post_serializer.data)

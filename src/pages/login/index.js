@@ -21,7 +21,7 @@ const Login = (props) => {
             };
             dispatch(loginAction(data))
             localStorage.setItem('userinfo', JSON.stringify(data))
-            message.success('login successfully!')
+            message.success('login success!')
             history.replace('/')
         } else {
             message.error('login failed!')

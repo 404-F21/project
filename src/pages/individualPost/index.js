@@ -26,13 +26,13 @@ const IndividualPost = (props) => {
             message.warn('please input your comment')
             return
         }
-        const result = await client.post(`post/${postData.postId}/comments/`, {
+        const result = await client.post(`posts/${postData.postId}/comments/`, {
             authorId: postData.authorId.id,
             postId: postData.postId,
             text: commentInput,
         })
         if (result.status == 200) {
-            message.success('comment successfully!')
+            message.success('comment posted successfully!')
             setCommentInput('')
             updateCommentList()
         }

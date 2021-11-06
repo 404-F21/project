@@ -23,7 +23,7 @@ const App = (props) => {
     // create a post
     const sendPost = async (data) => {
         data['authorId'] = store.getState().login.id
-        const result = await client.post('post', data)
+        const result = await client.post('posts', data)
         console.log(result)
         if (result.status == 200) {
             message.success('post successfully!')

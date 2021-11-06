@@ -15,6 +15,7 @@ gunicorn = "*"
 
 [dev-packages]
 django-stubs = "*"
+httpie = "*"
 
 [requires]
 python_version = "3.8"

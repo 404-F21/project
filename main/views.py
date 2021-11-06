@@ -58,7 +58,7 @@ class Register(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
         )
         author.save()
         ser = AuthorSerializer(author)
-        return HttpResponse(AuthorSerializer.data)
+        return Response(ser.data)
 
 @api_view(['POST'])
 def login(request):
@@ -141,6 +141,18 @@ def comment_list(request, pk):
         #     return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+def author_profile(request, pk):
+    """
+    List all of an Author's information
+    """
+    if request.method == 'GET':
+        author = Author.objects.filter(id=pk)
+        author_serializer = AuthorSerializer(author.first())
+        data = dict()
+        data['type'] = 'author'
+        data.update(author_serializer.data)
+        return Response(data)
 '''
 @api_view(['GET'])
 def author_page(request, pk):
@@ -148,10 +160,9 @@ def author_page(request, pk):
     List all information of an Author, and all of their posts
     """
     if request.method == 'GET':
-        author = Author.objects.filter(displayName=pk)
+        author = Author.objects.filter(id=pk)
         author_serializer = AuthorSerializer(author.first())
-        combined_data = []
-        posts = Post.objects.filter(authorId=author.first().id)
+        posts = Post.objects.filter(authorId=pk)
         post_serializer = PostSerializer(posts, many=True)
         combined_data.append(author_serializer.data)
         combined_data.append(post_serializer.data)
@@ -164,30 +175,25 @@ def new_author(request):
     """
     if request.method == 'POST':
         author = Author(displayName = request.data['displayName'])
+'''
 
 @api_view(['GET'])
-def all_authors(request, pk):
+def all_authors(request):
     """
-    List all information of an Author, and all of their posts
+    List all authors in the server
     """
     if request.method == 'GET':
-        author = Author.objects.filter(displayName=pk)
-        author_serializer = AuthorSerializer(author.first())
-        combined_data = []
-        posts = Post.objects.filter(authorId=author.first().id)
-        post_serializer = PostSerializer(posts, many=True)
-        combined_data.append(author_serializer.data)
-        combined_data.append(post_serializer.data)
-        return Response(combined_data)
+        page = int(request.query_params.get('page', '1'))
+        size = int(request.query_params.get('size', '5'))
+        begin = (page - 1) * size
+        end = begin + size
+        authors = Author.objects.all()[begin:end]
+        serializer = AuthorSerializer(authors, many=True)
 
-    elif request.method == 'POST':
-        serializer = PostSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.saver()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data = { 'type': 'authors', 'items': serializer.data }
+        return Response(data)
 
-'''
+
 '''
 @api_view(['POST'])
 def like(request, pk):

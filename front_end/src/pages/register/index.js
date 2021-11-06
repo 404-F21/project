@@ -22,7 +22,7 @@ const Register = (props) => {
             let user = { displayName, password };
             const ret = await client.post('register', user)
             if (ret.status >= 200 && ret.status < 400) {
-                message.success('register successfully!')
+                message.success('registered successfully!')
                 history.replace('/login')
             }
             console.log(ret)

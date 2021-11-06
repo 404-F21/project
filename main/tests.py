@@ -15,8 +15,8 @@ class AuthorModelTests(TestCase):
         author = Author(displayName="ishq_kan",github="kanishk@github.com")
         self.assertEqual(author.displayName, "ishq_kan")
         self.assertEqual(author.github, "kanishk@github.com")
-        self.assertEqual(type(author.id), UUID)
-        proper_id_and_name = f"{str(author.id)}: {author.displayName}"
+        self.assertEqual(type(author.uid), UUID)
+        proper_id_and_name = f"{str(author.uid)}: {author.displayName}"
         # check string representation compared to proper form
         self.assertEqual(str(author), proper_id_and_name)
     
@@ -70,7 +70,7 @@ class CommentModelTests(TestCase):
         # Basic parameters
         comment = Comment(authorId=temp_author_foreign_key,postId=temp_post_foreign_key, text="test text\n\n\n")
         self.assertEqual(type(comment), Comment)
-        self.assertEqual(comment.authorId.id, temp_author_foreign_key.id)
+        self.assertEqual(comment.authorId.id, temp_author_foreign_key.uid)
         self.assertEqual(comment.postId.postId, temp_post_foreign_key.postId)
         self.assertEqual(comment.text, "test text\n\n\n")
 
@@ -109,7 +109,7 @@ class PostSerializerTests(TestCase):
 
         # authorId, postId, and post_text values
         serializer = PostSerializer(temp_post)
-        self.assertEqual(serializer.data['authorId']['id'], str(temp_author.id))
+        self.assertEqual(serializer.data['authorId']['id'], str(temp_author.uid))
         self.assertEqual(serializer.data['description'], "")
         self.assertEqual(serializer.data['title'], "")
 

@@ -26,7 +26,7 @@ class Author(models.Model):
     # Potentially the future home of the HATEOS URL for github API
     github = models.URLField(default="")
 
-    profilePic = models.ImageField(upload_to='profilePics/', blank=True)
+    profileImage = models.ImageField(upload_to='profilePics/', blank=True)
 
     def __str__(self):
         return str(self.id) + ": " + str(self.displayName)

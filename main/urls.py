@@ -2,20 +2,20 @@ from django.urls import path
 from main import views
 
 urlpatterns = [
-    # register a new account
-    path('register', views.Register.as_view()),
     # log in to an existing account
     path('log', views.app_login),
 
-    # view many authors' profiles
+    # view many authors' profiles or register/update an account
     path('authors/', views.all_authors),
     # view one author's profile
     path('author/<pk>/', views.author_profile),
 
+    path('author/<pk>/followers', views.FollowerList.as_view()),
+
     # get post list & create a post
     path('posts', views.PostList.as_view()),
     # get the specified post details
-    path('posts/<pk>', views.individual_post),
+    path('posts/<pk>', views.PostDetail.as_view()),
     # get the specified post comments
     path('posts/<pk>/comments/', views.comment_list),
     # post like

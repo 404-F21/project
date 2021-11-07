@@ -1,14 +1,18 @@
 from django.db import models
 import uuid
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractBaseUser
 from django.utils.translation import gettext_lazy as _
 # from django.contrib.auth import authenticate
 # from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 
-class Author(AbstractUser):
+class Author(AbstractBaseUser):
     '''
-    Login information
+    A user who can make posts, friends, comments, and like posts.
+    '''
+
+    '''
+    Private information
     '''
     password = models.CharField(max_length=25, default = "", blank=True)
     '''
@@ -57,6 +61,15 @@ class FriendRequest(models.Model):
 	def __str__(self):
 		return str(self.friend.displayName) + " wants to follow " + str(self.author.displayName)
 
+
+class Following(models.Model):
+    follower = models.ForeignKey(Author, related_name='follower_set', on_delete=models.CASCADE, editable=False)
+    followee = models.ForeignKey(Author, related_name='followee_set', on_delete=models.CASCADE, editable=False)
+
+    class Meta:
+        unique_together = ['follower', 'followee']
+
+
 class Post(models.Model):
     contentOptions = (
         ("text/markdown", "Common Mark"),
@@ -81,7 +94,6 @@ class Post(models.Model):
     origin = models.URLField(null=True, blank=True)
     description = models.TextField(default="")
     post_text = models.TextField(default="")
-    # contentType = models.CharField(max_length=20, default="text/plain")
     contentType = models.CharField(max_length=20, choices=contentOptions, default="text/plain")
     categories = models.TextField(default="")
     commentCount = models.IntegerField(default=0)
@@ -91,10 +103,8 @@ class Post(models.Model):
     # i.e. posturl/comments
     commentUrl = models.TextField(default=postId)
 
-    #commentSrc = models.ForeignKey(commentSrc, on_delete=models.CASCADE)
     publishedOn = models.DateTimeField(auto_now_add=True, blank=True)
 
-    #visibility = models.CharField(max_length=20, choices=visibilityOptions)
     visibility = models.CharField(max_length=20, choices=visibilityOptions, default="PUBLIC")
     unlisted = models.BooleanField(default=False)
 

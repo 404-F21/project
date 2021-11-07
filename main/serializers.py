@@ -4,7 +4,6 @@ from rest_framework import serializers
 class AuthorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Author
-        # fields = '__all__'
         fields = ['id', 'host', 'displayName', 'url', 'github', 'profileImage']
 
 class PostSerializer(serializers.ModelSerializer):
@@ -12,7 +11,7 @@ class PostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = '__all__'
-        depth=1
+        depth = 1
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:

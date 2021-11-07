@@ -1,17 +1,13 @@
-from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.parsers import JSONParser
-from rest_framework.views import APIView
 from rest_framework import mixins
 from rest_framework import generics
 from main.models import Author, Comment, Post, LikePost
 from main.serializers import AuthorSerializer, CommentSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
 from django.db.models import F
+from django.contrib.auth import authenticate, login
 import uuid
-from uuid import UUID
 import json
 
 # Create your views here.
@@ -33,7 +29,7 @@ class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
         #print(request.data)
         #print(request.content_type)
         if request.content_type == "application/json":
-            author = Author.objects.filter(id=uuid.UUID(request.data['authorId'])).first()
+            author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
             text = request.data['post_text']
             title = request.data['title']
             new_post = Post(authorId=author,post_text=text,title=title)
@@ -52,7 +48,7 @@ class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
 
 class Register(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
     def post(self, request, format=None):
-        author = Author(
+        author = Author.objects.create(
             displayName = request.data['displayName'],
             password = request.data["password"],
         )
@@ -61,19 +57,24 @@ class Register(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
         return Response(ser.data)
 
 @api_view(['POST'])
-def login(request):
+def app_login(request):
     name = request.data['displayName']
     pwd = request.data['password']
-    author = Author.objects.filter(displayName = name, password = pwd)
-    if len(author):
-        # TODO generate a token response it to client
-        return HttpResponse(json.dumps({
+
+    '''
+    author = authenticate(request, username=name, password=pwd)
+    if author is not None:
+    '''
+    try:
+        author = Author.objects.get(displayName=name, password=pwd)
+        # login(request, author)
+
+        return Response({
             'succ': True,
-            'id': str(author[0].id),
-        }))
-    return HttpResponse(json.dumps({
-        'succ': False
-    }))
+            'id': str(author.pk),
+        })
+    except Author.DoesNotExist:
+        return Response({ 'succ': False })
 
 @api_view(['GET'])
 def individual_post(request, pk):
@@ -82,32 +83,33 @@ def individual_post(request, pk):
     """
     if request.method == 'GET':
         try:
-            post = Post.objects.filter(postId=uuid.UUID(pk))
+            post = Post.objects.get(postId=uuid.UUID(pk))
         except Post.DoesNotExist:
             return HttpResponse(status=404)
         combined_data = []
-        post_serializer = PostSerializer(post.first())
+        post_serializer = PostSerializer(post)
         return JsonResponse(post_serializer.data)
 
 @api_view(['POST'])
 def like_post(request, pk):
-    post = Post.objects.filter(postId=uuid.UUID(pk))
-    author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))
+    post_id = uuid.UUID(pk)
+    author_id = uuid.UUID(request.data['authorId'])
+
+    post = Post.objects.get(postId=post_id)
+    author = Author.objects.get(id=author_id)
     # check if already exists 
-    likes = LikePost.objects.filter(postId=post[0], authorId=author[0])
+    likes = LikePost.objects.filter(postId=post_id, authorId=author_id)
     if len(likes):
         # already liked can not like again
-        return HttpResponse(json.dumps({
-            'succ': False
-        }))
+        return Response({ 'succ': False })
     likepost = LikePost(postId=post[0], authorId=author[0])
     likepost.save()
     # let likecount update with itself + 1
     post.update(likeCount=F('likeCount') + 1)
-    return HttpResponse(json.dumps({
+    return Response({
         'succ': True,
-        'count': post[0].likeCount
-    }))
+        'count': post.likeCount
+    })
 
 @api_view(['GET','POST'])
 def comment_list(request, pk):

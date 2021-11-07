@@ -154,8 +154,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-#AUTH_USER_MODEL = "main.NewUser"
-
 # Configure Django App for Heroku.
 import django_heroku
 django_heroku.settings(locals())

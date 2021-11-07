@@ -20,7 +20,7 @@ const Register = (props) => {
             judge(password === confirmPassword, 'The password is not equal to the confirmation password')
         ) {
             let user = { displayName, password };
-            const ret = await client.post('register', user)
+            const ret = await client.post('authors/', user)
             if (ret.status >= 200 && ret.status < 400) {
                 message.success('registered successfully!')
                 history.replace('/login')

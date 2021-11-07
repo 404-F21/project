@@ -1,17 +1,16 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import mixins
-from rest_framework import generics
-from main.models import Author, Comment, Post, LikePost
-from main.serializers import AuthorSerializer, CommentSerializer, PostSerializer
+from rest_framework.views import APIView
+from main.models import Author, Comment, Following, Post, LikePost
+from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.db.models import F
-from django.contrib.auth import authenticate, login
+# from django.contrib.auth import authenticate, login
 import uuid
-import json
 
 # Create your views here.
-class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+class PostList(APIView):
     """
     List all Posts in the database
     """
@@ -46,7 +45,8 @@ class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
         #return Response(status=status.HTTP_201_CREATED)
         return HttpResponse("post created")
 
-class Register(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+
+class Register(APIView):
     def post(self, request, format=None):
         author = Author.objects.create(
             displayName = request.data['displayName'],
@@ -55,6 +55,32 @@ class Register(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
         author.save()
         ser = AuthorSerializer(author)
         return Response(ser.data)
+
+
+class FollowerList(APIView):
+    def get(self, request, pk, format=None):
+        author = Author.objects.get(pk=pk)
+        follow_pairs = author.followee_set.all()
+        serializer = FollowingSerializer(follow_pairs, many=True)
+
+        # this list comprehension is required to keep the serializers consistent
+        return Response([e['follower'] for e in serializer.data])
+
+    def put(self, request, pk, format=None):
+        follower = Author.objects.get(pk=request.data['followerId'])
+        followee = Author.objects.get(pk=pk)
+
+        follow_pair = Following.objects.create(followee=followee, follower=follower)
+        follow_pair.save()
+
+        follower_ser = AuthorSerializer(follower)
+        followee_ser = AuthorSerializer(followee)
+
+        return Response({
+            'follower': follower_ser.data,
+            'followee': followee_ser.data
+        })
+
 
 @api_view(['POST'])
 def app_login(request):
@@ -76,12 +102,12 @@ def app_login(request):
     except Author.DoesNotExist:
         return Response({ 'succ': False })
 
-@api_view(['GET'])
-def individual_post(request, pk):
+
+class PostDetail(APIView):
     """
     List an individual post
     """
-    if request.method == 'GET':
+    def get(self, request, pk, format=None):
         try:
             post = Post.objects.get(postId=uuid.UUID(pk))
         except Post.DoesNotExist:
@@ -89,6 +115,7 @@ def individual_post(request, pk):
         combined_data = []
         post_serializer = PostSerializer(post)
         return JsonResponse(post_serializer.data)
+
 
 @api_view(['POST'])
 def like_post(request, pk):
@@ -179,10 +206,10 @@ def new_author(request):
         author = Author(displayName = request.data['displayName'])
 '''
 
-@api_view(['GET'])
+@api_view(['GET', 'POST'])
 def all_authors(request):
     """
-    List all authors in the server
+    List all authors in the server, or register a new author
     """
     if request.method == 'GET':
         page = int(request.query_params.get('page', '1'))
@@ -194,6 +221,15 @@ def all_authors(request):
 
         data = { 'type': 'authors', 'items': serializer.data }
         return Response(data)
+
+    elif request.method == 'POST':
+        author = Author.objects.create(
+            displayName = request.data['displayName'],
+            password = request.data["password"],
+        )
+        author.save()
+        ser = AuthorSerializer(author)
+        return Response(ser.data)
 
 
 '''
@@ -210,7 +246,6 @@ def like(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 '''
-
 
 from django.shortcuts import render
 # Create your views here.

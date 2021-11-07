@@ -1,12 +1,12 @@
 from django.db import models
 import uuid
-# from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
 # from django.contrib.auth import authenticate
 # from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 
-class Author(models.Model):
+class Author(AbstractUser):
     '''
     Login information
     '''
@@ -18,18 +18,23 @@ class Author(models.Model):
 
     url = models.CharField(max_length=150, blank=True, null=True)
 
-    # user = models.ForeignKey(User, on_delete=models.CASCADE)
-
     host = models.URLField(blank=True, null=True)
-    displayName = models.CharField(max_length=100, unique=True)
+    displayName = models.CharField(max_length=100, default="", unique=True)
 
     # Potentially the future home of the HATEOS URL for github API
     github = models.URLField(default="")
 
     profileImage = models.ImageField(upload_to='profilePics/', blank=True)
 
+    USERNAME_FIELD = "displayName"
+    REQUIRED_FIELDS = ["password"]
+
     def __str__(self):
         return str(self.id) + ": " + str(self.displayName)
+
+
+class Admin(Author):
+    '''TODO: the whole damned model'''
 
 
 class FriendRequest(models.Model):

@@ -5,7 +5,7 @@ urlpatterns = [
     # register a new account
     path('register', views.Register.as_view()),
     # log in to an existing account
-    path('log', views.login),
+    path('log', views.app_login),
 
     # view many authors' profiles
     path('authors/', views.all_authors),

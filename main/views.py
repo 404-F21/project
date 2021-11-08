@@ -64,22 +64,39 @@ class FollowerList(APIView):
         serializer = FollowingSerializer(follow_pairs, many=True)
 
         # this list comprehension is required to keep the serializers consistent
-        return Response([e['follower'] for e in serializer.data])
+        items = [e['follower'] for e in serializer.data]
 
-    def put(self, request, pk, format=None):
-        follower = Author.objects.get(pk=request.data['followerId'])
+        return Response({ 'type': 'followers', 'items': items })
+
+
+class FollowerDetail(APIView):
+    def delete(self, request, pk, fpk, format=None):
+        try:
+            author = Author.objects.get(pk=pk)
+            follow_pair = author.followee_set.get(follower=fpk)
+            follow_pair.delete()
+            return Response({ 'success': True })
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'success': False })
+
+    def put(self, request, pk, fpk, format=None):
+        follower = Author.objects.get(pk=fpk)
         followee = Author.objects.get(pk=pk)
 
         follow_pair = Following.objects.create(followee=followee, follower=follower)
         follow_pair.save()
 
-        follower_ser = AuthorSerializer(follower)
-        followee_ser = AuthorSerializer(followee)
+        serializer = FollowingSerializer(follow_pair)
 
-        return Response({
-            'follower': follower_ser.data,
-            'followee': followee_ser.data
-        })
+        return Response(serializer.data)
+
+    def get(self, request, pk, fpk, format=None):
+        try:
+            author = Author.objects.get(pk=pk)
+            author.followee_set.get(follower=fpk)
+            return Response({ 'isFollower': True })
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'isFollower': False })
 
 
 @api_view(['POST'])
@@ -170,12 +187,11 @@ def comment_list(request, pk):
         #     return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET'])
-def author_profile(request, pk):
+class AuthorDetail(APIView):
     """
     List all of an Author's information
     """
-    if request.method == 'GET':
+    def get(self, request, pk, format=None):
         author = Author.objects.filter(id=pk)
         author_serializer = AuthorSerializer(author.first())
         data = dict()
@@ -196,22 +212,13 @@ def author_page(request, pk):
         combined_data.append(author_serializer.data)
         combined_data.append(post_serializer.data)
         return Response(combined_data)
-
-@api_view(['GET','POST'])
-def new_author(request):
-    """
-    Make a new author
-    """
-    if request.method == 'POST':
-        author = Author(displayName = request.data['displayName'])
 '''
 
-@api_view(['GET', 'POST'])
-def all_authors(request):
+class AuthorList(APIView):
     """
     List all authors in the server, or register a new author
     """
-    if request.method == 'GET':
+    def get(self, request, format=None):
         page = int(request.query_params.get('page', '1'))
         size = int(request.query_params.get('size', '5'))
         begin = (page - 1) * size
@@ -222,10 +229,13 @@ def all_authors(request):
         data = { 'type': 'authors', 'items': serializer.data }
         return Response(data)
 
-    elif request.method == 'POST':
+    def post(self, request, format=None):
+        uri = request.build_absolute_uri('/')
+
         author = Author.objects.create(
             displayName = request.data['displayName'],
             password = request.data["password"],
+            host = uri,
         )
         author.save()
         ser = AuthorSerializer(author)

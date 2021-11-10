@@ -19,7 +19,7 @@ const Contacts = ({ contacts }) => {
           <div class="card-body">
             <h5 class="card-title">{contact.title}, {contact.postId}</h5>
             <h6 class="card-subtitle mb-2 text-muted">Published by {contact.authorId.displayName} on {contact.publishedOn}</h6>
-            <p class="card-text">{contact.post_text}</p>
+            <p class="card-text">{contact.content}</p>
           </div>
         </div>
         

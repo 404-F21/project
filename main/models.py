@@ -36,7 +36,9 @@ class Author(AbstractBaseUser):
     REQUIRED_FIELDS = ["password"]
 
     def save(self, *args, **kwargs):
-        self.url = f'{self.host}author/{self.id}'
+        if self.url is None:
+            self.url = f'{self.host}author/{self.id}'
+
         super(Author, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -82,11 +84,11 @@ class FriendRequest(models.Model):
 
 class Following(models.Model):
     follower = models.ForeignKey(Author,
-                                 related_name='follower_set',
+                                 related_name='followed_set',
                                  on_delete=models.CASCADE,
                                  editable=False)
     followee = models.ForeignKey(Author,
-                                 related_name='followee_set',
+                                 related_name='follower_set',
                                  on_delete=models.CASCADE,
                                  editable=False)
 
@@ -117,13 +119,15 @@ class Post(models.Model):
     postId = models.UUIDField(primary_key=True,
                               default=uuid.uuid4,
                               editable=False)
-    authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
+    authorId = models.ForeignKey(Author,
+                                 related_name='post_set',
+                                 on_delete=models.CASCADE)
 
     title = models.CharField(max_length=100, default="")
     source = models.URLField(null=True, blank=True)
     origin = models.URLField(null=True, blank=True)
     description = models.TextField(default="")
-    post_text = models.TextField(default="")
+    content = models.TextField(default="")
     contentType = models.CharField(max_length=20,
                                    choices=contentOptions,
                                    default="text/plain")

@@ -55,7 +55,7 @@ const App = (props) => {
                 <Form.Item name={['title']} label="title">
                     <Input placeholder="please input your post's title"/>
                 </Form.Item>
-                <Form.Item name={['post_text']} label="post text">
+                <Form.Item name={['content']} label="post text">
                     <Input.TextArea placeholder="please input your post's text"/>
                 </Form.Item>
                 <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
@@ -70,7 +70,7 @@ const App = (props) => {
                     //     <Meta
                     //         avatar={<Avatar src={require('../../assets/user.jpg').default} />}
                     //         title={item.title}
-                    //         description={item.post_text}
+                    //         description={item.content}
                     //         />
                     // </Card>
                     <Card onClick={() => history.push(`/individualpost/${item.postId}`)}>
@@ -90,7 +90,7 @@ const App = (props) => {
                         />
                         <Card.Body>
                             <h4>{item.title}</h4>
-                            <div style={{ marginBottom: '3px' }}>{item.post_text}</div>
+                            <div style={{ marginBottom: '3px' }}>{item.content}</div>
                             <div className='like'>
                                 <div>
                                     <i className="iconfont icon-xiaoxi"></i>

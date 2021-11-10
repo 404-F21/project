@@ -16,6 +16,10 @@ urlpatterns = [
     path('author/<pk>/followers', views.FollowerList.as_view()),
 
     path('author/<pk>/followers/<fpk>', views.FollowerDetail.as_view()),
+    path('author/<pk>/friends', views.FriendList.as_view()),
+
+    path('author/<pk>/posts/', views.AuthorPostList.as_view()),
+    path('author/<pk>/posts/<pid>', views.AuthorPostDetail.as_view()),
 
     # get post list & create a post
     path('posts', views.PostList.as_view()),

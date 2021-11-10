@@ -1,6 +1,6 @@
+from django.db.models.query import QuerySet
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework import mixins
 from rest_framework.views import APIView
 from main.models import Author, Comment, Following, Post, LikePost
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
@@ -8,6 +8,18 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import F
 # from django.contrib.auth import authenticate, login
 import uuid
+from typing import Dict
+
+
+def paginate(objects: QuerySet, params: Dict[str, str]) -> QuerySet:
+    page = int(params.get('page', '1'))
+    size = int(params.get('size', '5'))
+
+    begin = (page - 1) * size
+    end = begin + size
+
+    return objects[begin:end]
+
 
 # Create your views here.
 class PostList(APIView):
@@ -16,8 +28,11 @@ class PostList(APIView):
     """
 
     def get(self, request, format=None):
-        all_posts = Post.objects.filter(visibility="PUBLIC").order_by('-publishedOn')[:5]
-        post_serializer = PostSerializer(all_posts, many=True)
+        all_posts = (Post.objects.filter(visibility="PUBLIC")
+                                 .order_by('-publishedOn'))
+        paged_posts = paginate(all_posts, request.query_params)
+
+        post_serializer = PostSerializer(paged_posts, many=True)
         data = post_serializer.data
         response = JsonResponse(data, safe=False)
         return response
@@ -29,16 +44,16 @@ class PostList(APIView):
         #print(request.content_type)
         if request.content_type == "application/json":
             author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
-            text = request.data['post_text']
+            text = request.data['content']
             title = request.data['title']
-            new_post = Post(authorId=author,post_text=text,title=title)
+            new_post = Post(authorId=author,content=text,title=title)
             new_post.save()
             
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()
-            text = request.data['post_text']
+            text = request.data['content']
             title = request.data['title']
-            new_post = Post(authorId=author,post_text=text,title=title)
+            new_post = Post(authorId=author,content=text,title=title)
             new_post.save()
 
         #return Response(request.data)
@@ -59,9 +74,10 @@ class Register(APIView):
 
 class FollowerList(APIView):
     def get(self, request, pk, format=None):
-        author = Author.objects.get(pk=pk)
-        follow_pairs = author.followee_set.all()
-        serializer = FollowingSerializer(follow_pairs, many=True)
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        follow_pairs = author.follower_set.all().order_by('follower__displayName')
+        paged_pairs = paginate(follow_pairs, request.query_params)
+        serializer = FollowingSerializer(paged_pairs, many=True)
 
         # this list comprehension is required to keep the serializers consistent
         items = [e['follower'] for e in serializer.data]
@@ -72,16 +88,16 @@ class FollowerList(APIView):
 class FollowerDetail(APIView):
     def delete(self, request, pk, fpk, format=None):
         try:
-            author = Author.objects.get(pk=pk)
-            follow_pair = author.followee_set.get(follower=fpk)
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            follow_pair = author.follower_set.get(follower=uuid.UUID(fpk))
             follow_pair.delete()
             return Response({ 'success': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'success': False })
 
     def put(self, request, pk, fpk, format=None):
-        follower = Author.objects.get(pk=fpk)
-        followee = Author.objects.get(pk=pk)
+        follower = Author.objects.get(pk=uuid.UUID(fpk))
+        followee = Author.objects.get(pk=uuid.UUID(pk))
 
         follow_pair = Following.objects.create(followee=followee, follower=follower)
         follow_pair.save()
@@ -92,11 +108,22 @@ class FollowerDetail(APIView):
 
     def get(self, request, pk, fpk, format=None):
         try:
-            author = Author.objects.get(pk=pk)
-            author.followee_set.get(follower=fpk)
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            author.followee_set.get(follower=uuid.UUID(fpk))
             return Response({ 'isFollower': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
+
+class FriendList(APIView):
+    def get(self, request, pk, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        followers = author.follower_set.all().values_list('follower__id')
+        friend_pairs = author.followed_set.filter(followee__id__in=followers).order_by('followee__displayName')
+        paged_pairs = paginate(friend_pairs, request.query_params)
+
+        serializer = FollowingSerializer(paged_pairs, many=True)
+        items = [e['followee'] for e in serializer.data]
+        return Response({'type': 'friends', 'items': items})
 
 
 @api_view(['POST'])
@@ -132,6 +159,47 @@ class PostDetail(APIView):
         combined_data = []
         post_serializer = PostSerializer(post)
         return JsonResponse(post_serializer.data)
+
+
+class AuthorPostList(APIView):
+    def get(self, request, pk, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        posts = author.post_set.all().order_by('-publishedOn')
+        serializer = PostSerializer(posts, many=True)
+
+        return Response({ 'type': 'posts', 'items': serializer.data })
+
+    def post(self, request, pk, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        text = request.data['content']
+        title = request.data['title']
+        new_post = Post.objects.create(authorId=author,content=text,title=title)
+        new_post.save()
+
+        return Response({ 'success': True })
+
+class AuthorPostDetail(APIView):
+    def get(self, request, pk, pid, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        post = author.post_set.get(pk=uuid.UUID(pid))
+        serializer = PostSerializer(post)
+
+        data = dict({ 'type': 'post' }, **serializer.data)
+        return Response(data)
+
+    def post(self, request, pk, pid, format=None):
+        text = request.data['content']
+        title = request.data['title']
+        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post.update(content=text, title=title)
+
+        return Response({ 'success': True })
+
+    def delete(self, request, pk, pid, format=None):
+        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post.delete()        
+
+        return Response({ 'success': True })
 
 
 @api_view(['POST'])
@@ -219,11 +287,7 @@ class AuthorList(APIView):
     List all authors in the server, or register a new author
     """
     def get(self, request, format=None):
-        page = int(request.query_params.get('page', '1'))
-        size = int(request.query_params.get('size', '5'))
-        begin = (page - 1) * size
-        end = begin + size
-        authors = Author.objects.all()[begin:end]
+        authors = paginate(Author.objects.all().order_by('displayName'), request.query_params)
         serializer = AuthorSerializer(authors, many=True)
 
         data = { 'type': 'authors', 'items': serializer.data }

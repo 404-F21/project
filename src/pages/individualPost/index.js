@@ -104,7 +104,7 @@ const IndividualPost = (props) => {
                                 <div className='username'>{postData?.authorId?.displayName}</div>
                             </div>
                             <h3>{postData?.title}</h3>
-                            <p>{postData?.post_text}</p>
+                            <p>{postData?.content}</p>
                             <div className='like'>
                                 <div>
                                     <i className="iconfont icon-xiaoxi"></i>

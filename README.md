@@ -67,7 +67,7 @@
 * Can belong to a post - store the post id
 * Is unique but removable - store identifier
 
-Copyright 2021 kanishk Chawla, Nathan Drapeza, Xingjie He, Warren Stix, Yifan Wu
+Copyright 2021 Kanishk Chawla, Nathan Drapeza, Xingjie He, Warren Stix, Yifan Wu
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

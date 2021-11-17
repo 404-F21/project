@@ -1,3 +1,0 @@
-dj-database-url==0.5.0
-django-heroku==0.0.0
-python-dotenv==0.19.2

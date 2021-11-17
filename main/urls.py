@@ -1,6 +1,9 @@
 from django.urls import path
 from main import views
 
+from django.conf import settings
+from django.conf.urls.static import static
+
 urlpatterns = [
     #path('', views.home),
     #path('<pk>/', views.individual_post),
@@ -16,4 +19,5 @@ urlpatterns = [
     path('post/<pk>/comments/', views.comment_list),
     # post like
     path('post/<pk>/like/', views.like_post),
+    path('', views.render_html)
 ]

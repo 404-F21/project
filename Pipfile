@@ -8,9 +8,6 @@ django = "*"
 django-cors-headers = "*"
 djangorestframework = "*"
 pillow = "*"
-python-dotenv = "*"
-dj_database_url = "*"
-django_heroku = "*"
 
 [dev-packages]
 django-stubs = "*"

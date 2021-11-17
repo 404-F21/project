@@ -9,8 +9,6 @@ django-cors-headers = "*"
 djangorestframework = "*"
 pillow = "*"
 python-dotenv = "*"
-django-heroku = "*"
-dj-database-url = "*"
 
 [dev-packages]
 django-stubs = "*"

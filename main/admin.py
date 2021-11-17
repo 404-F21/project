@@ -15,11 +15,11 @@
 
 from django.contrib import admin
 from main.models import Author, Comment, Post, LikePost
-from rest_framework.authtoken.admin import TokenAdmin
+# from rest_framework.authtoken.admin import TokenAdmin
 
 admin.site.register(Author)
 admin.site.register(Comment)
 admin.site.register(Post)
 admin.site.register(LikePost)
 
-TokenAdmin.raw_id_fields = ('user',)
+# TokenAdmin.raw_id_fields = ('user',)

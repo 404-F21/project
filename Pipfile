@@ -11,6 +11,7 @@ pillow = "*"
 python-dotenv = "*"
 dj-database-url = "*"
 django-heroku = "*"
+gunicorn = "*"
 
 [dev-packages]
 django-stubs = "*"

@@ -10,6 +10,7 @@ djangorestframework = "*"
 pillow = "*"
 python-dotenv = "*"
 dj-database-url = "*"
+django-heroku = "*"
 
 [dev-packages]
 django-stubs = "*"

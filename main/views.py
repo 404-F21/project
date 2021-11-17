@@ -384,12 +384,10 @@ def like(request, pk):
 
 '''
 
-<<<<<<< HEAD
 from django.shortcuts import render
 # Create your views here.
 def render_html(request):
     return render(request, 'index.html') 
-=======
 
 # APIs for admin functions
 # ============================
@@ -651,4 +649,3 @@ def get_public_data(request):
         return no_auth()
     else:
         return failure('GET')
->>>>>>> e9e5bddd (Add admin frontend and matching APIs)

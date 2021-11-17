@@ -68,5 +68,5 @@ urlpatterns = [
     path('admin/current/', views.admin_current_user),
 
     # provide public data to other nodes
-    path('connect/public/', views.get_public_data)
+    path('connect/public/', views.get_public_data),
 ]

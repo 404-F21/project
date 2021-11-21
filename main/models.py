@@ -1,35 +1,67 @@
+# Copyright 2021 Kanishk Chawla, Nathan Drapeza, Warren Stix
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from django.db import models
 import uuid
-# from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractBaseUser
 from django.utils.translation import gettext_lazy as _
 # from django.contrib.auth import authenticate
-# from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 
 
-class Author(models.Model):
+class Author(AbstractBaseUser):
     '''
-    Login information
+    A user who can make posts, friends, comments, and like posts.
+    '''
+
+    '''
+    Private information
     '''
     password = models.CharField(max_length=25, default = "", blank=True)
     '''
     Public information
     '''
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4,editable=False, blank=False)
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False,
+                          blank=False)
 
     url = models.CharField(max_length=150, blank=True, null=True)
 
-    # user = models.ForeignKey(User, on_delete=models.CASCADE)
-
     host = models.URLField(blank=True, null=True)
-    displayName = models.CharField(max_length=100, unique=True)
+    displayName = models.CharField(max_length=100, default="", unique=True)
 
     # Potentially the future home of the HATEOS URL for github API
     github = models.URLField(default="")
 
-    profilePic = models.ImageField(upload_to='profilePics/', blank=True)
+    profileImage = models.ImageField(upload_to='profilePics/', blank=True)
+
+    USERNAME_FIELD = "displayName"
+    REQUIRED_FIELDS = ["password"]
+
+    def save(self, *args, **kwargs):
+        if self.url is None:
+            self.url = f'{self.host}author/{self.id}'
+
+        super(Author, self).save(*args, **kwargs)
 
     def __str__(self):
         return str(self.id) + ": " + str(self.displayName)
+
+
+class Admin(Author):
+    '''TODO: the whole damned model'''
 
 
 class FriendRequest(models.Model):
@@ -41,16 +73,47 @@ class FriendRequest(models.Model):
 		('Pending', 'Pending'),
 	)
 
-	reqId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-	friend = models.ForeignKey(Author, related_name='from_user',on_delete=models.CASCADE, editable=False)
-	author = models.ForeignKey(Author,  related_name='to_user',on_delete=models.CASCADE, editable=False)
-	status = models.CharField(max_length=50, choices=option, default='Pending')
+	reqId = models.UUIDField(primary_key=True,
+                             default=uuid.uuid4,
+                             editable=False)
+	friend = models.ForeignKey(Author,
+                               related_name='from_user',
+                               on_delete=models.CASCADE,
+                               editable=False)
+	author = models.ForeignKey(Author,
+                               related_name='to_user',
+                               on_delete=models.CASCADE,
+                               editable=False)
+	status = models.CharField(max_length=50,
+                              choices=option,
+                              default='Pending')
 
 	class Meta:
 		unique_together = ('author', 'friend',)
 
 	def __str__(self):
-		return str(self.friend.displayName) + " wants to follow " + str(self.author.displayName)
+		return (str(self.friend.displayName) +
+                " wants to follow " +
+                str(self.author.displayName))
+
+
+class Following(models.Model):
+    follower = models.ForeignKey(Author,
+                                 related_name='followed_set',
+                                 on_delete=models.CASCADE,
+                                 editable=False)
+    followee = models.ForeignKey(Author,
+                                 related_name='follower_set',
+                                 on_delete=models.CASCADE,
+                                 editable=False)
+
+    class Meta:
+        unique_together = ('follower', 'followee')
+        constraints = [models.CheckConstraint(
+            name = 'follower_ne_followee',
+            check = ~models.Q(follower=models.F('followee')),
+        )]
+
 
 class Post(models.Model):
     contentOptions = (
@@ -68,16 +131,21 @@ class Post(models.Model):
 		("toAuthor", "AUTHOR ONLY"), # not sure how to implement this
     )
 
-    postId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
+    postId = models.UUIDField(primary_key=True,
+                              default=uuid.uuid4,
+                              editable=False)
+    author = models.ForeignKey(Author,
+                               related_name='post_set',
+                               on_delete=models.CASCADE)
 
     title = models.CharField(max_length=100, default="")
     source = models.URLField(null=True, blank=True)
     origin = models.URLField(null=True, blank=True)
     description = models.TextField(default="")
-    post_text = models.TextField(default="")
-    # contentType = models.CharField(max_length=20, default="text/plain")
-    contentType = models.CharField(max_length=20, choices=contentOptions, default="text/plain")
+    content = models.TextField(default="")
+    contentType = models.CharField(max_length=20,
+                                   choices=contentOptions,
+                                   default="text/plain")
     categories = models.TextField(default="")
     commentCount = models.IntegerField(default=0)
     likeCount = models.IntegerField(default=0)
@@ -86,11 +154,11 @@ class Post(models.Model):
     # i.e. posturl/comments
     commentUrl = models.TextField(default=postId)
 
-    #commentSrc = models.ForeignKey(commentSrc, on_delete=models.CASCADE)
     publishedOn = models.DateTimeField(auto_now_add=True, blank=True)
 
-    #visibility = models.CharField(max_length=20, choices=visibilityOptions)
-    visibility = models.CharField(max_length=20, choices=visibilityOptions, default="PUBLIC")
+    visibility = models.CharField(max_length=20,
+                                  choices=visibilityOptions,
+                                  default="PUBLIC")
     unlisted = models.BooleanField(default=False)
 
 #     def __str__(self):
@@ -105,11 +173,15 @@ class Comment(models.Model):
         ("image/jpeg;base64", "JPEG")
     )
 
-    commentId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    commentId = models.UUIDField(primary_key=True,
+                                 default=uuid.uuid4,
+                                 editable=False)
     postId = models.ForeignKey(Post, on_delete=models.CASCADE)
     authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
     publishedOn = models.DateTimeField(auto_now_add=True, blank=True)
-    contentType = models.CharField(max_length=20, choices=contentOptions, default="text/plain")
+    contentType = models.CharField(max_length=20,
+                                   choices=contentOptions,
+                                   default="text/plain")
     text = models.TextField(default="", max_length=500)
 
     def __str__(self):
@@ -153,7 +225,9 @@ class Inbox(models.Model):
 	pass
 
 class Node(models.Model):
-	nodeId = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+	nodeId = models.UUIDField(primary_key=True,
+                              default=uuid.uuid4,
+                              editable=False)
 
 	# ---------------
 	# Work in progess

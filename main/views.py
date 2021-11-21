@@ -1,28 +1,53 @@
-from rest_framework import status
+# Copyright 2021 Nathan Drapeza, Xingjie He, Warren Stix, Yifan Wu
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+from django.db.models.query import QuerySet
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.parsers import JSONParser
 from rest_framework.views import APIView
-from rest_framework import mixins
-from rest_framework import generics
-from main.models import Author, Comment, Post, LikePost
-from main.serializers import AuthorSerializer, CommentSerializer, PostSerializer
+from main.models import Author, Comment, Following, Post, LikePost
+from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
 from django.db.models import F
+# from django.contrib.auth import authenticate, login
 import uuid
-from uuid import UUID
-import json
+from typing import Dict
+
+
+def paginate(objects: QuerySet, params: Dict[str, str]) -> QuerySet:
+    page = int(params.get('page', '1'))
+    size = int(params.get('size', '5'))
+
+    begin = (page - 1) * size
+    end = begin + size
+
+    return objects[begin:end]
+
 
 # Create your views here.
-class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+class PostList(APIView):
     """
     List all Posts in the database
     """
 
     def get(self, request, format=None):
-        all_posts = Post.objects.filter(visibility="PUBLIC").order_by('-publishedOn')[:5]
-        post_serializer = PostSerializer(all_posts, many=True)
+        all_posts = (Post.objects.filter(visibility="PUBLIC")
+                                 .order_by('-publishedOn'))
+        paged_posts = paginate(all_posts, request.query_params)
+
+        post_serializer = PostSerializer(paged_posts, many=True)
         data = post_serializer.data
         response = JsonResponse(data, safe=False)
         return response
@@ -33,81 +58,185 @@ class PostList(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericA
         #print(request.data)
         #print(request.content_type)
         if request.content_type == "application/json":
-            author = Author.objects.filter(id=uuid.UUID(request.data['authorId'])).first()
-            text = request.data['post_text']
+            author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
+            text = request.data['content']
             title = request.data['title']
-            new_post = Post(authorId=author,post_text=text,title=title)
+            new_post = Post(authorId=author,content=text,title=title)
             new_post.save()
             
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()
-            text = request.data['post_text']
+            text = request.data['content']
             title = request.data['title']
-            new_post = Post(authorId=author,post_text=text,title=title)
+            new_post = Post(authorId=author,content=text,title=title)
             new_post.save()
 
         #return Response(request.data)
         #return Response(status=status.HTTP_201_CREATED)
         return HttpResponse("post created")
 
-class Register(mixins.ListModelMixin, mixins.CreateModelMixin, generics.GenericAPIView):
+
+class Register(APIView):
     def post(self, request, format=None):
-        author = Author(
+        author = Author.objects.create(
             displayName = request.data['displayName'],
             password = request.data["password"],
         )
         author.save()
         ser = AuthorSerializer(author)
-        return HttpResponse(AuthorSerializer.data)
+        return Response(ser.data)
+
+
+class FollowerList(APIView):
+    def get(self, request, pk, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        follow_pairs = author.follower_set.all().order_by('follower__displayName')
+        paged_pairs = paginate(follow_pairs, request.query_params)
+        serializer = FollowingSerializer(paged_pairs, many=True)
+
+        # this list comprehension is required to keep the serializers consistent
+        items = [e['follower'] for e in serializer.data]
+
+        return Response({ 'type': 'followers', 'items': items })
+
+
+class FollowerDetail(APIView):
+    def delete(self, request, pk, fpk, format=None):
+        try:
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            follow_pair = author.follower_set.get(follower=uuid.UUID(fpk))
+            follow_pair.delete()
+            return Response({ 'success': True })
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'success': False })
+
+    def put(self, request, pk, fpk, format=None):
+        follower = Author.objects.get(pk=uuid.UUID(fpk))
+        followee = Author.objects.get(pk=uuid.UUID(pk))
+
+        follow_pair = Following.objects.create(followee=followee, follower=follower)
+        follow_pair.save()
+
+        serializer = FollowingSerializer(follow_pair)
+
+        return Response(serializer.data)
+
+    def get(self, request, pk, fpk, format=None):
+        try:
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            author.followee_set.get(follower=uuid.UUID(fpk))
+            return Response({ 'isFollower': True })
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'isFollower': False })
+
+class FriendList(APIView):
+    def get(self, request, pk, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        followers = author.follower_set.all().values_list('follower__id')
+        friend_pairs = author.followed_set.filter(followee__id__in=followers).order_by('followee__displayName')
+        paged_pairs = paginate(friend_pairs, request.query_params)
+
+        serializer = FollowingSerializer(paged_pairs, many=True)
+        items = [e['followee'] for e in serializer.data]
+        return Response({'type': 'friends', 'items': items})
+
 
 @api_view(['POST'])
-def login(request):
+def app_login(request):
     name = request.data['displayName']
     pwd = request.data['password']
-    author = Author.objects.filter(displayName = name, password = pwd)
-    if len(author):
-        # TODO generate a token response it to client
-        return HttpResponse(json.dumps({
-            'succ': True,
-            'id': str(author[0].id),
-        }))
-    return HttpResponse(json.dumps({
-        'succ': False
-    }))
 
-@api_view(['GET'])
-def individual_post(request, pk):
+    '''
+    author = authenticate(request, username=name, password=pwd)
+    if author is not None:
+    '''
+    try:
+        author = Author.objects.get(displayName=name, password=pwd)
+        # login(request, author)
+
+        return Response({
+            'succ': True,
+            'id': str(author.pk),
+        })
+    except Author.DoesNotExist:
+        return Response({ 'succ': False })
+
+
+class PostDetail(APIView):
     """
     List an individual post
     """
-    if request.method == 'GET':
+    def get(self, request, pk, format=None):
         try:
-            post = Post.objects.filter(postId=uuid.UUID(pk))
+            post = Post.objects.get(postId=uuid.UUID(pk))
         except Post.DoesNotExist:
             return HttpResponse(status=404)
         combined_data = []
-        post_serializer = PostSerializer(post.first())
+        post_serializer = PostSerializer(post)
         return JsonResponse(post_serializer.data)
+
+
+class AuthorPostList(APIView):
+    def get(self, request, pk, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        posts = author.post_set.all().order_by('-publishedOn')
+        serializer = PostSerializer(posts, many=True)
+
+        return Response({ 'type': 'posts', 'items': serializer.data })
+
+    def post(self, request, pk, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        text = request.data['content']
+        title = request.data['title']
+        new_post = Post.objects.create(authorId=author,content=text,title=title)
+        new_post.save()
+
+        return Response({ 'success': True })
+
+class AuthorPostDetail(APIView):
+    def get(self, request, pk, pid, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        post = author.post_set.get(pk=uuid.UUID(pid))
+        serializer = PostSerializer(post)
+
+        data = dict({ 'type': 'post' }, **serializer.data)
+        return Response(data)
+
+    def post(self, request, pk, pid, format=None):
+        text = request.data['content']
+        title = request.data['title']
+        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post.update(content=text, title=title)
+
+        return Response({ 'success': True })
+
+    def delete(self, request, pk, pid, format=None):
+        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post.delete()        
+
+        return Response({ 'success': True })
+
 
 @api_view(['POST'])
 def like_post(request, pk):
-    post = Post.objects.filter(postId=uuid.UUID(pk))
-    author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))
+    post_id = uuid.UUID(pk)
+    author_id = uuid.UUID(request.data['authorId'])
+
+    post = Post.objects.get(postId=post_id)
+    author = Author.objects.get(id=author_id)
     # check if already exists 
-    likes = LikePost.objects.filter(postId=post[0], authorId=author[0])
+    likes = LikePost.objects.filter(postId=post_id, authorId=author_id)
     if len(likes):
         # already liked can not like again
-        return HttpResponse(json.dumps({
-            'succ': False
-        }))
+        return Response({ 'succ': False })
     likepost = LikePost(postId=post[0], authorId=author[0])
     likepost.save()
     # let likecount update with itself + 1
     post.update(likeCount=F('likeCount') + 1)
-    return HttpResponse(json.dumps({
+    return Response({
         'succ': True,
-        'count': post[0].likeCount
-    }))
+        'count': post.likeCount
+    })
 
 @api_view(['GET','POST'])
 def comment_list(request, pk):
@@ -141,6 +270,17 @@ def comment_list(request, pk):
         #     return Response(serializer.data, status=status.HTTP_201_CREATED)
         # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class AuthorDetail(APIView):
+    """
+    List all of an Author's information
+    """
+    def get(self, request, pk, format=None):
+        author = Author.objects.filter(id=pk)
+        author_serializer = AuthorSerializer(author.first())
+        data = dict()
+        data['type'] = 'author'
+        data.update(author_serializer.data)
+        return Response(data)
 '''
 @api_view(['GET'])
 def author_page(request, pk):
@@ -148,46 +288,39 @@ def author_page(request, pk):
     List all information of an Author, and all of their posts
     """
     if request.method == 'GET':
-        author = Author.objects.filter(displayName=pk)
+        author = Author.objects.filter(id=pk)
         author_serializer = AuthorSerializer(author.first())
-        combined_data = []
-        posts = Post.objects.filter(authorId=author.first().id)
+        posts = Post.objects.filter(authorId=pk)
         post_serializer = PostSerializer(posts, many=True)
         combined_data.append(author_serializer.data)
         combined_data.append(post_serializer.data)
         return Response(combined_data)
-
-@api_view(['GET','POST'])
-def new_author(request):
-    """
-    Make a new author
-    """
-    if request.method == 'POST':
-        author = Author(displayName = request.data['displayName'])
-
-@api_view(['GET'])
-def all_authors(request, pk):
-    """
-    List all information of an Author, and all of their posts
-    """
-    if request.method == 'GET':
-        author = Author.objects.filter(displayName=pk)
-        author_serializer = AuthorSerializer(author.first())
-        combined_data = []
-        posts = Post.objects.filter(authorId=author.first().id)
-        post_serializer = PostSerializer(posts, many=True)
-        combined_data.append(author_serializer.data)
-        combined_data.append(post_serializer.data)
-        return Response(combined_data)
-
-    elif request.method == 'POST':
-        serializer = PostSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.saver()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
 '''
+
+class AuthorList(APIView):
+    """
+    List all authors in the server, or register a new author
+    """
+    def get(self, request, format=None):
+        authors = paginate(Author.objects.all().order_by('displayName'), request.query_params)
+        serializer = AuthorSerializer(authors, many=True)
+
+        data = { 'type': 'authors', 'items': serializer.data }
+        return Response(data)
+
+    def post(self, request, format=None):
+        uri = request.build_absolute_uri('/')
+
+        author = Author.objects.create(
+            displayName = request.data['displayName'],
+            password = request.data["password"],
+            host = uri,
+        )
+        author.save()
+        ser = AuthorSerializer(author)
+        return Response(ser.data)
+
+
 '''
 @api_view(['POST'])
 def like(request, pk):
@@ -202,4 +335,3 @@ def like(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 '''
-

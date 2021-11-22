@@ -47,6 +47,22 @@ INSTALLED_APPS = [
     'django_apscheduler',
 ]
 
+# Django Rest Framework
+REST_FRAMEWORK = {
+    # Can change the pagination here according to our preference
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 5,
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+        # Leaving it commented as of now since we don't need token auth
+        # 'rest_framework.authentication.TokenAuthentication'
+    ),
+    'DEFAULT_PARSER_CLASSES': (
+        'rest_framework.parsers.JSONParser'
+    )
+}
+
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',

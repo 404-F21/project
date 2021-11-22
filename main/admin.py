@@ -1,4 +1,4 @@
-# Copyright 2021 Xingjie He, Yifan Wu
+# Copyright 2021 Xingjie He, Yifan Wu, Kanishk Chawla
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@
 
 from django.contrib import admin
 from main.models import Author, Comment, Post, LikePost
-
+from rest_framework.authtoken.admin import TokenAdmin
 
 admin.site.register(Author)
 admin.site.register(Comment)
 admin.site.register(Post)
 admin.site.register(LikePost)
+
+TokenAdmin.raw_id_fields = ('user',)

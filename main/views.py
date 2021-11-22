@@ -271,11 +271,52 @@ def comment_list(request, pk):
         post.update(commentCount=F('commentCount') + 1)
         comment.save()
         return HttpResponse(str(comment))
-        # serializer = PostSerializer(data=request.data['post'])
-        # if serializer.is_valid():
-        #     serializer.saver()
-        #     return Response(serializer.data, status=status.HTTP_201_CREATED)
-        # return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer = PostSerializer(data=request.data['post'])
+        if serializer.is_valid():
+            serializer.saver()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class CommentList(APIView):
+    def get(self, request, postId, format=None):
+        # check if user is authenticated and if not return a 401
+        
+        # https://docs.djangoproject.com/en/dev/ref/models/querysets/#exists
+        post = Post.objects.get(pk=postId)
+        if (post.exists()):
+            # Check if the post is visible for public/friends/whatever
+            #assuming it is visible to all
+
+            comments = Comment.objects.filter(pk=uuid.UUID(postid))
+            if (comments.exists()):
+                paged_comments = paginate(comments, request.query_params)
+                serializer = CommentSerializer(paged_comments, many=True)
+                return JsonResponse(serializer.data, safe=False)
+            else:
+                return Response("There are no comments on the post", status=404)
+        else:
+            # return a 404 response
+            return Response("Post not found", status=404)
+
+    def post(self, request, postid, format=None):
+        # check if user is authenticated and if not return a 401
+        post = Post.objects.get(pk=postId)
+        if (post.exists()):
+
+            author = Author.objects.filter(pk=uuid.UUID(request.data['authorId'])) # ?????????????????? 
+            comment = Comment(
+                postId = post,
+                authorId = author,
+                text = request.data['text']
+            )
+            post.update(commentCount=F('commentCount') + 1)
+            comment.save()
+            return HttpResponse(str(comment))
+
+        else:
+            # return a 404 response
+            return Response("Post not found", status=404)
+
 
 class AuthorDetail(APIView):
     """

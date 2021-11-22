@@ -41,7 +41,8 @@ urlpatterns = [
     # get the specified post details
     path('posts/<pk>', views.PostDetail.as_view()),
     # get the specified post comments
-    path('posts/<pk>/comments/', views.comment_list),
+    # path('posts/<pk>/comments/', views.comment_list),
+    path('posts/<pk>/comments/', views.CommentList.as_view()),
     # post like
     path('post/<pk>/like/', views.like_post),
     path('posts/<pk>/like/', views.like_post),

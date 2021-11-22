@@ -15,49 +15,70 @@
 
 from django.db import models
 import uuid
-from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import User
+# from django.contrib.auth.models import AbstractBaseUser
 from django.utils.translation import gettext_lazy as _
 # from django.contrib.auth import authenticate
 
+class Author(models.Model):
+    # Author Info
 
-class Author(AbstractBaseUser):
-    '''
-    A user who can make posts, friends, comments, and like posts.
-    '''
-
-    '''
-    Private information
-    '''
-    password = models.CharField(max_length=25, default = "", blank=True)
-    '''
-    Public information
-    '''
-    id = models.UUIDField(primary_key=True,
-                          default=uuid.uuid4,
-                          editable=False,
-                          blank=False)
-
+    # will always be appended to the author's URL
+    uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, blank=False)
     url = models.CharField(max_length=150, blank=True, null=True)
 
-    host = models.URLField(blank=True, null=True)
-    displayName = models.CharField(max_length=100, default="", unique=True)
+    # User in the default django table
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    # Potentially the future home of the HATEOS URL for github API
+    host = models.URLField(blank=True, null=True)  # Url of different hosts
+    displayName = models.CharField(max_length=100, unique=True)
+
+    # HATEOS url for GITHUB API???
     github = models.URLField(default="")
 
-    profileImage = models.ImageField(upload_to='profilePics/', blank=True)
-
-    USERNAME_FIELD = "displayName"
-    REQUIRED_FIELDS = ["password"]
-
-    def save(self, *args, **kwargs):
-        if self.url is None:
-            self.url = f'{self.host}author/{self.id}'
-
-        super(Author, self).save(*args, **kwargs)
+    profilePic = models.ImageField(upload_to='profilePics/', blank=True)
 
     def __str__(self):
-        return str(self.id) + ": " + str(self.displayName)
+        return str(self.uid) + ": " + self.displayName
+
+# class Author(AbstractBaseUser):
+#     '''
+#     A user who can make posts, friends, comments, and like posts.
+#     '''
+
+#     '''
+#     Private information
+#     '''
+#     password = models.CharField(max_length=25, default = "", blank=True)
+#     '''
+#     Public information
+#     '''
+#     id = models.UUIDField(primary_key=True,
+#                           default=uuid.uuid4,
+#                           editable=False,
+#                           blank=False)
+
+#     url = models.CharField(max_length=150, blank=True, null=True)
+
+#     host = models.URLField(blank=True, null=True)
+#     displayName = models.CharField(max_length=100, default="", unique=True)
+
+#     # Potentially the future home of the HATEOS URL for github API
+#     github = models.URLField(default="")
+
+#     profileImage = models.ImageField(upload_to='profilePics/', blank=True)
+
+#     USERNAME_FIELD = "displayName"
+#     REQUIRED_FIELDS = ["password"]
+
+#     def save(self, *args, **kwargs):
+#         if self.url is None:
+#             self.url = f'{self.host}author/{self.id}'
+
+#         super(Author, self).save(*args, **kwargs)
+
+#     def __str__(self):
+#         return str(self.id) + ": " + str(self.displayName)
 
 
 class Admin(models.Model):
@@ -70,12 +91,12 @@ class Admin(models.Model):
     password_md5 = models.CharField(max_length=32, blank=False, null=False, verbose_name='AdminPasswordMD5')
 
     def __str__(self):
-        return str(self.id) + ': ' + self.username
+        # return str(self.id) + ': ' + self.username
+        return self.username
 
     def dict(self):
         return {
-            'id': self.id,
-            'username': self.username
+            'username': self.username,
         }
 
 

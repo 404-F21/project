@@ -1,10 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router,Route } from 'react-router-dom';
+import { BrowserRouter as Router, Route } from 'react-router-dom';
 import Home from './pages/home';
 import Login from './pages/login';
 import User from './pages/user';
 import store from './store/store';
-import {Provider} from 'react-redux';
+import { Provider } from 'react-redux';
 import 'antd-mobile/dist/antd-mobile.css';
 import './App.css';
 import Register from './pages/register';
@@ -14,6 +14,7 @@ import IndividualPost from './pages/individualPost';
 import EditInfo from './pages/editInfo';
 import Header from './components/Header';
 import 'antd/dist/antd.css';
+import './iconfont/iconfont.css'
 const App = () => {
   return (
     <Provider store={store}>

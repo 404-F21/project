@@ -118,8 +118,28 @@ WSGI_APPLICATION = 'social.wsgi.application'
 #         'NAME': BASE_DIR / 'db.sqlite3',
 #     }
 # }
+# DATABASES = {}
+# DATABASES['default'] = dj_database_url.config(conn_max_age=600)
+
+# https://stackoverflow.com/questions/26080303/improperlyconfigured-settings-databases-is-improperly-configured-please-supply
+# Answer by Martjin pieters
 DATABASES = {}
-DATABASES['default'] = dj_database_url.config(conn_max_age=600)
+if os.environ.get('ON_HEROKU'):
+    # DATABASES['default'] = dj_database_url.config(conn_max_age=600)
+    
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'postgresql',
+        }
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

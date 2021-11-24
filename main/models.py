@@ -24,7 +24,7 @@ class Author(models.Model):
     # Author Info
 
     # will always be appended to the author's URL
-    uid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, blank=False)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, blank=False)
     url = models.CharField(max_length=150, blank=True, null=True)
 
     # User in the default django table
@@ -39,7 +39,7 @@ class Author(models.Model):
     profilePic = models.ImageField(upload_to='profilePics/', blank=True)
 
     def __str__(self):
-        return str(self.uid) + ": " + self.displayName
+        return str(self.id) + ": " + self.displayName
 
 # class Author(AbstractBaseUser):
 #     '''

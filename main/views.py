@@ -75,7 +75,8 @@ class PostList(APIView):
             author = Author.objects.all().first()
             text = request.data['content']
             title = request.data['title']
-            new_post = Post(authorId=author,content=text,title=title)
+            new_post = Post(author=author,content=text,title=title)
+            # new_post = Post(authorId=author,content=text,title=title)
             new_post.save()
 
         #return Response(request.data)
@@ -287,7 +288,7 @@ class CommentList(APIView):
             # Check if the post is visible for public/friends/whatever
             #assuming it is visible to all
 
-            comments = Comment.objects.filter(pk=uuid.UUID(postid))
+            comments = Comment.objects.filter(pk=uuid.UUID(postId))
             if (comments.exists()):
                 paged_comments = paginate(comments, request.query_params)
                 serializer = CommentSerializer(paged_comments, many=True)
@@ -298,7 +299,7 @@ class CommentList(APIView):
             # return a 404 response
             return Response("Post not found", status=404)
 
-    def post(self, request, postid, format=None):
+    def post(self, request, postId, format=None):
         # check if user is authenticated and if not return a 401
         post = Post.objects.get(pk=postId)
         if (post.exists()):

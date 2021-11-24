@@ -12,17 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
+import base64
 
 from django.db.models.query import QuerySet
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from main.models import Author, Comment, Following, Post, LikePost
+from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.db.models import F
+from main.response import success, failure, no_auth
+from django.core.paginator import Paginator
+from main.decorator import need_admin
 # from django.contrib.auth import authenticate, login
 import uuid
+import json
+import hashlib
 from typing import Dict
 
 
@@ -44,7 +51,7 @@ class PostList(APIView):
 
     def get(self, request, format=None):
         all_posts = (Post.objects.filter(visibility="PUBLIC")
-                                 .order_by('-publishedOn'))
+                     .order_by('-publishedOn'))
         paged_posts = paginate(all_posts, request.query_params)
 
         post_serializer = PostSerializer(paged_posts, many=True)
@@ -52,7 +59,7 @@ class PostList(APIView):
         response = JsonResponse(data, safe=False)
         return response
 
-    def post(self, request, format=None):
+    def post(self, request, *args, **kwargs):
 
         #print(request.body)
         #print(request.data)
@@ -61,7 +68,7 @@ class PostList(APIView):
             author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
             text = request.data['content']
             title = request.data['title']
-            new_post = Post(authorId=author,content=text,title=title)
+            new_post = Post(author=author,content=text,title=title)
             new_post.save()
             
         elif request.content_type == "application/x-www-form-urlencoded":
@@ -336,7 +343,271 @@ def like(request, pk):
 
 '''
 
+<<<<<<< HEAD
 from django.shortcuts import render
 # Create your views here.
 def render_html(request):
     return render(request, 'index.html') 
+=======
+
+# APIs for admin functions
+# ============================
+def admin_login(request):
+    """
+    Admin login
+    """
+    if request.method == 'POST':
+        json_obj = json.loads(request.body.decode())
+        username = json_obj.get('username')
+        password = json_obj.get('password')
+        if not username or not password:
+            return failure('arguments not enough')
+
+        # Check if the user exists
+        try:
+            admin = Admin.objects.get(username=username)
+        except Admin.DoesNotExist:
+            return failure('user not exists')
+        password_md5 = hashlib.md5(password.encode()).hexdigest()
+
+        if admin.password_md5 == password_md5:
+            # Password correct, admin login
+            request.session['username'] = username
+            request.session['role'] = 'admin'
+            return HttpResponse(json.dumps({
+                'status': 'ok',
+                'type': 'account',
+                'currentAuthority': 'admin',
+            }))
+        else:
+            # Password incorrect, fail
+            return HttpResponse(json.dumps({
+                'status': 'error',
+                'type': 'account',
+                'currentAuthority': 'guest',
+            }))
+    else:
+        return failure('POST')
+
+
+def admin_current_user(request):
+    """
+    Get current login user
+    """
+    if request.method == 'GET':
+        if request.session.get('username', None) is not None:
+            return HttpResponse(json.dumps({
+                'success': True,
+                'data': {
+                    'name': request.session['username'],
+                    'avatar': 'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png',
+                    'access': request.session['role']
+                }
+            }))
+        else:
+            r = HttpResponse(json.dumps({
+                'data': {
+                    'isLogin': False,
+                },
+                'errorCode': '401',
+                'errorMessage': 'Login please!',
+                'success': True
+            }))
+            r.status_code = 401
+            return r
+    else:
+        return failure('GET')
+
+
+def admin_logout(request):
+    """
+    Admin logout
+    """
+    del request.session['username']
+    del request.session['role']
+    return success(None)
+
+
+@need_admin
+def admin_list(request):
+    """
+    Get admin users list
+    """
+    if request.method == 'GET':
+        # Pagination
+        current = request.GET.get('current')
+        page_size = request.GET.get('pageSize')
+        if not current or not page_size:
+            return failure('arguments not enough')
+        admins = Admin.objects.all()
+        page = Paginator(admins, page_size).page(current)
+        obj_list = page.object_list
+        results = []
+        for admin in obj_list:
+            results.append(admin.dict())
+        return success({
+            'data': results,
+            'total': admins.count()
+        })
+    else:
+        return failure('GET')
+
+
+@need_admin
+def admin_change_password(request):
+    """
+    Change admin user's password
+    """
+    if request.method == 'POST':
+        json_obj = json.loads(request.body.decode())
+        username = json_obj.get('username')
+        password = json_obj.get('password')
+        if not username or not password:
+            return failure('arguments not enough')
+        # Check if the user exists
+        try:
+            admin = Admin.objects.get(username=username)
+        except Admin.DoesNotExist:
+            return failure('user not exists')
+        # Change the password
+        password_md5 = hashlib.md5(password.encode()).hexdigest()
+        admin.password_md5 = password_md5
+        admin.save()
+        return success(None)
+    else:
+        return failure('POST')
+
+
+@need_admin
+def admin_node_list(request):
+    """
+    Get node list
+    """
+    if request.method == 'GET':
+        # Pagination
+        current = request.GET.get('current')
+        page_size = request.GET.get('pageSize')
+        node_type = request.GET.get('type')
+        if not current or not page_size or not node_type:
+            return failure('arguments not enough')
+        nodes = Node.objects.filter(node_type=node_type)
+        page = Paginator(nodes, page_size).page(current)
+        obj_list = page.object_list
+        results = []
+        for node in obj_list:
+            results.append(node.dict())
+        return success({
+            'data': results,
+            'total': nodes.count()
+        })
+    else:
+        return failure('GET')
+
+
+@need_admin
+def admin_create_node(request):
+    """
+    Create node
+    """
+    if request.method == 'POST':
+        json_obj = json.loads(request.body.decode())
+        host = json_obj.get('host')
+        password = json_obj.get('password')
+        node_type = json_obj.get('type')
+        # If type of new node is FETCH, then this operation need an another argument: username for HTTP Basic Auth
+        username = ''
+        if node_type == 'FETCH':
+            username = json_obj.get('username')
+            if not username:
+                return failure('arguments not enough')
+        if not host or not password or not node_type:
+            return failure('arguments not enough')
+        # Check if particular node already exists
+        try:
+            Node.objects.get(host=host)
+        except Node.DoesNotExist:
+            password_md5 = hashlib.md5(password.encode()).hexdigest()
+            node = Node(
+                host=host,
+                password_md5=password_md5,
+                create_time=time.time(),
+                http_username=username,
+                node_type=node_type
+            )
+            node.save()
+            return success(None)
+        return failure('This host address already exists.')
+    else:
+        return failure('POST')
+
+
+@need_admin
+def admin_delete_node(request):
+    """
+    Delete node
+    """
+    if request.method == 'GET':
+        node_id = request.GET.get('id')
+        if not node_id:
+            return failure('arguments not enough')
+        try:
+            node = Node.objects.get(nodeId=node_id)
+        except Node.DoesNotExist:
+            return failure('The node not exists')
+        node.delete()
+        return success(None)
+    else:
+        return failure('GET')
+
+
+@need_admin
+def admin_set_node_approved(request):
+    """
+    Set if a node is allowed to connect
+    """
+    if request.method == 'POST':
+        json_obj = json.loads(request.body.decode())
+        node_id = json_obj.get('id')
+        if_approved = json_obj.get('approved')
+        if not node_id or not if_approved:
+            return failure('arguments not enough')
+        # Check if particular node already exists
+        try:
+            node = Node.objects.get(nodeId=node_id)
+        except Node.DoesNotExist:
+            return failure('The node not exists.')
+        node.if_approved = str(if_approved) == '1'
+        node.save()
+        return success(None)
+    else:
+        return failure('POST')
+
+
+def get_public_data(request):
+    """
+    Get public data on this server, used for providing data to other nodes
+    Every different node has its own access password
+    """
+    if request.method == 'GET':
+        if 'HTTP_AUTHORIZATION' in request.META:
+            auth = request.META['HTTP_AUTHORIZATION'].split()
+            if len(auth) == 2:
+                if auth[0].lower() == "basic":
+                    node_id, password = base64.b64decode(auth[1]).decode().split(':')
+                    password_md5 = hashlib.md5(password.encode()).hexdigest()
+                    try:
+                        node = Node.objects.get(nodeId=node_id)
+                    except Node.DoesNotExist:
+                        return failure('id not found')
+                    if not node.if_approved or node.password_md5 != password_md5:
+                        # Password is incorrect
+                        return no_auth()
+                    public_posts = Post.objects.filter(visibility='public')
+                    result = []
+                    for post in public_posts:
+                        result.append(post.dict())
+                    return success(result)
+        return no_auth()
+    else:
+        return failure('GET')
+>>>>>>> e9e5bddd (Add admin frontend and matching APIs)

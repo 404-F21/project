@@ -45,5 +45,27 @@ urlpatterns = [
     # post like
     path('post/<pk>/like/', views.like_post),
     path('posts/<pk>/like/', views.like_post),
-    path('', views.render_html)
+    path('', views.render_html),
+
+    # admin login
+    path('admin/login/', views.admin_login),
+    # admin logout
+    path('admin/logout/', views.admin_logout),
+    # get admin users list
+    path('admin/list/', views.admin_list),
+    # change admin user's password
+    path('admin/password/', views.admin_change_password),
+    # get nodes list
+    path('admin/node/list/', views.admin_node_list),
+    # create node
+    path('admin/node/create/', views.admin_create_node),
+    # delete node
+    path('admin/node/delete/', views.admin_delete_node),
+    # set node permission
+    path('admin/node/approved/', views.admin_set_node_approved),
+    # get current admin user login
+    path('admin/current/', views.admin_current_user),
+
+    # provide public data to other nodes
+    path('connect/public/', views.get_public_data)
 ]

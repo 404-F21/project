@@ -16,32 +16,71 @@ import time
 from django.db import models
 import uuid
 from django.contrib.auth.models import User
-# from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import AbstractBaseUser
 from django.utils.translation import gettext_lazy as _
 # from django.contrib.auth import authenticate
 
-class Author(models.Model):
-    # Author Info
+# class Author(models.Model):
+#     # Author Info
+#
+#     '''
+#     Private information
+#     '''
+#     password = models.CharField(max_length=25, default = "", blank=True)
+#
+#     # will always be appended to the author's URL
+#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, blank=False)
+#     url = models.CharField(max_length=150, blank=True, null=True)
+#
+#     # User in the default django table
+#     user = models.ForeignKey(User, on_delete=models.CASCADE)
+#
+#     host = models.URLField(blank=True, null=True)  # Url of different hosts
+#     displayName = models.CharField(max_length=100, unique=True)
+#
+#     # HATEOS url for GITHUB API???
+#     github = models.URLField(default="")
+#
+#     profilePic = models.ImageField(upload_to='profilePics/', blank=True)
+#
+#     def save(self, *args, **kwargs):
+#         if self.url is None:
+#             self.url = f'{self.host}author/{self.id}'
+#
+#         super(Author, self).save(*args, **kwargs)
+#
+#     def __str__(self):
+#         return str(self.id) + ": " + self.displayName
+
+class Author(AbstractBaseUser):
+    '''
+    A user who can make posts, friends, comments, and like posts.
+    '''
 
     '''
     Private information
     '''
     password = models.CharField(max_length=25, default = "", blank=True)
+    '''
+    Public information
+    '''
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False,
+                          blank=False)
 
-    # will always be appended to the author's URL
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, blank=False)
     url = models.CharField(max_length=150, blank=True, null=True)
 
-    # User in the default django table
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    host = models.URLField(blank=True, null=True)
+    displayName = models.CharField(max_length=100, default="", unique=True)
 
-    host = models.URLField(blank=True, null=True)  # Url of different hosts
-    displayName = models.CharField(max_length=100, unique=True)
-
-    # HATEOS url for GITHUB API???
+    # Potentially the future home of the HATEOS URL for github API
     github = models.URLField(default="")
 
-    profilePic = models.ImageField(upload_to='profilePics/', blank=True)
+    profileImage = models.ImageField(upload_to='profilePics/', blank=True)
+
+    USERNAME_FIELD = "displayName"
+    REQUIRED_FIELDS = ["password"]
 
     def save(self, *args, **kwargs):
         if self.url is None:
@@ -50,46 +89,16 @@ class Author(models.Model):
         super(Author, self).save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.id) + ": " + self.displayName
+        return str(self.id) + ": " + str(self.displayName)
 
-# class Author(AbstractBaseUser):
-#     '''
-#     A user who can make posts, friends, comments, and like posts.
-#     '''
-
-#     '''
-#     Private information
-#     '''
-#     password = models.CharField(max_length=25, default = "", blank=True)
-#     '''
-#     Public information
-#     '''
-#     id = models.UUIDField(primary_key=True,
-#                           default=uuid.uuid4,
-#                           editable=False,
-#                           blank=False)
-
-#     url = models.CharField(max_length=150, blank=True, null=True)
-
-#     host = models.URLField(blank=True, null=True)
-#     displayName = models.CharField(max_length=100, default="", unique=True)
-
-#     # Potentially the future home of the HATEOS URL for github API
-#     github = models.URLField(default="")
-
-#     profileImage = models.ImageField(upload_to='profilePics/', blank=True)
-
-#     USERNAME_FIELD = "displayName"
-#     REQUIRED_FIELDS = ["password"]
-
-#     def save(self, *args, **kwargs):
-#         if self.url is None:
-#             self.url = f'{self.host}author/{self.id}'
-
-#         super(Author, self).save(*args, **kwargs)
-
-#     def __str__(self):
-#         return str(self.id) + ": " + str(self.displayName)
+    def dict(self):
+        return {
+            'id': str(self.id),
+            'url': self.url,
+            'host': self.host,
+            'displayName': self.displayName,
+            'github': self.github
+        }
 
 
 class FriendRequest(models.Model):
@@ -191,8 +200,8 @@ class Post(models.Model):
 
     def dict(self):
         return {
-            'postId': str(self.postId),
-            'author': self.author.url,
+            'id': str(self.postId),
+            'author': self.author.dict(),
             'title': self.title,
             'source': self.source,
             'origin': self.origin,
@@ -203,7 +212,7 @@ class Post(models.Model):
             'commentCount': self.commentCount,
             'likeCount': self.likeCount,
             'commentUrl': self.commentUrl,
-            'publishedOn': self.publishedOn.strftime('%Y/%m/%d %H:%M:%S')
+            'published': self.publishedOn.strftime('%Y/%m/%d %H:%M:%S')
         }
 
 #     def __str__(self):

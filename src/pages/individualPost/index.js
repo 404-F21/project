@@ -1,3 +1,16 @@
+/* Copyright 2021 Nathan Drapeza, Xingjie He, Yifan Wu
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *		http://www.apache.org/licenses/LICENSE-2.0
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import React, { useCallback, useEffect, useState } from 'react'
 import { List, NavBar, Icon } from 'antd-mobile';
 
@@ -26,13 +39,13 @@ const IndividualPost = (props) => {
             message.warn('please input your comment')
             return
         }
-        const result = await client.post(`post/${postData.postId}/comments/`, {
+        const result = await client.post(`posts/${postData.postId}/comments/`, {
             authorId: postData.authorId.id,
             postId: postData.postId,
             text: commentInput,
         })
         if (result.status == 200) {
-            message.success('comment successfully!')
+            message.success('comment posted successfully!')
             setCommentInput('')
             updateCommentList()
         }
@@ -104,7 +117,7 @@ const IndividualPost = (props) => {
                                 <div className='username'>{postData?.authorId?.displayName}</div>
                             </div>
                             <h3>{postData?.title}</h3>
-                            <p>{postData?.post_text}</p>
+                            <p>{postData?.content}</p>
                             <div className='like'>
                                 <div>
                                     <i className="iconfont icon-xiaoxi"></i>

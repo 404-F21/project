@@ -12,9 +12,11 @@ python-dotenv = "*"
 dj-database-url = "*"
 django-heroku = "*"
 gunicorn = "*"
+django-apscheduler = "*"
 
 [dev-packages]
 django-stubs = "*"
+httpie = "*"
 
 [requires]
 python_version = "3.8"

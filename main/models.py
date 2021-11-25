@@ -325,6 +325,9 @@ class Node(models.Model):
     http_username = \
         models.CharField(max_length=512, blank=True, null=True, default='', verbose_name='Http Auth Username(FETCH)')
 
+    http_password = \
+        models.CharField(max_length=512, blank=True, null=True, default='', verbose_name='Http Auth Password(FETCH)')
+
     def dict(self):
         return {
             'id': str(self.nodeId),

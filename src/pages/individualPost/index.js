@@ -138,7 +138,7 @@ const IndividualPost = (props) => {
                 </div>
                 <div className="top-news bgw">
                     <div>user info</div>
-                    <div>display name: <span>{postData?.authorId?.displayName}</span></div>
+                    <div>display name: <span>{postData?.author?.displayName}</span></div>
                 </div>
             </div>
 

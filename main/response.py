@@ -14,10 +14,12 @@
 
 import json
 import time
+import datetime
+import requests
 from django.shortcuts import HttpResponse
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import DjangoJobStore
-from main.models import Node, Post
+from main.models import Node, Post, Author
 
 
 def __result(code: int, message: str, data: any) -> HttpResponse:
@@ -44,14 +46,51 @@ def no_auth() -> HttpResponse:
 
 
 # Setup a timer to fetch nodes content
-# task_manager = BackgroundScheduler()
-# task_manager.add_jobstore(DjangoJobStore())
-#
-#
-# def fetch_content():
-#     fetch_nodes = Node.objects.filter(node_type='FETCH')
-#     for node in fetch_nodes:
-#         url = node.host
-#
-#
-# task_manager.add_job(fetch_content, 'cron', id='fetch_content', replace_existing=True, hour=0, minute=1, second=0)
+print('Timer')
+task_manager = BackgroundScheduler()
+task_manager.add_jobstore(DjangoJobStore())
+
+
+def fetch_posts():
+    print('Fetching...')
+    fetch_nodes = Node.objects.filter(node_type='FETCH')
+    for node in fetch_nodes:
+        url = node.host
+        if not node.if_approved:
+            print(f"{url}:Ignored")
+            continue
+        print(f"{url}:Fetching")
+        username = node.http_username
+        password = node.http_password
+        result = requests.get(url, auth=(username, password))
+        json_obj = result.json()
+        if json_obj['type'] == 'posts':
+            for item in json_obj['items']:
+                author = item['author']
+                try:
+                    author = Author.objects.get(url=author['url'])
+                except Author.DoesNotExist:
+                    author = Author.objects.create(
+                        url=author['url'],
+                        host=author['host'],
+                        displayName=author['displayName'],
+                        github=author['github']
+                    )
+                Post.objects.create(
+                    author=author,
+                    title=item['title'],
+                    source=item['source'],
+                    origin=item['origin'],
+                    description=item['description'],
+                    content=item['content'],
+                    contentType=item['contentType'],
+                    categories=', '.join(list(item['categories'])),
+                    commentCount=0,
+                    publishedOn=datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ'),
+                    visibility=str(item['visibility']).lower(),
+                    unlisted=item['unlisted']
+                )
+
+
+task_manager.add_job(fetch_posts, 'interval', id='fetch_content', replace_existing=True, seconds=60)
+task_manager.start()

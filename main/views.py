@@ -623,14 +623,24 @@ def admin_create_node(request):
         try:
             Node.objects.get(host=host)
         except Node.DoesNotExist:
-            password_md5 = hashlib.md5(password.encode()).hexdigest()
-            node = Node(
-                host=host,
-                password_md5=password_md5,
-                create_time=time.time(),
-                http_username=username,
-                node_type=node_type
-            )
+            if node_type == 'SHARE':
+                password_md5 = hashlib.md5(password.encode()).hexdigest()
+                node = Node(
+                    host=host,
+                    password_md5=password_md5,
+                    create_time=time.time(),
+                    http_username=username,
+                    node_type=node_type
+                )
+            else:
+                node = Node(
+                    host=host,
+                    password_md5='',
+                    create_time=time.time(),
+                    http_username=username,
+                    http_password=password,
+                    node_type=node_type
+                )
             node.save()
             return success(None)
         return failure('This host address already exists.')
@@ -705,7 +715,9 @@ def get_public_post(request):
                     public_posts = Post.objects.filter(visibility='public')
                     result = []
                     for post in public_posts:
-                        result.append(post.dict())
+                        p = post.dict()
+                        p['type'] = 'post'
+                        result.append(p)
                     return JsonResponse({
                         'type': 'posts',
                         'items': result
@@ -738,7 +750,9 @@ def get_public_author(request):
                     authors = Author.objects.all()
                     result = []
                     for author in authors:
-                        result.append(author.dict())
+                        a = author.dict()
+                        a['type'] = 'author'
+                        result.append(a)
                     return JsonResponse({
                         "type": "authors",
                         "items": result

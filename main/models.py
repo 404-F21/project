@@ -174,6 +174,8 @@ class Post(models.Model):
     author = models.ForeignKey(Author,
                                related_name='post_set',
                                on_delete=models.CASCADE)
+    # Used to store id of post from other nodes, to avoid repeat of fetch
+    remoteId = models.CharField(max_length=512, blank=True, null=True, default='')
 
     title = models.CharField(max_length=100, default="")
     source = models.URLField(null=True, blank=True)

@@ -76,20 +76,24 @@ def fetch_posts():
                         displayName=author['displayName'],
                         github=author['github']
                     )
-                Post.objects.create(
-                    author=author,
-                    title=item['title'],
-                    source=item['source'],
-                    origin=item['origin'],
-                    description=item['description'],
-                    content=item['content'],
-                    contentType=item['contentType'],
-                    categories=', '.join(list(item['categories'])),
-                    commentCount=0,
-                    publishedOn=datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ'),
-                    visibility=str(item['visibility']).lower(),
-                    unlisted=item['unlisted']
-                )
+                try:
+                    Post.objects.get(remoteId=item['id'])
+                except Post.DoesNotExist:
+                    Post.objects.create(
+                        author=author,
+                        remoteId=item['id'],
+                        title=item['title'],
+                        source=item['source'],
+                        origin=item['origin'],
+                        description=item['description'],
+                        content=item['content'],
+                        contentType=item['contentType'],
+                        categories=', '.join(list(item['categories'])),
+                        commentCount=0,
+                        publishedOn=datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ'),
+                        visibility=str(item['visibility']).lower(),
+                        unlisted=item['unlisted']
+                    )
 
 
 task_manager.add_job(fetch_posts, 'interval', id='fetch_content', replace_existing=True, seconds=60)

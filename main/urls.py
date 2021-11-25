@@ -49,26 +49,28 @@ urlpatterns = [
 
 
     # admin login
-    path('service/admin/login/', views.admin_login),
+    path('admin/login/', views.admin_login),
     # admin logout
-    path('service/admin/logout/', views.admin_logout),
+    path('admin/logout/', views.admin_logout),
     # get admin users list
-    path('service/admin/list/', views.admin_list),
+    path('admin/list/', views.admin_list),
     # create admin
-    path('service/admin/create/', views.admin_create_admin),
+    path('admin/create/', views.admin_create_admin),
     # change admin user's password
-    path('service/admin/password/', views.admin_change_password),
+    path('admin/password/', views.admin_change_password),
     # get nodes list
-    path('service/admin/node/list/', views.admin_node_list),
+    path('admin/node/list/', views.admin_node_list),
     # create node
-    path('service/admin/node/create/', views.admin_create_node),
+    path('admin/node/create/', views.admin_create_node),
     # delete node
-    path('service/admin/node/delete/', views.admin_delete_node),
+    path('admin/node/delete/', views.admin_delete_node),
     # set node permission
-    path('service/admin/node/approved/', views.admin_set_node_approved),
+    path('admin/node/approved/', views.admin_set_node_approved),
     # get current admin user login
-    path('service/admin/current/', views.admin_current_user),
+    path('admin/current/', views.admin_current_user),
 
-    # provide public data to other nodes
-    path('connect/public/', views.get_public_data)
+    # provide public posts to other nodes
+    path('connect/public/', views.get_public_post),
+    # provide authors to other nodes
+    path('connect/public/author/', views.get_public_author)
 ]

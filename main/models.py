@@ -23,6 +23,11 @@ from django.utils.translation import gettext_lazy as _
 class Author(models.Model):
     # Author Info
 
+    '''
+    Private information
+    '''
+    password = models.CharField(max_length=25, default = "", blank=True)
+
     # will always be appended to the author's URL
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, blank=False)
     url = models.CharField(max_length=150, blank=True, null=True)
@@ -37,6 +42,12 @@ class Author(models.Model):
     github = models.URLField(default="")
 
     profilePic = models.ImageField(upload_to='profilePics/', blank=True)
+
+    def save(self, *args, **kwargs):
+        if self.url is None:
+            self.url = f'{self.host}author/{self.id}'
+
+        super(Author, self).save(*args, **kwargs)
 
     def __str__(self):
         return str(self.id) + ": " + self.displayName
@@ -79,25 +90,6 @@ class Author(models.Model):
 
 #     def __str__(self):
 #         return str(self.id) + ": " + str(self.displayName)
-
-
-class Admin(models.Model):
-    """I'll do this, guy. calm down"""
-    """
-    Model for server admin
-    """
-    username = models.CharField(max_length=128, blank=False, null=False, verbose_name='AdminUsername')
-
-    password_md5 = models.CharField(max_length=32, blank=False, null=False, verbose_name='AdminPasswordMD5')
-
-    def __str__(self):
-        # return str(self.id) + ': ' + self.username
-        return self.username
-
-    def dict(self):
-        return {
-            'username': self.username,
-        }
 
 
 class FriendRequest(models.Model):

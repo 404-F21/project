@@ -676,7 +676,7 @@ def admin_set_node_approved(request):
 
 
 @csrf_exempt
-def get_public_data(request):
+def get_public_post(request):
     """
     Get public data on this server, used for providing data to other nodes
     Every different node has its own access password
@@ -704,3 +704,32 @@ def get_public_data(request):
     else:
         return failure('GET')
 
+
+@csrf_exempt
+def get_public_author(request):
+    """
+    Get authors on this server, used for providing data to other nodes
+    Every different node has its own access password
+    """
+    if request.method == 'GET':
+        if 'HTTP_AUTHORIZATION' in request.META:
+            auth = request.META['HTTP_AUTHORIZATION'].split()
+            if len(auth) == 2:
+                if auth[0].lower() == "basic":
+                    node_id, password = base64.b64decode(auth[1]).decode().split(':')
+                    password_md5 = hashlib.md5(password.encode()).hexdigest()
+                    try:
+                        node = Node.objects.get(nodeId=node_id)
+                    except Node.DoesNotExist:
+                        return failure('id not found')
+                    if not node.if_approved or node.password_md5 != password_md5:
+                        # Password is incorrect
+                        return no_auth()
+                    authors = Author.objects.all()
+                    result = []
+                    for author in authors:
+                        result.append(author.dict())
+                    return success(result)
+        return no_auth()
+    else:
+        return failure('GET')

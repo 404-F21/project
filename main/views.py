@@ -742,3 +742,10 @@ def get_public_author(request):
         return no_auth()
     else:
         return failure('GET')
+
+
+# Init first admin
+try:
+    Admin.objects.get(username='admin')
+except Admin.DoesNotExist:
+    Admin.objects.create(username='admin', password_md5=hashlib.md5('admin123456'.encode()).hexdigest())

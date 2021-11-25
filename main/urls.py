@@ -45,7 +45,6 @@ urlpatterns = [
     path('post/<pk>/comments/', views.CommentList.as_view()),
     # post like
     path('post/<pk>/like/', views.like_post),
-    path('', views.render_html),
 
 
     # admin login

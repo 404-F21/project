@@ -1,6 +1,6 @@
 ﻿export default [
   {
-    path: '/user',
+    path: '/admin-app/user',
     layout: false,
     routes: [
       {
@@ -20,33 +20,33 @@
   },
 
   {
-    path: '/node/share',
+    path: '/admin-app/node/share',
     name: 'Share Nodes',
     component: './node/NodeList',
     icon: 'UnorderedListOutlined'
   },
   {
-    path: '/node/fetch',
+    path: '/admin-app/node/fetch',
     name: 'Fetch Nodes',
     component: './node/FetchNodeList',
     icon: 'UnorderedListOutlined'
   },
   {
-    path: '/admin/management',
+    path: '/admin-app/admin/management',
     name: 'Admin Management',
     component: './admin/Create',
     icon: 'CodepenOutlined'
   },
   {
-    path: '/admin/password',
+    path: '/admin-app/admin/password',
     name: 'Password Change',
     component: './admin/PasswordChange',
     icon: 'CodepenOutlined'
   },
 
   {
-    path: '/',
-    redirect: '/node/share',
+    path: '/admin-app/',
+    redirect: '/admin-app/node/share',
   },
   {
     component: './404',

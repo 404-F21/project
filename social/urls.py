@@ -21,4 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('service/', include('main.urls')),
     path('', views.render_html),
+    path('admin-app/', views.render_admin)
 ]

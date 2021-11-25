@@ -408,6 +408,9 @@ from django.shortcuts import render
 def render_html(request):
     return render(request, 'index.html')
 
+def render_admin(request):
+    return render(request, 'ant-design-pro/index.html')
+
 
 # APIs for admin functions
 # ============================

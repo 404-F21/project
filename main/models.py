@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+import time
 from django.db import models
 import uuid
 from django.contrib.auth.models import User
@@ -278,6 +278,24 @@ class Inbox(models.Model):
     pass
 
 
+class Admin(models.Model):
+    """
+    Model for server admin
+    """
+    username = models.CharField(max_length=128, blank=False, null=False, verbose_name='Admin Username')
+
+    password_md5 = models.CharField(max_length=32, blank=False, null=False, verbose_name='Admin Password MD5')
+
+    def __str__(self):
+        return str(self.id) + ': ' + self.username
+
+    def dict(self):
+        return {
+            'id': self.id,
+            'username': self.username
+        }
+
+
 class Node(models.Model):
     """
     Nodes
@@ -295,7 +313,7 @@ class Node(models.Model):
 
     host = models.CharField(max_length=512, blank=False, null=False, verbose_name='Host URL')
 
-    create_time = models.FloatField(blank=False, null=False, verbose_name='Node create timestamp')
+    create_time = models.FloatField(blank=False, null=False, default=time.time(), verbose_name='Node create timestamp')
 
     node_type = models.CharField(max_length=5, blank=False, null=False, choices=TYPE_CHOICE, verbose_name='Node Type')
 

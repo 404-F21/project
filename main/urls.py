@@ -45,28 +45,30 @@ urlpatterns = [
     path('posts/<pk>/comments/', views.CommentList.as_view()),
     # post like
     path('post/<pk>/like/', views.like_post),
-    path('posts/<pk>/like/', views.like_post),
     path('', views.render_html),
 
+
     # admin login
-    path('admin/login/', views.admin_login),
+    path('service/admin/login/', views.admin_login),
     # admin logout
-    path('admin/logout/', views.admin_logout),
+    path('service/admin/logout/', views.admin_logout),
     # get admin users list
-    path('admin/list/', views.admin_list),
+    path('service/admin/list/', views.admin_list),
+    # create admin
+    path('service/admin/create/', views.admin_create_admin),
     # change admin user's password
-    path('admin/password/', views.admin_change_password),
+    path('service/admin/password/', views.admin_change_password),
     # get nodes list
-    path('admin/node/list/', views.admin_node_list),
+    path('service/admin/node/list/', views.admin_node_list),
     # create node
-    path('admin/node/create/', views.admin_create_node),
+    path('service/admin/node/create/', views.admin_create_node),
     # delete node
-    path('admin/node/delete/', views.admin_delete_node),
+    path('service/admin/node/delete/', views.admin_delete_node),
     # set node permission
-    path('admin/node/approved/', views.admin_set_node_approved),
+    path('service/admin/node/approved/', views.admin_set_node_approved),
     # get current admin user login
-    path('admin/current/', views.admin_current_user),
+    path('service/admin/current/', views.admin_current_user),
 
     # provide public data to other nodes
-    path('connect/public/', views.get_public_data),
+    path('connect/public/', views.get_public_data)
 ]

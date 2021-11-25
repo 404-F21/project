@@ -13,13 +13,17 @@
 # limitations under the License.
 
 
+# Register your models here.
+from main.models import Author, Comment, Post, LikePost, Admin, Node
 from django.contrib import admin
-from main.models import Author, Comment, Post, LikePost
 # from rest_framework.authtoken.admin import TokenAdmin
+
 
 admin.site.register(Author)
 admin.site.register(Comment)
 admin.site.register(Post)
 admin.site.register(LikePost)
+admin.site.register(Admin)
+admin.site.register(Node)
 
 # TokenAdmin.raw_id_fields = ('user',)

@@ -19,6 +19,18 @@ from django.db.models.query import QuerySet
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from rest_framework import mixins
+from rest_framework import generics
+from main.models import Author, Comment, Post, LikePost, Admin, Node
+from main.serializers import AuthorSerializer, CommentSerializer, PostSerializer
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render
+from main.decorator import need_admin
+from main.response import success, failure, no_auth
+from django.db.models import F
+from django.core.paginator import Paginator
+
 from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
@@ -27,8 +39,14 @@ from main.response import success, failure, no_auth
 from django.core.paginator import Paginator
 from main.decorator import need_admin
 # from django.contrib.auth import authenticate, login
+
 import uuid
 import json
+
+import time
+import hashlib
+import base64
+from django.views.decorators.csrf import csrf_exempt
 import hashlib
 from typing import Dict
 
@@ -388,10 +406,12 @@ def like(request, pk):
 from django.shortcuts import render
 # Create your views here.
 def render_html(request):
-    return render(request, 'index.html') 
+    return render(request, 'index.html')
+
 
 # APIs for admin functions
 # ============================
+@csrf_exempt
 def admin_login(request):
     """
     Admin login
@@ -430,6 +450,7 @@ def admin_login(request):
         return failure('POST')
 
 
+@csrf_exempt
 def admin_current_user(request):
     """
     Get current login user
@@ -459,6 +480,7 @@ def admin_current_user(request):
         return failure('GET')
 
 
+@csrf_exempt
 def admin_logout(request):
     """
     Admin logout
@@ -468,6 +490,7 @@ def admin_logout(request):
     return success(None)
 
 
+@csrf_exempt
 @need_admin
 def admin_list(request):
     """
@@ -493,6 +516,31 @@ def admin_list(request):
         return failure('GET')
 
 
+@csrf_exempt
+@need_admin
+def admin_create_admin(request):
+    """
+    Create admin
+    """
+    if request.method == 'POST':
+        json_obj = json.loads(request.body.decode())
+        username = json_obj.get('username')
+        password = json_obj.get('password')
+        if not username or not password:
+            return failure('arguments not enough')
+        # Check if the user exists
+        try:
+            Admin.objects.get(username=username)
+        except Admin.DoesNotExist:
+            password_md5 = hashlib.md5(password.encode()).hexdigest()
+            Admin.objects.create(username=username, password_md5=password_md5)
+            return success(None)
+        return failure('User already exists.')
+    else:
+        return failure('POST')
+
+
+@csrf_exempt
 @need_admin
 def admin_change_password(request):
     """
@@ -518,6 +566,7 @@ def admin_change_password(request):
         return failure('POST')
 
 
+@csrf_exempt
 @need_admin
 def admin_node_list(request):
     """
@@ -544,6 +593,7 @@ def admin_node_list(request):
         return failure('GET')
 
 
+@csrf_exempt
 @need_admin
 def admin_create_node(request):
     """
@@ -581,6 +631,7 @@ def admin_create_node(request):
         return failure('POST')
 
 
+@csrf_exempt
 @need_admin
 def admin_delete_node(request):
     """
@@ -600,6 +651,7 @@ def admin_delete_node(request):
         return failure('GET')
 
 
+@csrf_exempt
 @need_admin
 def admin_set_node_approved(request):
     """
@@ -623,6 +675,7 @@ def admin_set_node_approved(request):
         return failure('POST')
 
 
+@csrf_exempt
 def get_public_data(request):
     """
     Get public data on this server, used for providing data to other nodes
@@ -650,3 +703,4 @@ def get_public_data(request):
         return no_auth()
     else:
         return failure('GET')
+

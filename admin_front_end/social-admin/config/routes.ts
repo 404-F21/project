@@ -32,6 +32,12 @@
     icon: 'UnorderedListOutlined'
   },
   {
+    path: '/admin/management',
+    name: 'Admin Management',
+    component: './admin/Create',
+    icon: 'CodepenOutlined'
+  },
+  {
     path: '/admin/password',
     name: 'Password Change',
     component: './admin/PasswordChange',

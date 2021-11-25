@@ -8,10 +8,9 @@
  */
 export default {
   dev: {
-    // localhost:8000/api/** -> http://127.0.0.1:8000/**
-    '/api': {
+    // 127.0.0.1:8001/admin/** -> http://127.0.0.1:8000/admin/**
+    '/service': {
       target: 'http://127.0.0.1:8000',
-      pathRewrite: {'^/api': ''},
       changeOrigin: true,
     },
   },

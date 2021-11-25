@@ -189,6 +189,11 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+import os
+
+if not os.path.exists(BASE_DIR / 'build' / 'static'):
+    os.makedirs(BASE_DIR / 'build' / 'static')
+
 STATICFILES_DIRS = [
     BASE_DIR / 'build' / 'static',
     # os.path.join(BASE_DIR, 'build'),

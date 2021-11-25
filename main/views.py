@@ -699,7 +699,10 @@ def get_public_post(request):
                     result = []
                     for post in public_posts:
                         result.append(post.dict())
-                    return success(result)
+                    return JsonResponse({
+                        'type': 'posts',
+                        'items': result
+                    })
         return no_auth()
     else:
         return failure('GET')
@@ -729,7 +732,10 @@ def get_public_author(request):
                     result = []
                     for author in authors:
                         result.append(author.dict())
-                    return success(result)
+                    return JsonResponse({
+                        "type": "authors",
+                        "items": result
+                    })
         return no_auth()
     else:
         return failure('GET')

@@ -39,8 +39,8 @@ const IndividualPost = (props) => {
             message.warn('please input your comment')
             return
         }
-        const result = await client.post(`posts/${postData.postId}/comments/`, {
-            authorId: postData.authorId.id,
+        const result = await client.post(`post/${postData.postId}/comments/`, {
+            authorId: postData.author.id,
             postId: postData.postId,
             text: commentInput,
         })

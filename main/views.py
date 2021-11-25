@@ -255,10 +255,11 @@ def like_post(request, pk):
     if len(likes):
         # already liked can not like again
         return Response({ 'succ': False })
-    likepost = LikePost(postId=post[0], authorId=author[0])
+    likepost = LikePost(postId=post, authorId=author)
     likepost.save()
     # let likecount update with itself + 1
-    post.update(likeCount=F('likeCount') + 1)
+    post.likeCount += 1
+    post.save()
     return Response({
         'succ': True,
         'count': post.likeCount
@@ -297,17 +298,17 @@ def comment_list(request, pk):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class CommentList(APIView):
-    def get(self, request, postId, format=None):
+    def get(self, request, pk, format=None):
         # check if user is authenticated and if not return a 401
         
         # https://docs.djangoproject.com/en/dev/ref/models/querysets/#exists
-        post = Post.objects.get(pk=postId)
-        if (post.exists()):
+        post = Post.objects.get(pk=pk)
+        if post is not None:
             # Check if the post is visible for public/friends/whatever
             #assuming it is visible to all
 
-            comments = Comment.objects.filter(pk=uuid.UUID(postId))
-            if (comments.exists()):
+            comments = Comment.objects.filter(postId=post)
+            if comments.count() > 0:
                 paged_comments = paginate(comments, request.query_params)
                 serializer = CommentSerializer(paged_comments, many=True)
                 return JsonResponse(serializer.data, safe=False)
@@ -317,18 +318,21 @@ class CommentList(APIView):
             # return a 404 response
             return Response("Post not found", status=404)
 
-    def post(self, request, postId, format=None):
+    def post(self, request, pk, format=None):
         # check if user is authenticated and if not return a 401
-        post = Post.objects.get(pk=postId)
-        if (post.exists()):
+        post = Post.objects.get(pk=pk)
+        if post is not None:
 
-            author = Author.objects.filter(pk=uuid.UUID(request.data['authorId'])) # ?????????????????? 
+            author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
+            if author is None:
+                return HttpResponse('Error, no such author')
             comment = Comment(
                 postId = post,
                 authorId = author,
                 text = request.data['text']
             )
-            post.update(commentCount=F('commentCount') + 1)
+            post.commentCount += 1
+            post.save()
             comment.save()
             return HttpResponse(str(comment))
 

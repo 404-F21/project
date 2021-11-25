@@ -90,7 +90,7 @@ const App = (props) => {
                         <Card.Header
                             title={
                                 <div style={{ marginLeft: 10, fontSize: 14 }}>
-                                    {item.authorId.displayName}
+                                    {item.author.displayName}
                                 </div>
                             }
                             thumb={

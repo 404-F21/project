@@ -9,6 +9,8 @@ import routes from './routes';
 const { REACT_APP_ENV } = process.env;
 
 export default defineConfig({
+  base: '/static/ant-design-pro',
+  publicPath: '/static/ant-design-pro/',
   hash: true,
   antd: {},
   dva: {
@@ -48,7 +50,7 @@ export default defineConfig({
   ignoreMomentLocale: true,
   proxy: proxy[REACT_APP_ENV || 'dev'],
   manifest: {
-    basePath: '/admin-app/',
+    basePath: '/static/ant-design-pro/',
   },
   // Fast Refresh
   fastRefresh: {},

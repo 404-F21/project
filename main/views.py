@@ -68,7 +68,7 @@ class PostList(APIView):
     """
 
     def get(self, request, format=None):
-        all_posts = (Post.objects.filter(visibility="PUBLIC")
+        all_posts = (Post.objects.filter(visibility="public")
                      .order_by('-publishedOn'))
         paged_posts = paginate(all_posts, request.query_params)
 

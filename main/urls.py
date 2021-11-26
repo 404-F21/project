@@ -15,11 +15,16 @@
 
 from django.urls import path
 from main import views
-
-from django.conf import settings
-from django.conf.urls.static import static
+from rest_framework.schemas import get_schema_view
 
 urlpatterns = [
+    # root API path
+    path('', get_schema_view(
+        title="Team 17's Social Network API",
+        description="A social network built with React and DRF",
+        version="1.0.0"
+    ), name='openapi-schema'),
+
     # log in to an existing account
     path('log', views.app_login),
 

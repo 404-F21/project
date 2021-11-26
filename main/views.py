@@ -22,23 +22,14 @@ from rest_framework.views import APIView
 
 from rest_framework import mixins
 from rest_framework import generics
-from main.models import Author, Comment, Post, LikePost, Admin, Node
-from main.serializers import AuthorSerializer, CommentSerializer, PostSerializer
+from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
+from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from main.decorator import need_admin
 from main.response import success, failure, no_auth
 from django.db.models import F
 from django.core.paginator import Paginator
-
-from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
-from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
-from django.http import HttpResponse, JsonResponse
-from django.db.models import F
-from main.response import success, failure, no_auth
-from django.core.paginator import Paginator
-from main.decorator import need_admin
-# from django.contrib.auth import authenticate, login
 
 import uuid
 import json

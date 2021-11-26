@@ -316,7 +316,7 @@ class Node(models.Model):
 
     host = models.CharField(max_length=512, blank=False, null=False, verbose_name='Host URL')
 
-    create_time = models.FloatField(blank=False, null=False, default=time.time(), verbose_name='Node create timestamp')
+    create_time = models.FloatField(blank=False, null=False, default=time.time, verbose_name='Node create timestamp')
 
     node_type = models.CharField(max_length=5, blank=False, null=False, choices=TYPE_CHOICE, verbose_name='Node Type')
 

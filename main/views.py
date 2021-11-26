@@ -30,6 +30,7 @@ from main.decorator import need_admin
 from main.response import success, failure, no_auth
 from django.db.models import F
 from django.core.paginator import Paginator
+from django.shortcuts import redirect
 
 import uuid
 import json
@@ -430,6 +431,7 @@ def admin_login(request):
 
         if admin.password_md5 == password_md5:
             # Password correct, admin login
+            request.session['id'] = admin.id
             request.session['username'] = username
             request.session['role'] = 'admin'
             return HttpResponse(json.dumps({
@@ -458,6 +460,7 @@ def admin_current_user(request):
             return HttpResponse(json.dumps({
                 'success': True,
                 'data': {
+                    'id': int(request.session['id']),
                     'name': request.session['username'],
                     'avatar': 'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png',
                     'access': request.session['role']
@@ -540,19 +543,18 @@ def admin_create_admin(request):
 
 @csrf_exempt
 @need_admin
-def admin_change_password(request):
+def admin_change_password(request, admin_id):
     """
     Change admin user's password
     """
     if request.method == 'POST':
         json_obj = json.loads(request.body.decode())
-        username = json_obj.get('username')
         password = json_obj.get('password')
-        if not username or not password:
+        if not admin_id or not password:
             return failure('arguments not enough')
         # Check if the user exists
         try:
-            admin = Admin.objects.get(username=username)
+            admin = Admin.objects.get(id=admin_id)
         except Admin.DoesNotExist:
             return failure('user not exists')
         # Change the password
@@ -566,7 +568,7 @@ def admin_change_password(request):
 
 @csrf_exempt
 @need_admin
-def admin_node_list(request):
+def admin_node_list(request, node_type):
     """
     Get node list
     """
@@ -574,7 +576,6 @@ def admin_node_list(request):
         # Pagination
         current = request.GET.get('current')
         page_size = request.GET.get('pageSize')
-        node_type = request.GET.get('type')
         if not current or not page_size or not node_type:
             return failure('arguments not enough')
         nodes = Node.objects.filter(node_type=node_type)
@@ -593,7 +594,7 @@ def admin_node_list(request):
 
 @csrf_exempt
 @need_admin
-def admin_create_node(request):
+def admin_create_node(request, node_type):
     """
     Create node
     """
@@ -601,7 +602,6 @@ def admin_create_node(request):
         json_obj = json.loads(request.body.decode())
         host = json_obj.get('host')
         password = json_obj.get('password')
-        node_type = json_obj.get('type')
         # If type of new node is FETCH, then this operation need an another argument: username for HTTP Basic Auth
         username = ''
         if node_type == 'FETCH':
@@ -641,12 +641,11 @@ def admin_create_node(request):
 
 @csrf_exempt
 @need_admin
-def admin_delete_node(request):
+def admin_delete_node(request, node_id):
     """
     Delete node
     """
-    if request.method == 'GET':
-        node_id = request.GET.get('id')
+    if request.method == 'DELETE':
         if not node_id:
             return failure('arguments not enough')
         try:
@@ -656,18 +655,17 @@ def admin_delete_node(request):
         node.delete()
         return success(None)
     else:
-        return failure('GET')
+        return failure('DELETE')
 
 
 @csrf_exempt
 @need_admin
-def admin_set_node_approved(request):
+def admin_set_node_approved(request, node_id):
     """
     Set if a node is allowed to connect
     """
     if request.method == 'POST':
         json_obj = json.loads(request.body.decode())
-        node_id = json_obj.get('id')
         if_approved = json_obj.get('approved')
         if not node_id or not if_approved:
             return failure('arguments not enough')
@@ -751,6 +749,13 @@ def get_public_author(request):
         return no_auth()
     else:
         return failure('GET')
+
+
+def admin_page_logo(request):
+    """
+    Redirect request for logo to correct path
+    """
+    return redirect('/static/ant-design-pro/logo.svg')
 
 
 # Init first admin

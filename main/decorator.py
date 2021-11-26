@@ -19,14 +19,21 @@ def need_admin(view_func):
     """
     Restrict the permission, only allow admin role to access
     """
-    def inner(request):
+    def inner(request, admin_id=None, node_type=None, node_id=None):
         """
         Check the permission
         """
-        username = request.session.get('username')
+        username_session = request.session.get('username')
         role = request.session.get('role')
-        if username and role and role == 'admin':
-            return view_func(request)
+        if username_session and role and role == 'admin':
+            if admin_id:
+                return view_func(request, admin_id)
+            elif node_type:
+                return view_func(request, node_type)
+            elif node_id:
+                return view_func(request, node_id)
+            else:
+                return view_func(request)
         return no_auth()
 
     return inner

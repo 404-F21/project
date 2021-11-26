@@ -21,16 +21,15 @@ export const getAdminList = async (current: number, pageSize: number) => {
 
 /**
  * Change password of an admin user
- * @param username username belongs to the user who we want to change his/her password
+ * @param adminId id belongs to the admin who we want to change his/her password
  * @param password new password
  */
-export const changeAdminPassword = async (username: string, password: string) => {
+export const changeAdminPassword = async (adminId: number, password: string) => {
   return request<APP.Result<undefined>>(
-    '/service/admin/password/',
+    '/service/admin/password/' + adminId + '/',
     {
       method: 'POST',
       data: {
-        username,
         password
       }
     }
@@ -63,13 +62,12 @@ export const createAdmin = async (username: string, password: string) => {
  */
 export const getNodeList = async (current: number, pageSize: number, type: string) => {
   return request<APP.Result<{data: APP.Node[], total: number}>>(
-    '/service/admin/node/list/',
+    '/service/admin/node/list/' + type + '/',
     {
       method: 'GET',
       params: {
         current,
-        pageSize,
-        type
+        pageSize
       }
     }
   )
@@ -84,13 +82,12 @@ export const getNodeList = async (current: number, pageSize: number, type: strin
  */
 export const createNode = async (host: string, password: string, type: string, username: string) => {
   return request<APP.Result<undefined>>(
-    '/service/admin/node/create/',
+    '/service/admin/node/create/' + type + '/',
     {
       method: 'POST',
       data: {
         host,
         password,
-        type,
         username
       }
     }
@@ -103,12 +100,9 @@ export const createNode = async (host: string, password: string, type: string, u
  */
 export const deleteNode = async (id: string) => {
   return request<APP.Result<undefined>>(
-    '/service/admin/node/delete/',
+    '/service/admin/node/delete/' + id + '/',
     {
-      method: 'GET',
-      params: {
-        id
-      }
+      method: 'DELETE'
     }
   )
 }
@@ -121,11 +115,10 @@ export const deleteNode = async (id: string) => {
 export const setNodeApproved = async (id: string, approvedIn: boolean) => {
   const approved = approvedIn ? '1' : '0'
   return request<APP.Result<undefined>>(
-    '/service/admin/node/approved/',
+    '/service/admin/node/approved/' + id + '/',
     {
       method: 'POST',
       data: {
-        id,
         approved
       }
     }

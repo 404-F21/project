@@ -61,15 +61,15 @@ urlpatterns = [
     # create admin
     path('admin/create/', views.admin_create_admin),
     # change admin user's password
-    path('admin/password/', views.admin_change_password),
+    path('admin/password/<str:admin_id>/', views.admin_change_password),
     # get nodes list
-    path('admin/node/list/', views.admin_node_list),
+    path('admin/node/list/<str:node_type>/', views.admin_node_list),
     # create node
-    path('admin/node/create/', views.admin_create_node),
+    path('admin/node/create/<str:node_type>/', views.admin_create_node),
     # delete node
-    path('admin/node/delete/', views.admin_delete_node),
+    path('admin/node/delete/<str:node_id>/', views.admin_delete_node),
     # set node permission
-    path('admin/node/approved/', views.admin_set_node_approved),
+    path('admin/node/approved/<str:node_id>/', views.admin_set_node_approved),
     # get current admin user login
     path('admin/current/', views.admin_current_user),
 

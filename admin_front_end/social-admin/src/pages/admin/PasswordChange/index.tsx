@@ -16,7 +16,7 @@ export default () => {
         onFinish={(item: {password: string}) => {
           setButtonLoading(true)
           // @ts-ignore
-          changeAdminPassword(initialState.currentUser.name, item.password).then(r => {
+          changeAdminPassword(initialState.currentUser.id, item.password).then(r => {
             if (r.code === 200) {
               message.success('Change successfully!')
               form.resetFields()

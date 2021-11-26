@@ -15,8 +15,16 @@
 
 from django.urls import path
 from main import views
+from rest_framework.schemas import get_schema_view
 
 urlpatterns = [
+    # root API path
+    path('', get_schema_view(
+        title="Team 17's Social Network API",
+        description="A social network built with React and DRF",
+        version="1.0.0"
+    ), name='openapi-schema'),
+
     # log in to an existing account
     path('log', views.app_login),
 
@@ -36,9 +44,37 @@ urlpatterns = [
     # get post list & create a post
     path('posts', views.PostList.as_view()),
     # get the specified post details
-    path('posts/<pk>', views.PostDetail.as_view()),
+    path('post/<pk>', views.PostDetail.as_view()),
     # get the specified post comments
-    path('posts/<pk>/comments/', views.comment_list),
+    # path('posts/<pk>/comments/', views.comment_list),
+    path('post/<pk>/comments/', views.CommentList.as_view()),
     # post like
-    path('posts/<pk>/like/', views.like_post),
+    path('post/<pk>/like/', views.like_post),
+
+
+    # admin login
+    path('admin/login/', views.admin_login),
+    # admin logout
+    path('admin/logout/', views.admin_logout),
+    # get admin users list
+    path('admin/list/', views.admin_list),
+    # create admin
+    path('admin/create/', views.admin_create_admin),
+    # change admin user's password
+    path('admin/password/<str:admin_id>/', views.admin_change_password),
+    # get nodes list
+    path('admin/node/list/<str:node_type>/', views.admin_node_list),
+    # create node
+    path('admin/node/create/<str:node_type>/', views.admin_create_node),
+    # delete node
+    path('admin/node/delete/<str:node_id>/', views.admin_delete_node),
+    # set node permission
+    path('admin/node/approved/<str:node_id>/', views.admin_set_node_approved),
+    # get current admin user login
+    path('admin/current/', views.admin_current_user),
+
+    # provide public posts to other nodes
+    path('connect/public/', views.get_public_post),
+    # provide authors to other nodes
+    path('connect/public/author/', views.get_public_author)
 ]

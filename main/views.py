@@ -31,6 +31,8 @@ from main.response import success, failure, no_auth
 from django.db.models import F
 from django.core.paginator import Paginator
 from django.shortcuts import redirect
+from main.response import fetch_posts
+from social.settings import deploy_host
 
 import uuid
 import json
@@ -601,39 +603,50 @@ def admin_create_node(request, node_type):
     if request.method == 'POST':
         json_obj = json.loads(request.body.decode())
         host = json_obj.get('host')
-        password = json_obj.get('password')
-        # If type of new node is FETCH, then this operation need an another argument: username for HTTP Basic Auth
-        username = ''
-        if node_type == 'FETCH':
-            username = json_obj.get('username')
-            if not username:
+        node_id = json_obj.get('nodeId')
+        if not node_id:
+            node_id = uuid.uuid4()
+        if node_type == 'SHARE':
+            password = json_obj.get('password')
+            if not host or not password or not node_type:
                 return failure('arguments not enough')
-        if not host or not password or not node_type:
-            return failure('arguments not enough')
-        # Check if particular node already exists
-        try:
-            Node.objects.get(host=host)
-        except Node.DoesNotExist:
-            if node_type == 'SHARE':
+            try:
+                Node.objects.get(host=host)
+            except Node.DoesNotExist:
                 password_md5 = hashlib.md5(password.encode()).hexdigest()
                 node = Node(
+                    nodeId=node_id,
                     host=host,
                     password_md5=password_md5,
                     create_time=time.time(),
-                    http_username=username,
                     node_type=node_type
                 )
-            else:
+                node.save()
+                return success(None)
+        else:
+            # If type of new node is FETCH, then this operation need an another argument: username for HTTP Basic Auth
+            username = json_obj.get('username')
+            password = json_obj.get('password')
+            author_url = json_obj.get('authorUrl')
+            post_url = json_obj.get('postUrl')
+            if not host or not username or not password or not author_url or not post_url:
+                return failure('arguments not enough')
+            try:
+                Node.objects.get(host=host)
+            except Node.DoesNotExist:
                 node = Node(
+                    nodeId=node_id,
                     host=host,
                     password_md5='',
                     create_time=time.time(),
+                    node_type=node_type,
+                    fetch_author_url=author_url,
+                    fetch_post_url=post_url,
                     http_username=username,
-                    http_password=password,
-                    node_type=node_type
+                    http_password=password
                 )
-            node.save()
-            return success(None)
+                node.save()
+                return success(None)
         return failure('This host address already exists.')
     else:
         return failure('POST')

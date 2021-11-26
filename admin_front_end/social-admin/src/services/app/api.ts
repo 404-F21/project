@@ -79,8 +79,12 @@ export const getNodeList = async (current: number, pageSize: number, type: strin
  * @param password password for this new node
  * @param type node type
  * @param username if the type is FETCH, api need an another argument: username, for HTTP Basic Auth
+ * @param authorUrl
+ * @param postUrl
+ * @param nodeId
  */
-export const createNode = async (host: string, password: string, type: string, username: string) => {
+export const createNode = async (
+  host: string, password: string, type: string, username: string, authorUrl: string, postUrl: string, nodeId: string) => {
   return request<APP.Result<undefined>>(
     '/service/admin/node/create/' + type + '/',
     {
@@ -88,7 +92,10 @@ export const createNode = async (host: string, password: string, type: string, u
       data: {
         host,
         password,
-        username
+        username,
+        authorUrl,
+        postUrl,
+        nodeId
       }
     }
   )

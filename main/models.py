@@ -17,6 +17,7 @@ from django.db import models
 import uuid
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractBaseUser
+from social.settings import deploy_host
 from django.utils.translation import gettext_lazy as _
 # from django.contrib.auth import authenticate
 
@@ -72,7 +73,7 @@ class Author(AbstractBaseUser):
     url = models.CharField(max_length=150, blank=True, null=True)
 
     host = models.URLField(blank=True, null=True)
-    displayName = models.CharField(max_length=100, default="", unique=True)
+    displayName = models.CharField(max_length=100, default="")
 
     # Potentially the future home of the HATEOS URL for github API
     github = models.URLField(default="")
@@ -200,6 +201,15 @@ class Post(models.Model):
                                   default="public")
     unlisted = models.BooleanField(default=False)
 
+    def __str__(self):
+        return str(self.postId) + '-' + self.title
+
+    def save(self, *args, **kwargs):
+        if self.origin is None and self.source is None:
+            self.source = deploy_host + '/service/post/' + str(self.postId)
+            self.origin = deploy_host + '/service/post/' + str(self.postId)
+        super(Post, self).save(*args, **kwargs)
+
     def dict(self):
         return {
             'id': str(self.postId),
@@ -323,6 +333,12 @@ class Node(models.Model):
     if_approved = models.BooleanField(blank=False, null=False, default=True, verbose_name='If approved to connect')
 
     password_md5 = models.CharField(max_length=32, blank=False, null=False, verbose_name='Auth Password')
+
+    fetch_author_url = \
+        models.CharField(max_length=512, blank=True, null=True, default='', verbose_name='Author URL(FETCH)')
+
+    fetch_post_url = \
+        models.CharField(max_length=512, blank=True, null=True, default='', verbose_name='Post URL(FETCH)')
 
     http_username = \
         models.CharField(max_length=512, blank=True, null=True, default='', verbose_name='Http Auth Username(FETCH)')

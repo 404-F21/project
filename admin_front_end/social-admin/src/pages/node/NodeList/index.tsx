@@ -162,9 +162,9 @@ export default () => {
       >
         <Form
           form={form}
-          onFinish={(item: { host: string, password: string}) => {
+          onFinish={(item: { host: string, password: string, nodeId: string}) => {
             setCreateButtonLoading(true)
-            createNode(item.host, item.password, 'SHARE', '').then(r => {
+            createNode(item.host, item.password, 'SHARE', '', '', '', item.nodeId).then(r => {
               if (r.code === 200) {
                 message.success('Create successfully!')
                 setShowModal(false)
@@ -182,6 +182,9 @@ export default () => {
           </Form.Item>
           <Form.Item label={'Access Password'} name={'password'} rules={[{required: true}]}>
             <Input type={'password'}/>
+          </Form.Item>
+          <Form.Item label={'If Set a Specific ID'} name={'nodeId'}>
+            <Input type={'text'} placeholder={'Leave blank to generate a new ID'}/>
           </Form.Item>
         </Form>
       </Modal>

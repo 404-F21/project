@@ -162,9 +162,9 @@ export default () => {
       >
         <Form
           form={form}
-          onFinish={(item: { host: string, password: string, username: string}) => {
+          onFinish={(item: {host: string, password: string, username: string, authorUrl: string, postUrl: string}) => {
             setCreateButtonLoading(true)
-            createNode(item.host, item.password, 'FETCH', item.username).then(r => {
+            createNode(item.host, item.password, 'FETCH', item.username, item.authorUrl, item.postUrl, '').then(r => {
               if (r.code === 200) {
                 message.success('Create successfully!')
                 setShowModal(false)
@@ -177,7 +177,7 @@ export default () => {
             })
           }}
         >
-          <Form.Item label={'Fetch API Address'} name={'host'} rules={[{required: true}]}>
+          <Form.Item label={'Host'} name={'host'} rules={[{required: true}]}>
             <Input type={'text'}/>
           </Form.Item>
           <Form.Item label={'HTTP Basic Auth Username'} name={'username'} rules={[{required: true}]}>
@@ -185,6 +185,12 @@ export default () => {
           </Form.Item>
           <Form.Item label={'HTTP Basic Auth Password'} name={'password'} rules={[{required: true}]}>
             <Input type={'password'}/>
+          </Form.Item>
+          <Form.Item label={'Author API'} name={'authorUrl'} rules={[{required: true}]}>
+            <Input type={'text'}/>
+          </Form.Item>
+          <Form.Item label={'Post API'} name={'postUrl'} rules={[{required: true}]}>
+            <Input type={'text'}/>
           </Form.Item>
         </Form>
       </Modal>

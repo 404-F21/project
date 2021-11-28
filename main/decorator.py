@@ -1,4 +1,4 @@
-# Copyright 2021 Nathan Drapeza, Xingjie He, Warren Stix, Yifan Wu
+# Copyright 2021 Xingjie He, Yifan Wu
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

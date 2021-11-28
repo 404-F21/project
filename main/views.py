@@ -51,7 +51,7 @@ from typing import Dict
 
 def paginate(objects: QuerySet, params: Dict[str, str]) -> QuerySet:
     page = int(params.get('page', '1'))
-    size = int(params.get('size', '5'))
+    size = int(params.get('size', '10'))
 
     begin = (page - 1) * size
     end = begin + size
@@ -64,22 +64,20 @@ class PostList(APIView):
     """
     List all Posts in the database
     """
-
     def get(self, request, format=None):
         all_posts = (Post.objects.filter(visibility="public")
                      .order_by('-publishedOn'))
         paged_posts = paginate(all_posts, request.query_params)
 
-        post_serializer = PostSerializer(paged_posts, many=True)
-        data = post_serializer.data
+        data = []
+        for post in paged_posts:
+            data.append(post.dict())
+        foreign_posts = fetch_posts()
+        data = data + foreign_posts
         response = JsonResponse(data, safe=False)
         return response
 
     def post(self, request, *args, **kwargs):
-
-        #print(request.body)
-        #print(request.data)
-        #print(request.content_type)
         if request.content_type == "application/json":
             author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
             text = request.data['content']
@@ -295,6 +293,28 @@ def comment_list(request, pk):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+@csrf_exempt
+def get_foreign_comments(request, node_id, url_base64):
+    """
+    Get foreign comments (used as a proxy)
+    """
+    if request.method == 'GET':
+        url = base64.b64decode(url_base64).decode()
+        try:
+            node = Node.objects.get(nodeId=node_id)
+        except Node.DoesNotExist:
+            return failure('Node not found')
+        username = node.http_username
+        password = node.http_password
+        if 'http://' in url:
+            url = url.replace('http:', 'https:')
+        result = requests.get(url, auth=(username, password))
+        return JsonResponse(result.json())
+    else:
+        return failure('GET')
+
+
 class CommentList(APIView):
     def get(self, request, pk, format=None):
         # check if user is authenticated and if not return a 401
@@ -408,6 +428,12 @@ def like(request, pk):
 from django.shortcuts import render
 # Create your views here.
 def render_html(request):
+    from django.contrib.auth.models import User
+    # create default super user
+    if User.objects.count() == 0:
+        user = User.objects.create_user('admin', 'test@test.com', 'admin123456')
+        user.is_stuff = True
+        user.save()
     return render(request, 'index.html')
 
 def render_admin(request):
@@ -610,12 +636,12 @@ def admin_create_node(request, node_type):
     Create node
     """
     # Setup a timer to fetch nodes content
-    if Node.objects.count() == 0:
-        print('Timer')
-        task_manager = BackgroundScheduler()
-        task_manager.add_jobstore(DjangoJobStore())
-        task_manager.add_job(fetch_posts, 'interval', id='fetch_content', replace_existing=True, seconds=10)
-        task_manager.start()
+    # if Node.objects.count() == 0:
+    #     print('Timer')
+    #     task_manager = BackgroundScheduler()
+    #     task_manager.add_jobstore(DjangoJobStore())
+    #     task_manager.add_job(fetch_posts, 'interval', id='fetch_content', replace_existing=True, seconds=10)
+    #     task_manager.start()
 
     if request.method == 'POST':
         json_obj = json.loads(request.body.decode())

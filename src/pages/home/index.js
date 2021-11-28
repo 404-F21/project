@@ -11,22 +11,21 @@
  * limitations under the License.
  */
 
-import React, { Component, useCallback, useEffect, useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import React, {useCallback, useEffect, useState} from 'react';
+import {useHistory} from 'react-router-dom';
 //import Contacts from '/Users/nathandrapeza/Documents/year4/404/project/front_end/src/posts/posts'
 
-import Contacts from './../../posts/posts'
-
-import { List, Card, Icon, NavBar } from 'antd-mobile';
-import { Form, Input, Avatar, Button, message } from 'antd';
+import {Card} from 'antd-mobile';
+import {Button, Form, Input, message} from 'antd';
 import './index.css';
-import { client } from '../../http';
+import {client} from '../../http';
 import store from '../../store/store';
-const { Meta } = Card;
+
+const {Meta} = Card;
 
 const layout = {
-    labelCol: { span: 2 },
-    wrapperCol: { span: 22 },
+    labelCol: {span: 2},
+    wrapperCol: {span: 22},
 };
 
 
@@ -48,7 +47,7 @@ const App = (props) => {
 
     // get post list function
     const getPostList = useCallback(async () => {
-        const result = await client.get('post')
+        const result = await client.get('posts')
         if (result.status === 200) {
             console.log(result.data)
             setPostList(result.data)
@@ -71,13 +70,13 @@ const App = (props) => {
                 <Form.Item name={['content']} label="post text">
                     <Input.TextArea placeholder="please input your post's text"/>
                 </Form.Item>
-                <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
+                <Form.Item wrapperCol={{...layout.wrapperCol, offset: 8}}>
                     <Button type="primary" htmlType="submit">
                         Post
                     </Button>
                 </Form.Item>
             </Form>
-            <div>   
+            <div>
                 {postList.map(item => (
                     // <Card key={item.postId} onClick={()=> history.push(`/individualpost/${item.postId}`)}>
                     //     <Meta
@@ -86,33 +85,39 @@ const App = (props) => {
                     //         description={item.content}
                     //         />
                     // </Card>
-                    <Card onClick={() => history.push(`/individualpost/${item.postId}`)}>
+                    <Card onClick={() => {
+                        const param = window.btoa(JSON.stringify(item))
+                        history.push(`/individualpost/${param}`)
+                    }}>
                         <Card.Header
                             title={
-                                <div style={{ marginLeft: 10, fontSize: 14 }}>
+                                <div style={{marginLeft: 10, fontSize: 14}}>
                                     {item.author.displayName}
                                 </div>
                             }
                             thumb={
                                 <img
-                                    style={{ width: 35, borderRadius: 10 }}
+                                    style={{width: 35, borderRadius: 10}}
                                     src={require('../../assets/user.jpg').default}
                                 />
                             }
-                            thumbStyle={{ width: 35, borderRadius: 10 }}
+                            thumbStyle={{width: 35, borderRadius: 10}}
                         />
                         <Card.Body>
                             <h4>{item.title}</h4>
-                            <div style={{ marginBottom: '3px' }}>{item.content}</div>
+                            <div style={{marginBottom: '3px'}}>{item.content}</div>
                             <div className='like'>
                                 <div>
                                     <i className="iconfont icon-xiaoxi"></i>
-                                    <div style={{ marginLeft: 5, display: 'inline-block', width: 35 }}>
+                                    <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
                                         {item.commentCount}
                                     </div>
                                     <i className="iconfont icon-dianzan"></i>
-                                    <div style={{ marginLeft: 5, display: 'inline-block', width: 35 }}>
+                                    <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
                                         {item.likeCount}
+                                    </div>
+                                    <div style={{marginLeft: 10, display: 'inline-block'}}>
+                                        { item.foreignNodeId ? `Source: ${item.origin}` : ''}
                                     </div>
                                 </div>
                             </div>
@@ -183,4 +188,5 @@ export default App
         </div>
     </div>
 </Card.Body>
-</Card> */}
+</Card> */
+}

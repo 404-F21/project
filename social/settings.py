@@ -10,15 +10,14 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import os
 from pathlib import Path
 
-import os
-import dotenv
 import dj_database_url
+import dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -30,7 +29,6 @@ SECRET_KEY = 'django-insecure-4keww)lra%&tspw#+0()788m_a+x)e^kt8^eg^)!n_h@)2r&0*
 DEBUG = True
 
 ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
-
 
 # Application definition
 
@@ -78,14 +76,14 @@ MIDDLEWARE = [
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-CORS_ALLOW_ALL_ORIGINS = True # If this is used then `CORS_ALLOWED_ORIGINS` will not have any effect
+CORS_ALLOW_ALL_ORIGINS = True  # If this is used then `CORS_ALLOWED_ORIGINS` will not have any effect
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:8001',
     'http://localhost:8001',
     'https://cmput404f21t17.herokuapp.com'
-] # If this is used, then not need to use `CORS_ALLOW_ALL_ORIGINS = True`
+]  # If this is used, then not need to use `CORS_ALLOW_ALL_ORIGINS = True`
 CORS_ALLOWED_ORIGIN_REGEXES = [
     'http://localhost:3000',
 ]
@@ -110,7 +108,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'social.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -129,7 +126,7 @@ WSGI_APPLICATION = 'social.wsgi.application'
 DATABASES = {}
 if os.environ.get('ON_HEROKU'):
     # DATABASES['default'] = dj_database_url.config(conn_max_age=600)
-    
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql_psycopg2',
@@ -143,7 +140,6 @@ else:
             'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
@@ -163,7 +159,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
@@ -176,7 +171,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
@@ -209,6 +203,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Configure Django App for Heroku.
 import django_heroku
+
 django_heroku.settings(locals())
 
 dotenv_file = os.path.join(BASE_DIR, ".env")

@@ -19,6 +19,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractBaseUser
 from social.settings import deploy_host
 from django.utils.translation import gettext_lazy as _
+
+
 # from django.contrib.auth import authenticate
 
 # class Author(models.Model):
@@ -60,7 +62,7 @@ class Author(AbstractBaseUser):
     '''
     Private information
     '''
-    password = models.CharField(max_length=25, default = "", blank=True)
+    password = models.CharField(max_length=25, default="", blank=True)
     '''
     Public information
     '''
@@ -151,8 +153,8 @@ class Following(models.Model):
     class Meta:
         unique_together = ('follower', 'followee')
         constraints = [models.CheckConstraint(
-            name = 'follower_ne_followee',
-            check = ~models.Q(follower=models.F('followee')),
+            name='follower_ne_followee',
+            check=~models.Q(follower=models.F('followee')),
         )]
 
 
@@ -169,7 +171,7 @@ class Post(models.Model):
         ("public", "PUBLIC"),
         ("friends", "FRIENDS ONLY"),
         ("fof", "FRIENDS OF FRIENDS"),
-        ("toAuthor", "AUTHOR ONLY"), # not sure how to implement this
+        ("toAuthor", "AUTHOR ONLY"),  # not sure how to implement this
     )
 
     postId = models.UUIDField(primary_key=True,
@@ -195,7 +197,7 @@ class Post(models.Model):
 
     # URL of the comment
     # i.e. posturl/comments
-    commentUrl = models.TextField(default=postId)
+    comments = models.CharField(max_length=512, null=True, default=None)
 
     publishedOn = models.DateTimeField(auto_now_add=True, blank=True)
 
@@ -203,6 +205,9 @@ class Post(models.Model):
                                   choices=visibilityOptions,
                                   default="public")
     unlisted = models.BooleanField(default=False)
+
+    # Be used by frontend to get username and password of node
+    foreign_node_id = None
 
     def __str__(self):
         return str(self.postId) + '-' + self.title
@@ -226,9 +231,11 @@ class Post(models.Model):
             'categories': self.categories,
             'commentCount': self.commentCount,
             'likeCount': self.likeCount,
-            'commentUrl': self.commentUrl,
-            'published': self.publishedOn.strftime('%Y/%m/%d %H:%M:%S')
+            'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/' if not self.comments else self.comments,
+            'published': self.publishedOn.strftime('%Y/%m/%d %H:%M:%S'),
+            'foreignNodeId': self.foreign_node_id
         }
+
 
 #     def __str__(self):
 #         return str(self.postId)
@@ -256,6 +263,7 @@ class Comment(models.Model):
     def __str__(self):
         return str(self.commentId)
 
+
 class LikePost(models.Model):
     postId = models.ForeignKey(Post, on_delete=models.CASCADE)
     authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
@@ -266,6 +274,7 @@ class LikePost(models.Model):
     def __str__(self):
         # return self.liker.displayName + " liked your post"
         pass
+
 
 # https://djangocentral.com/creating-comments-system-with-django/
 class LikeComment(models.Model):
@@ -278,6 +287,7 @@ class LikeComment(models.Model):
     def __str__(self):
         return self.liker.displayName + " liked your comment"
 
+
 class Like(models.Model):
     # TODO
     # get the id of the author from the url
@@ -285,6 +295,7 @@ class Like(models.Model):
     # return LikePost objects and LikeComment objects
     # not sure if we need this as a class even
     pass
+
 
 class Inbox(models.Model):
     # TODO

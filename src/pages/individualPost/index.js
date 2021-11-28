@@ -17,7 +17,7 @@ import { List, NavBar, Icon } from 'antd-mobile';
 import { Card, Form, Input, Button, message, Typography } from 'antd';
 import DialogueFooter from './DialogueFooter';
 import './index.css'
-import { client } from '../../http';
+import { client, foreignClient } from '../../http';
 import { useHistory } from 'react-router';
 import store from '../../store/store';
 
@@ -39,7 +39,7 @@ const IndividualPost = (props) => {
             message.warn('please input your comment')
             return
         }
-        const result = await client.post(`post/${postData.postId}/comments/`, {
+        const result = await client.post(`post/${postData.id}/comments/`, {
             authorId: postData.author.id,
             postId: postData.postId,
             text: commentInput,
@@ -56,9 +56,12 @@ const IndividualPost = (props) => {
     // fetch post data from server
     useEffect(async () => {
         let id = props.match?.params?.id
+        const post = window.atob(id)
         if (id) {
-            let result = await client.get(`post/${id}`)
-            setPostData(result.data)
+            // let result = await client.get(`post/${id}`)
+            // setPostData(result.data)
+            console.log(JSON.parse(post))
+            setPostData(JSON.parse(post))
         }
     }, [])
 
@@ -66,12 +69,19 @@ const IndividualPost = (props) => {
 
     // update comment list function
     const updateCommentList = useCallback(async () => {
-        if (postData) {
-            const res = await client.get(`post/${postData.postId}/comments/`)
+        if (postData && (!postData.foreignNodeId)) {
+            const res = await client.get(`post/${postData.id}/comments/`)
             if (res.status == 200) {
                 setCommentList(res.data)
             }
         }
+        // if (postData && postData.foreignNodeId) {
+        //     const urlBase64 = window.btoa(postData.comments)
+        //     const res = await client.get(`foreign-post/${postData.foreignNodeId}/${urlBase64}`)
+        //     if (res.status == 200) {
+        //         setCommentList(res.data)
+        //     }
+        // }
     }, [postData])
 
     // fetch comments 
@@ -84,7 +94,7 @@ const IndividualPost = (props) => {
             message.success('please waitting!')
             return
         }
-        const result = await client.post(`post/${postData.postId}/like/`, {
+        const result = await client.post(`post/${postData.id}/like/`, {
             authorId: store.getState().login.id
         })
         if (result.status==200) {

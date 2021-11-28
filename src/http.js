@@ -14,6 +14,8 @@
 import axios from "axios"
 
 export const client = axios.create({
-    baseURL: `https://cmput404f21t17.herokuapp.com/service/`
-    // baseURL: `http://localhost:8000/service/`
+    // baseURL: `https://cmput404f21t17.herokuapp.com/service/`
+    baseURL: `http://localhost:8000/service/`
 });
+
+export const foreignClient = axios.create()

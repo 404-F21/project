@@ -221,20 +221,19 @@ def fetch_posts():
                         )
                         post = Post(
                             author=author,
-                            remoteId=item['post_id'],
-                            title=item['title'],
-                            source=item['source'],
-                            origin=item['origin'],
-                            description=item['description'],
-                            content=item['content'],
-                            contentType=item['contentType'],
-                            categories=', '.join(list(item['categories'])) if type(
-                                item['categories']) == list else item['categories'],
+                            title=item.get('title', 'Title'),
+                            source=item.get('source', 'Source'),
+                            origin=item.get('origin', 'Origin'),
+                            description=item.get('description', 'Description'),
+                            content=item.get('content', 'Content'),
+                            contentType=item.get('contentType', 'text/plain'),
+                            categories=', '.join(list(item.get('categories', 'Categories'))) if type(
+                                item.get('categories', 'Categories')) == list else item.get('categories', 'Categories'),
                             commentCount=0,
-                            comments=item['comments'],
+                            comments=item.get('comments', 'Comments'),
                             publishedOn=datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ'),
-                            visibility=str(item['visibility']).lower(),
-                            unlisted=item['unlisted'],
+                            visibility=str(item.get('visibility', 'PUBLIC')).lower(),
+                            unlisted=item.get('unlisted', False),
                         )
                         post.foreign_node_id = str(node.nodeId)
                         post.foreign_node_host = node.host
@@ -262,20 +261,19 @@ def fetch_posts():
                     )
                     post = Post(
                         author=author,
-                        remoteId=item['id'],
-                        title=item['title'],
-                        source=item['source'],
-                        origin=item['origin'],
-                        description=item['description'],
-                        content=item['content'],
-                        contentType=item['contentType'],
-                        categories=', '.join(list(item['categories'])) if type(
-                            item['categories']) == list else item['categories'],
+                        title=item.get('title', 'Title'),
+                        source=item.get('source', 'Source'),
+                        origin=item.get('origin', 'Origin'),
+                        description=item.get('description', 'Description'),
+                        content=item.get('content', 'Content'),
+                        contentType=item.get('contentType', 'text/plain'),
+                        categories=', '.join(list(item.get('categories', 'Categories'))) if type(
+                            item.get('categories', 'Categories')) == list else item.get('categories', 'Categories'),
                         commentCount=0,
-                        comments=item['comments'],
+                        comments=item.get('comments', 'Comments'),
                         publishedOn=datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ'),
-                        visibility=str(item['visibility']).lower(),
-                        unlisted=item['unlisted']
+                        visibility=str(item.get('visibility', 'PUBLIC')).lower(),
+                        unlisted=item.get('unlisted', False),
                     )
                     post.foreign_node_id = str(node.nodeId)
                     post.foreign_node_host = node.host

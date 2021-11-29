@@ -16,7 +16,13 @@
 from main.models import Author, Comment, Following, Post # , LikePost
 from rest_framework import serializers
 
+from social.settings import SITE
+
 class AuthorSerializer(serializers.ModelSerializer):
+    id = serializers.SerializerMethodField()
+    
+    def get_id(self, obj : Author):
+        return f"{SITE}author/{obj.id}/"
     class Meta:
         model = Author
         exclude = ['password']
@@ -26,6 +32,12 @@ class PostSerializer(serializers.ModelSerializer):
     # rather than using the `depth` field, must do this or the password shows
     author = AuthorSerializer()
 
+    id = serializers.SerializerMethodField()
+    
+    def get_id(self, obj : Post):
+        return f"{SITE}author/{obj.author.id}/posts/{obj.postId}/"
+    
+    
     class Meta:
         model = Post
         fields = '__all__'
@@ -33,6 +45,11 @@ class PostSerializer(serializers.ModelSerializer):
 
 class CommentSerializer(serializers.ModelSerializer):
     authorId = AuthorSerializer()
+    
+    id = serializers.SerializerMethodField()
+    
+    def get_id(self, obj : Comment):
+        return f"{SITE}author/{obj.authorId}/posts/{obj.postId}/comments/{obj.commentId}/"
 
     class Meta:
         model = Comment

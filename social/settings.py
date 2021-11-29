@@ -30,6 +30,8 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
 
+SITE = "https://cmput404f21t17.herokuapp.com/service/"
+
 # Application definition
 
 INSTALLED_APPS = [

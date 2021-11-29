@@ -50,6 +50,13 @@ const App = (props) => {
         const result = await client.get('posts')
         if (result.status === 200) {
             console.log(result.data)
+            result.data.map(item => {
+                if (item.contentType === 'image/png' || item.contentType === 'image/jpeg' || item.contentType === 'image/jpg') {
+                    const base64 = 'data:image/png;base64,' + item.content.split("'")[1]
+                    item.imgSrc = base64
+                }
+                return item
+            })
             setPostList(result.data)
         }
     }, [])
@@ -105,7 +112,14 @@ const App = (props) => {
                         />
                         <Card.Body>
                             <h4>{item.title}</h4>
-                            <div style={{marginBottom: '3px'}}>{item.content}</div>
+                            <div style={{marginBottom: '3px'}}>
+                                {
+                                    item.contentType !== 'image/png' && item.contentType !== 'image/jpeg' && item.contentType !== 'image/jpg' ?
+                                        item.content
+                                        :
+                                        <img src={item.imgSrc} width={'100%'}/>
+                                }
+                            </div>
                             <div className='like'>
                                 <div>
                                     <i className="iconfont icon-xiaoxi"></i>
@@ -117,7 +131,7 @@ const App = (props) => {
                                         {item.likeCount}
                                     </div>
                                     <div style={{marginLeft: 10, display: 'inline-block'}}>
-                                        { item.foreignNodeId ? `Source: ${item.origin}` : ''}
+                                        { item.foreignNodeId ? `Source: ${item.foreignNodeHost}` : ''}
                                     </div>
                                 </div>
                             </div>

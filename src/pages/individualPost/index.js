@@ -11,19 +11,16 @@
  * limitations under the License.
  */
 
-import React, { useCallback, useEffect, useState } from 'react'
-import { List, NavBar, Icon } from 'antd-mobile';
+import React, {useCallback, useEffect, useState} from 'react'
 
-import { Card, Form, Input, Button, message, Typography } from 'antd';
-import DialogueFooter from './DialogueFooter';
+import {Button, Input, message} from 'antd';
 import './index.css'
-import { client, foreignClient } from '../../http';
-import { useHistory } from 'react-router';
+import {client} from '../../http';
 import store from '../../store/store';
 
 const layout = {
-    labelCol: { span: 2 },
-    wrapperCol: { span: 22 },
+    labelCol: {span: 2},
+    wrapperCol: {span: 22},
 };
 
 const IndividualPost = (props) => {
@@ -60,8 +57,13 @@ const IndividualPost = (props) => {
         if (id) {
             // let result = await client.get(`post/${id}`)
             // setPostData(result.data)
-            console.log(JSON.parse(post))
-            setPostData(JSON.parse(post))
+            const item = JSON.parse(post)
+            console.log(item)
+            if (item.contentType === 'image/png' || item.contentType === 'image/jpeg' || item.contentType === 'image/jpg') {
+                const base64 = 'data:image/png;base64,' + item.content.split("'")[1]
+                item.imgSrc = base64
+            }
+            setPostData(item)
         }
     }, [])
 
@@ -97,8 +99,8 @@ const IndividualPost = (props) => {
         const result = await client.post(`post/${postData.id}/like/`, {
             authorId: store.getState().login.id
         })
-        if (result.status==200) {
-            let { succ, count } = result.data
+        if (result.status == 200) {
+            let {succ, count} = result.data
             if (succ) {
                 message.success('liked!')
                 console.log(count)
@@ -121,22 +123,27 @@ const IndividualPost = (props) => {
                         <div className='comments-item'>
                             <div className="user-title">
                                 <img
-                                    style={{ width: 30, height: 30, borderRadius: '50%' }}
+                                    style={{width: 30, height: 30, borderRadius: '50%'}}
                                     src={require('../../assets/user.jpg').default}
                                 />
                                 <div className='username'>{postData?.authorId?.displayName}</div>
                             </div>
                             <h3>{postData?.title}</h3>
-                            <p>{postData?.content}</p>
+                            <p>{
+                                postData?.contentType !== 'image/png' && postData?.contentType !== 'image/jpeg' && postData?.contentType !== 'image/jpg' ?
+                                    postData?.content
+                                    :
+                                    <img src={postData?.imgSrc} width={'100%'}/>
+                            }</p>
                             <div className='like'>
                                 <div>
                                     <i className="iconfont icon-xiaoxi"></i>
-                                    <div style={{ marginLeft: 5, display: 'inline-block', width: 35 }}>
+                                    <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
                                         {postData?.commentCount ?? 0}
                                     </div>
                                     <span className="like-btn" onClick={likePost}>
                                         <i className="iconfont icon-dianzan"></i>
-                                        <div style={{ marginLeft: 5, display: 'inline-block', width: 35 }}>
+                                        <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
                                             {postData?.likeCount ?? 0}
                                         </div>
                                     </span>
@@ -159,13 +166,18 @@ const IndividualPost = (props) => {
                         <div>{new Date(item.publishedOn).toLocaleString()}</div>
                     </div>
                 ))}
-                {commentList.length===0?(
-                    <div style={{color:'#999'}}>Oop! It seems that no one has commented</div>
-                ): null}
+                {!postData?.foreignNodeId && commentList.length === 0 ? (
+                        <div style={{color: '#999'}}>Oop! It seems that no one has commented</div>
+                ) : null}
+                {
+                    postData?.foreignNodeId ?
+                        <div style={{color: '#999'}}>Oop! New comments to foreign posts are not supported </div> : null
+                }
             </div>
 
             <div className="comment-input">
-                <Input placeholder="please input friendly comment" value={commentInput} onChange={e => setCommentInput(e.target.value)} />
+                <Input placeholder="please input friendly comment" value={commentInput}
+                       onChange={e => setCommentInput(e.target.value)}/>
                 <Button type="primary" onClick={comment}>Send</Button>
             </div>
         </div>

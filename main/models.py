@@ -209,6 +209,9 @@ class Post(models.Model):
     # Be used by frontend to get username and password of node
     foreign_node_id = None
 
+    # Be used by frontend to get host of node
+    foreign_node_host = None
+
     def __str__(self):
         return str(self.postId) + '-' + self.title
 
@@ -233,7 +236,8 @@ class Post(models.Model):
             'likeCount': self.likeCount,
             'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/' if not self.comments else self.comments,
             'published': self.publishedOn.strftime('%Y/%m/%d %H:%M:%S'),
-            'foreignNodeId': self.foreign_node_id
+            'foreignNodeId': self.foreign_node_id,
+            'foreignNodeHost': self.foreign_node_host
         }
 
 

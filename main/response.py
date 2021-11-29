@@ -237,6 +237,7 @@ def fetch_posts():
                             unlisted=item['unlisted'],
                         )
                         post.foreign_node_id = str(node.nodeId)
+                        post.foreign_node_host = node.host
                         result_posts.append(post.dict())
             else:
                 print(f"\tPost,{post_url}")
@@ -277,6 +278,7 @@ def fetch_posts():
                         unlisted=item['unlisted']
                     )
                     post.foreign_node_id = str(node.nodeId)
+                    post.foreign_node_host = node.host
                     result_posts.append(post.dict())
         except BaseException as e:
             print(e)

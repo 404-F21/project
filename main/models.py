@@ -86,7 +86,7 @@ class Author(AbstractBaseUser):
 
     def save(self, *args, **kwargs):
         if self.url is None:
-            self.url = f'{self.host}author/{self.id}'
+            self.url = f'{self.host}service/author/{self.id}'
 
         super(Author, self).save(*args, **kwargs)
 

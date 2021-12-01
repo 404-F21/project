@@ -59,6 +59,28 @@ def paginate(objects: QuerySet, params: Dict[str, str]) -> QuerySet:
     return objects[begin:end]
 
 
+def __basic_auth(request):
+    if 'HTTP_AUTHORIZATION' in request.META:
+        auth = request.META['HTTP_AUTHORIZATION'].split()
+        if len(auth) == 2:
+            if auth[0].lower() == "basic":
+                node_id, password = base64.b64decode(auth[1]).decode().split(':')
+                password_md5 = hashlib.md5(password.encode()).hexdigest()
+                try:
+                    node = Node.objects.get(nodeId=node_id)
+                except Node.DoesNotExist:
+                    return 'id not found'
+                if not node.if_approved or node.password_md5 != password_md5:
+                    # Password is incorrect
+                    return 'password incorrect'
+                else:
+                    return AUTH_SUCCESS
+    return 'invalid auth'
+
+
+AUTH_SUCCESS = 'success'
+
+
 # Create your views here.
 class PostList(APIView):
     """
@@ -359,32 +381,16 @@ class CommentList(APIView):
             return Response("Post not found", status=404)
 
 
-class AuthorDetail(APIView):
-    """
-    List all of an Author's information
-    """
-    def get(self, request, pk, format=None):
-        author = Author.objects.filter(id=pk)
-        author_serializer = AuthorSerializer(author.first())
-        data = dict()
-        data['type'] = 'author'
-        data.update(author_serializer.data)
-        return Response(data)
-'''
-@api_view(['GET'])
-def author_page(request, pk):
-    """
-    List all information of an Author, and all of their posts
-    """
-    if request.method == 'GET':
-        author = Author.objects.filter(id=pk)
-        author_serializer = AuthorSerializer(author.first())
-        posts = Post.objects.filter(authorId=pk)
-        post_serializer = PostSerializer(posts, many=True)
-        combined_data.append(author_serializer.data)
-        combined_data.append(post_serializer.data)
-        return Response(combined_data)
-'''
+def get_author(request, pk):
+    if __basic_auth(request) != AUTH_SUCCESS:
+        return no_auth()
+    author = Author.objects.filter(id=pk)
+    author_serializer = AuthorSerializer(author.first())
+    data = dict()
+    data['type'] = 'author'
+    data.update(author_serializer.data)
+    return JsonResponse(data)
+
 
 class AuthorList(APIView):
     """

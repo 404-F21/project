@@ -294,6 +294,8 @@ class Inbox(models.Model):
     ]
     # get the id of the author from the url
     # return posts for which the current user is the author
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True, verbose_name='Inbox item UUID')
+
     # author this item belongs to
     author = models.ForeignKey(to=Author, null=True, on_delete=models.CASCADE, verbose_name='For author')
 

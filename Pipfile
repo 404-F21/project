@@ -29,7 +29,6 @@ Django = "*"
 Pillow = "*"
 pyyaml = "*"
 uritemplate = "*"
-gunicorn = "*"
 
 [dev-packages]
 httpie = "*"

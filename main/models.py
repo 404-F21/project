@@ -70,6 +70,10 @@ class Author(AbstractBaseUser):
         }
 
 
+class Admin(Author):
+    '''TODO: the whole damned model'''
+
+
 class FriendRequest(models.Model):
     # https://medium.com/analytics-vidhya/add-friends-with-689a2fa4e41d
 
@@ -119,15 +123,6 @@ class Following(models.Model):
             name='follower_ne_followee',
             check=~models.Q(follower=models.F('followee')),
         )]
-
-    def __str__(self):
-        return self.followee.displayName + '->' + self.follower.displayName
-
-    def dict(self):
-        return {
-            'follower': self.follower.dict(),
-            'followee': self.followee.dict()
-        }
 
 
 class Post(models.Model):
@@ -206,19 +201,21 @@ class Post(models.Model):
             'categories': self.categories,
             'commentCount': self.commentCount,
             'likeCount': self.likeCount,
-            'comments': deploy_host + '/service/post/' + str(
-                self.postId) + '/comments/' if not self.comments else self.comments,
+            'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/' if not self.comments else self.comments,
             'published': self.publishedOn.isoformat(),
             'foreignNodeId': self.foreign_node_id,
             'foreignNodeHost': self.foreign_node_host
         }
 
 
+#     def __str__(self):
+#         return str(self.postId)
+
 class Comment(models.Model):
     contentOptions = (
         ("text/markdown", "Common Mark"),
         ("text/plain", "Utf-8"),
-        ("application/base64", "application/base64"),
+        ("application/base64", "applcation/base64"),
         ("image/png;base64", "PNG"),
         ("image/jpeg;base64", "JPEG")
     )
@@ -239,9 +236,6 @@ class Comment(models.Model):
 
 
 class LikePost(models.Model):
-    """
-    Likes of posts and authors
-    """
     postId = models.ForeignKey(Post, on_delete=models.CASCADE)
     authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
 
@@ -250,13 +244,7 @@ class LikePost(models.Model):
 
     def __str__(self):
         # return self.liker.displayName + " liked your post"
-        return self.authorId.displayName + '-' + self.postId.title
-
-    def dict(self):
-        return {
-            'post': self.postId.dict(),
-            'author': self.authorId.dict()
-        }
+        pass
 
 
 # https://djangocentral.com/creating-comments-system-with-django/
@@ -281,45 +269,11 @@ class Like(models.Model):
 
 
 class Inbox(models.Model):
-    """
-    Inbox for each author
-    """
-    TYPE_POST = 'post'
-    TYPE_LIKE = 'like'
-    TYPE_FOLLOW = 'follow'
-    CHOICE = [
-        (TYPE_POST, 'Post'),
-        (TYPE_LIKE, 'Like'),
-        (TYPE_FOLLOW, 'Follow')
-    ]
+    # TODO
     # get the id of the author from the url
+
     # return posts for which the current user is the author
-    id = models.UUIDField(default=uuid.uuid4, primary_key=True, verbose_name='Inbox item UUID')
-
-    # author this item belongs to
-    author = models.ForeignKey(to=Author, null=True, on_delete=models.CASCADE, verbose_name='For author')
-
-    # item type
-    item_type = models.CharField(max_length=6, choices=CHOICE, null=False, blank=False,
-                                 default=TYPE_POST, verbose_name='Item type')
-
-    post = models.ForeignKey(to=Post, null=True, on_delete=models.CASCADE, verbose_name='Related post')
-
-    like = models.ForeignKey(to=LikePost, null=True, on_delete=models.CASCADE, verbose_name='Related like')
-
-    follow = models.ForeignKey(to=Following, null=True, on_delete=models.CASCADE, verbose_name='Related following')
-
-    def __str__(self):
-        return self.author.displayName + '<-' + self.item_type + ':' + str(self.id)
-
-    def dict(self):
-        return {
-            'id': str(self.id),
-            'author': self.author.dict(),
-            'type': self.item_type,
-            'item': self.post.dict() if self.item_type == 'post'
-            else self.like.dict() if self.item_type == 'like' else self.follow.dict()
-        }
+    pass
 
 
 class Admin(models.Model):

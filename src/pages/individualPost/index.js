@@ -71,6 +71,12 @@ const IndividualPost = (props) => {
 
     // update comment list function
     const updateCommentList = useCallback(async () => {
+        // if (postData && (!postData.foreignNodeId)) {
+        //     const res = await client.get(`post/${postData.id}/comments/`)
+        //     if (res.status == 200) {
+        //         setCommentList(res.data)
+        //     }
+        // }
         if (postData) {
             let res = {status: 0};
             if (postData.foreignNodeId) {
@@ -94,6 +100,13 @@ const IndividualPost = (props) => {
                 }
             }
         }
+        // if (postData && postData.foreignNodeId) {
+        //     const urlBase64 = window.btoa(postData.comments)
+        //     const res = await client.get(`foreign-post/${postData.foreignNodeId}/${urlBase64}`)
+        //     if (res.status == 200) {
+        //         setCommentList(res.data)
+        //     }
+        // }
     }, [postData])
 
     // fetch comments 

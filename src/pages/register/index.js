@@ -11,22 +11,21 @@
  * limitations under the License.
  */
 
-import React, { useState,useEffect } from 'react'
+import React, { useState } from 'react'
 import './login.css';
-import { useHistory,Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
-import { loginAction } from '../../store/actions'
+import { useHistory } from 'react-router-dom';
 import { Input, message } from 'antd';
 import { client } from '../../http';
-const Register = (props) => {
+const Register = _ => {
     const history = useHistory();
-    const dispatch = useDispatch();
 
     const [displayName, setDisplayName] = useState('')
     const [password, setPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
 
-    const reg = async () => {
+    const reg = async event => {
+		event.preventDefault()
+
         if (
             judge(displayName, 'Please input display name') &&
             judge(password, 'Please input password') &&
@@ -56,18 +55,37 @@ const Register = (props) => {
                         <div style={{textAlign:'center',margin:'50px 0 30px'}}> 
                             <img src={require('../../assets/logo.png').default} alt="" />
                         </div>
-                        <div className="loginform">
-                            <div className='input'>
-                                <Input type="text" placeholder="display name" name="displayName" value={displayName} onChange={e => setDisplayName(e.target.value)}/>
-                            </div>
-                            <div className='input'>
-                                <Input type="password" className="pwd" placeholder="password" name="pwd" value={password} onChange={e => setPassword(e.target.value)} />
-                            </div>
-                            <div className='input'>
-                                <Input type="password" className="pwd" placeholder="confirm password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} />
-                            </div>
-                            <div className="loginbtn" onClick={ reg }>Sign Up</div>
-                        </div>
+                        <form className="loginform" onSubmit={reg}>
+                            <Input
+								className='input'
+								type='text'
+								placeholder='display name'
+								name='displayName'
+								value={displayName}
+								onChange={e => setDisplayName(e.target.value)}
+							/>
+
+                            <Input
+								type='password'
+								className='input pwd'
+								placeholder='password'
+								name='pwd'
+								value={password}
+								onChange={e => setPassword(e.target.value)}
+							/>
+
+							<Input
+								type='password'
+								className='input pwd'
+								placeholder='confirm password'
+								value={confirmPassword}
+								onChange={e => setConfirmPassword(e.target.value)}
+							/>
+
+                            <button className='loginbtn' type='submit'>
+								Sign Up
+							</button>
+                        </form>
                     </div>
             </div>
         </div>

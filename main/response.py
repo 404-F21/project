@@ -226,7 +226,6 @@ def fetch_posts():
                         )
                         post = Post(
                             author=author,
-                            remoteId=item.get('id', ''),
                             title=item.get('title', 'Title'),
                             source=item.get('source', 'Source'),
                             origin=item.get('origin', 'Origin'),
@@ -268,7 +267,6 @@ def fetch_posts():
                     )
                     post = Post(
                         author=author,
-                        remoteId=item.get('id', ''),
                         title=item.get('title', 'Title'),
                         source=item.get('source', 'Source'),
                         origin=item.get('origin', 'Origin'),

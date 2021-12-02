@@ -81,9 +81,9 @@ const IndividualPost = (props) => {
             let res = {status: 0};
             if (postData.foreignNodeId) {
                 const urlBase64 = window.btoa(postData.comments)
-                res = await client.get(`foreign-data/${postData.foreignNodeId}/${urlBase64}`)
+                res = await client.get(`foreign-post/${postData.foreignNodeId}/${urlBase64}`)
                 if (res.status === 200) {
-                    // social-dis group comments
+                    // social-dis group
                     setCommentList(res.data.comments)
                 }
             } else {
@@ -112,41 +112,9 @@ const IndividualPost = (props) => {
             message.success('please waitting!')
             return
         }
-        let result
-        if (!postData.foreignNodeId) {
-            result = await client.post(`post/${postData.id}/like/`, {
-                authorId: store.getState().login.id
-            })
-        } else {
-            const protocol = window.location.protocol
-            const host = window.location.host
-            const userInfo = JSON.parse(localStorage.getItem('userinfo'))
-            const id = protocol + '//' + host + '/service/author/' + userInfo.id
-            const body =  {
-                "@context": postData.remoteId,
-                "summary": `${postData.author.displayName} Likes your post`,
-                "type": "Like",
-                "author":{
-                    "type":"author",
-                    "id": id,
-                    "host": userInfo.host,
-                    "displayName": userInfo.displayName,
-                    "url": userInfo.url,
-                    "github":userInfo.github,
-                    "profileImage": ''
-                },
-                "object": postData.remoteId
-            }
-            const urlBase64 = window.btoa(`${postData.foreignNodeHost}/author/${postData.author.id}/inbox/`)
-            result = await client.post(`foreign-data/${postData.foreignNodeId}/${urlBase64}`, body)
-            if (result.status === 200) {
-                message.success("Like sent to author's inbox")
-            } else {
-                message.error("Something wrong")
-            }
-        }
-
-
+        const result = await client.post(`post/${postData.id}/like/`, {
+            authorId: store.getState().login.id
+        })
         if (result.status == 200) {
             let {succ, count} = result.data
             if (succ) {
@@ -185,17 +153,10 @@ const IndividualPost = (props) => {
                             }</p>
                             <div className='like'>
                                 <div>
-                                    {
-                                        postData?.foreignNodeId ?
-                                            null
-                                            :
-                                            <>
-                                                <i className="iconfont icon-xiaoxi"></i>
-                                                <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
-                                                    {postData?.commentCount ?? 0}
-                                                </div>
-                                            </>
-                                    }
+                                    <i className="iconfont icon-xiaoxi"></i>
+                                    <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
+                                        {postData?.commentCount ?? 0}
+                                    </div>
                                     <span className="like-btn" onClick={likePost}>
                                         <i className="iconfont icon-dianzan"></i>
                                         <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
@@ -217,24 +178,12 @@ const IndividualPost = (props) => {
             <div className="comment-list">
                 {commentList.map(item => (
                     <div className="comment-item" key={item.commentId}>
-                        {
-                            postData.foreignNodeId ?
-                                <>
-                                    {/* Foreign format(social-dis) */}
-                                    <div>{item.comment}</div>
-                                    <div>{item.author.displayName} @ {new Date(item.published).toLocaleString()}</div>
-                                </>
-                                :
-                                <>
-                                    {/* Internal format */}
-                                    <div>{item.text}</div>
-                                    <div>{item.authorId.displayName} @ {new Date(item.publishedOn).toLocaleString()}</div>
-                                </>
-                        }
+                        <div>{item.text}</div>
+                        <div>{item.authorId.displayName} @ {new Date(item.publishedOn).toLocaleString()}</div>
                     </div>
                 ))}
                 {commentList.length === 0 ? (
-                    <div style={{color: '#999'}}>Oop! It seems that no one has commented</div>
+                        <div style={{color: '#999'}}>Oop! It seems that no one has commented</div>
                 ) : null}
             </div>
 

@@ -37,7 +37,7 @@ const App = (props) => {
         const result = await client.post('posts', data)
         console.log(result)
         if (result.status == 200) {
-            message.success('post successfully! Refreshing...')
+            message.success('post successfully!')
             await getPostList()
         }
     }

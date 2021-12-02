@@ -31,7 +31,7 @@ urlpatterns = [
     # view many authors' profiles or register/update an account
     path('authors/', views.AuthorList.as_view()),
     # view one author's profile
-    path('author/<pk>/', views.AuthorUpdate.as_view()),
+    path('author/<pk>/', views.get_author),
     # view all of an author's followers
     path('author/<pk>/followers', views.FollowerList.as_view()),
 
@@ -50,8 +50,8 @@ urlpatterns = [
     path('post/<pk>/comments/', views.CommentList.as_view()),
     # post like
     path('post/<pk>/like/', views.like_post),
-    # Get foreign data with associated auth info (used as a proxy)
-    path('foreign-data/<str:node_id>/<str:url_base64>', views.get_foreign_data),
+    # Get foreign comments (used as a proxy)
+    path('foreign-post/<str:node_id>/<str:url_base64>', views.get_foreign_comments),
 
 
     # admin login

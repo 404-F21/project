@@ -17,9 +17,9 @@ import hashlib
 import json
 import time
 import uuid
+import requests
 from typing import Dict
 
-import requests
 from django.core.paginator import Paginator
 from django.db.models import F
 from django.db.models.query import QuerySet
@@ -35,6 +35,7 @@ from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
 from main.response import fetch_posts, AUTH_SUCCESS, basic_auth
 from main.response import success, failure, no_auth
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
+from social.settings import frontend_auth_username, frontend_auth_password
 
 
 def paginate(objects: QuerySet, params: Dict[str, str]) -> QuerySet:
@@ -52,14 +53,15 @@ class PostList(APIView):
     """
     List all Posts in the database
     """
-
     def get(self, request, format=None):
         a_r = basic_auth(request)
         if a_r != AUTH_SUCCESS:
             return no_auth(a_r)
 
+
+
         all_posts = (Post.objects.filter(visibility="public")
-                     .order_by('-publishedOn'))
+                         .order_by('-publishedOn'))
         paged_posts = paginate(all_posts, request.query_params)
 
         data = []
@@ -195,9 +197,8 @@ def app_login(request):
         return Response({
             'succ': True,
             'id': str(author.pk),
-            'url': author.url,
-            'host': author.host,
-            'github': author.github
+            'authUsername': frontend_auth_username,
+            'authPassword': frontend_auth_password
         })
     except Author.DoesNotExist:
         return Response({'succ': False})
@@ -228,11 +229,9 @@ class AuthorPostList(APIView):
             return no_auth(a_r)
         author = Author.objects.get(pk=uuid.UUID(pk))
         posts = author.post_set.all().order_by('-publishedOn')
-        result = []
-        for item in posts:
-            result.append(item.dict())
+        serializer = PostSerializer(posts, many=True)
 
-        return Response({'type': 'posts', 'items': result})
+        return Response({'type': 'posts', 'items': serializer.data})
 
     def post(self, request, pk, format=None):
         a_r = basic_auth(request)
@@ -265,10 +264,8 @@ class AuthorPostDetail(APIView):
             return no_auth(a_r)
         text = request.data['content']
         title = request.data['title']
-        post = Post.objects.get(author__id=uuid.UUID(pk), pk=uuid.UUID(pid))
-        post.content = text
-        post.title = title
-        post.save()
+        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post.update(content=text, title=title)
 
         return Response({'success': True})
 
@@ -276,7 +273,7 @@ class AuthorPostDetail(APIView):
         a_r = basic_auth(request)
         if a_r != AUTH_SUCCESS:
             return no_auth(a_r)
-        post = Post.objects.get(author__id=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
         post.delete()
 
         return Response({'success': True})
@@ -345,35 +342,24 @@ def comment_list(request, pk):
 
 
 @csrf_exempt
-def get_foreign_data(request, node_id, url_base64):
+def get_foreign_comments(request, node_id, url_base64):
     """
-    Get foreign data (used as a proxy)
-    Post dat to foreign url (used as a proxy)
+    Get foreign comments (used as a proxy)
     """
     a_r = basic_auth(request)
     if a_r != AUTH_SUCCESS:
         return no_auth(a_r)
-    url = base64.b64decode(url_base64).decode()
-    try:
-        node = Node.objects.get(nodeId=node_id)
-    except Node.DoesNotExist:
-        return failure('Node not found')
-    username = node.http_username
-    password = node.http_password
-    if 'http://' in url:
-        url = url.replace('http:', 'https:')
-
     if request.method == 'GET':
-        # GET
-        result = requests.get(url, auth=(username, password))
-        return JsonResponse(result.json())
-    elif request.method == 'POST':
-        # POST
+        url = base64.b64decode(url_base64).decode()
         try:
-            data: dict = json.loads(request.body.decode())
-        except json.JSONDecodeError:
-            return failure('json data format incorrect')
-        result = requests.post(url, data=data, auth=(username, password))
+            node = Node.objects.get(nodeId=node_id)
+        except Node.DoesNotExist:
+            return failure('Node not found')
+        username = node.http_username
+        password = node.http_password
+        if 'http://' in url:
+            url = url.replace('http:', 'https:')
+        result = requests.get(url, auth=(username, password))
         return JsonResponse(result.json())
     else:
         return failure('GET')
@@ -429,41 +415,17 @@ class CommentList(APIView):
             return Response("Post not found", status=404)
 
 
-class AuthorUpdate(APIView):
-    """
-    Get a specific author or update an author
-    """
-
-    def get(self, request, pk):
-        a_r = basic_auth(request)
-        if a_r != AUTH_SUCCESS:
-            return no_auth(a_r)
-        author = Author.objects.filter(id=pk)
-        author_serializer = AuthorSerializer(author.first())
-        data = dict()
-        data['type'] = 'author'
-        data.update(author_serializer.data)
-        return Response(data)
-
-    def post(self, request, pk):
-        """
-        Update info of a user
-        """
-        a_r = basic_auth(request)
-        if a_r != AUTH_SUCCESS:
-            return no_auth(a_r)
-        display_name = request.data['displayName']
-        github = request.data['github']
-        try:
-            author = Author.objects.get(id=pk)
-        except Author.DoesNotExist:
-            return failure('id not found')
-        author.displayName = display_name
-        author.github = github
-        author.save()
-        return Response({
-            'succ': True
-        })
+@api_view(['GET'])
+def get_author(request, pk):
+    a_r = basic_auth(request)
+    if a_r != AUTH_SUCCESS:
+        return no_auth(a_r)
+    author = Author.objects.filter(id=pk)
+    author_serializer = AuthorSerializer(author.first())
+    data = dict()
+    data['type'] = 'author'
+    data.update(author_serializer.data)
+    return JsonResponse(data)
 
 
 class AuthorList(APIView):
@@ -516,7 +478,7 @@ def like(request, pk):
 # Create your views here.
 def render_html(request):
     from django.contrib.auth.models import User
-    # create default super user for django admin page
+    # create default super user
     if User.objects.count() == 0:
         user = User.objects.create_user('admin', 'test@test.com', 'admin123456')
         user.is_stuff = True

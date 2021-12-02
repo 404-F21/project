@@ -14,9 +14,6 @@
 
 import time
 import base64
-import threading
-import datetime
-import requests
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import DjangoJobStore
 from django.db.models.query import QuerySet
@@ -24,8 +21,6 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from rest_framework import mixins
-from rest_framework import generics
 from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
@@ -35,7 +30,6 @@ from main.response import success, failure, no_auth
 from django.db.models import F
 from django.core.paginator import Paginator
 from django.shortcuts import redirect
-from social.settings import deploy_host
 from main.response import fetch_posts
 
 import uuid

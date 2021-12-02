@@ -13,7 +13,10 @@
 
 import axios from "axios"
 
+const protocol = window.location.protocol;
+const host = window.location.host;
+
 export const client = axios.create({
-    baseURL: `https://cmput404f21t17.herokuapp.com/service/`
+    baseURL: `${protocol}//${host}/service/`,
     // baseURL: `http://localhost:8000/service/`
 });

@@ -31,6 +31,9 @@ const Login = (props) => {
             let data = {
                 ...user,
                 id: ret.data.id,
+                url: ret.data.url,
+                host: ret.data.host,
+                github: ret.data.github
             };
             dispatch(loginAction(data))
             localStorage.setItem('userinfo', JSON.stringify(data))

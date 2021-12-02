@@ -52,7 +52,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 5,
     'DEFAULT_AUTHENTICATION_CLASSES': (
         # 'rest_framework.authentication.BasicAuthentication',
-        # 'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
         # Leaving it commented as of now since we don't need token auth
         # 'rest_framework.authentication.TokenAuthentication'
     ),
@@ -213,11 +213,4 @@ if os.path.isfile(dotenv_file):
 options = DATABASES['default'].get('OPTIONS', {})
 options.pop('sslmode', None)
 
-if os.environ.get('ON_HEROKU'):
-    deploy_host = 'https://cmput404f21t17.herokuapp.com'
-else:
-    deploy_host = 'http://localhost:8000'
-
-# HTTP Basic Auth Username and Password (internal use)
-frontend_auth_username = 'bc8e0ebd-c591-4e7c-81f9-89aede953302'
-frontend_auth_password = '440bfadd-d21e-48c3-89b3-d789b40ce83a'
+deploy_host = 'https://cmput404f21t17.herokuapp.com'

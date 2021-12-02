@@ -34,6 +34,6 @@ def need_admin(view_func):
                 return view_func(request, node_id)
             else:
                 return view_func(request)
-        return no_auth('need admin')
+        return no_auth()
 
     return inner

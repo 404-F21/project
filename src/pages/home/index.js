@@ -52,6 +52,7 @@ const App = _ => {
 
 		postForm.resetFields();
 		setSwitchChecked(false);
+		setIsMd(false);
 		setHasContent(false);
 		setIsLoading(false);
 

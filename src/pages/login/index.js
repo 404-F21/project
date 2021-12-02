@@ -11,19 +11,23 @@
  * limitations under the License.
  */
 
-import React, { useState,useEffect } from 'react'
+import React, { useState } from 'react'
 import './login.css';
-import { useHistory,Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { useHistory } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { loginAction } from '../../store/actions'
-import { Input, message, Modal } from 'antd';
+import { Input, message } from 'antd';
 import { client } from '../../http';
-const Login = (props) => {
+
+const Login = _ => {
     const history = useHistory();
     const dispatch = useDispatch();
     const [displayName, setDisplayName] = useState('')
     const [password, setPassword] = useState('')
-    const log = async () => {
+
+    const log = async event => {
+		event.preventDefault()
+
         let user = { displayName, password }
         let ret = await client.post('log', user)
         console.log(ret)
@@ -40,27 +44,40 @@ const Login = (props) => {
             message.error('login failed!')
         }
     }
+
     return (
         <div className="bg">
             <div className="login">
-                    <div className="logincon">
-                        <div style={{textAlign:'center',margin:'50px 0 30px'}}> 
-                            <img src={require('../../assets/logo.png').default} alt="" />
-                        </div>
-                        <div className="loginform">
-                            <div className='input'>
-                                <Input type="text" placeholder="display name" name="displayName" value={displayName} onChange={e => setDisplayName(e.target.value)}/>
-                            </div>
-                            <div className='input'>
-                                <Input type="password" onPressEnter={ ()=>{} } className="pwd" placeholder="password" name="pwd"  value={password} onChange={e => setPassword(e.target.value)} />
-                            </div>
-                            {/* <div className="forgetpwd" onClick={ ()=>{} }>forget password？</div> */}
-                            <div className="loginbtn" onClick={ log }>Log In</div>
-                            {/* <div className='changeLogin'>
-                                <Link to='/register'>to Register</Link>
-                            </div> */}
-                        </div>
-                    </div>
+				<div className="logincon">
+					<div style={{textAlign:'center',margin:'50px 0 30px'}}> 
+						<img src={require('../../assets/logo.png').default} alt="" />
+					</div>
+					<form className="loginform" onSubmit={log}>
+						<Input
+							className='input'
+							type="text"
+							placeholder="display name"
+							name="displayName"
+							value={displayName}
+							onChange={e => setDisplayName(e.target.value)}
+						/>
+
+						<Input
+							type="password"
+							className="input pwd"
+							placeholder="password"
+							name="pwd" 
+							value={password}
+							onChange={e => setPassword(e.target.value)}
+						/>
+						{/* <div className="forgetpwd" onClick={ ()=>{} }>forget password？</div> */}
+						<button
+							className="loginbtn" type='submit'>Log In</button>
+						{/* <div className='changeLogin'>
+							<Link to='/register'>to Register</Link>
+						</div> */}
+					</form>
+				</div>
             </div>
         </div>
 

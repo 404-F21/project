@@ -23,88 +23,47 @@ from django.utils.translation import gettext_lazy as _
 
 # from django.contrib.auth import authenticate
 
-# class Author(models.Model):
-#     # Author Info
-#
-#     '''
-#     Private information
-#     '''
-#     password = models.CharField(max_length=25, default = "", blank=True)
-#
-#     # will always be appended to the author's URL
-#     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, blank=False)
-#     url = models.CharField(max_length=150, blank=True, null=True)
-#
-#     # User in the default django table
-#     user = models.ForeignKey(User, on_delete=models.CASCADE)
-#
-#     host = models.URLField(blank=True, null=True)  # Url of different hosts
-#     displayName = models.CharField(max_length=100, unique=True)
-#
-#     # HATEOS url for GITHUB API???
-#     github = models.URLField(default="")
-#
-#     profilePic = models.ImageField(upload_to='profilePics/', blank=True)
-#
-#     def save(self, *args, **kwargs):
-#         if self.url is None:
-#             self.url = f'{self.host}author/{self.id}'
-#
-#         super(Author, self).save(*args, **kwargs)
-#
-#     def __str__(self):
-#         return str(self.id) + ": " + self.displayName
+class Author(models.Model):
+    # Author Info
 
-class Author(AbstractBaseUser):
-    '''
-    A user who can make posts, friends, comments, and like posts.
-    '''
     '''
     Private information
     '''
-    password = models.CharField(max_length=25, default="", blank=True)
-    '''
-    Public information
-    '''
-    id = models.UUIDField(primary_key=True,
-                          default=uuid.uuid4,
-                          editable=False,
-                          blank=False)
+    password = models.CharField(max_length=25, default = "", blank=True)
 
+    # will always be appended to the author's URL
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, blank=False)
     url = models.CharField(max_length=150, blank=True, null=True)
 
-    host = models.URLField(blank=True, null=True)
-    displayName = models.CharField(max_length=100, default="")
+    # User in the default django table
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    # Potentially the future home of the HATEOS URL for github API
+    host = models.URLField(blank=True, null=True)  # Url of different hosts
+    displayName = models.CharField(max_length=100, unique=True)
+
+    # HATEOS url for GITHUB API???
     github = models.URLField(default="")
 
-    profileImage = models.ImageField(upload_to='profilePics/', blank=True)
-
-    USERNAME_FIELD = "displayName"
-    REQUIRED_FIELDS = ["password"]
+    profilePic = models.ImageField(upload_to='profilePics/', blank=True)
 
     def save(self, *args, **kwargs):
         if self.url is None:
-            self.url = f'{self.host}service/author/{self.id}'
+            self.url = f'{self.host}author/{self.id}'
 
         super(Author, self).save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.id) + ": " + str(self.displayName)
+        return str(self.id) + ": " + self.displayName
 
+
+    # for the record, these dict() methods should not exist, and we should be
+    #  using serializers. they are much faster and safer.
     def dict(self):
-        return {
-            'id': str(self.id),
-            'url': self.url,
-            'host': self.host,
-            'displayName': self.displayName,
-            'github': self.github
-        }
-
-
-class Admin(Author):
-    '''TODO: the whole damned model'''
+        return {'id': str(self.id),
+                'url': self.url,
+                'host': self.host,
+                'displayName': self.displayName,
+                'github': self.github}
 
 
 class FriendRequest(models.Model):
@@ -314,6 +273,10 @@ class Admin(models.Model):
     Model for server admin
     """
     username = models.CharField(max_length=128, blank=False, null=False, verbose_name='Admin Username')
+
+    id = models.UUIDField(primary_key=True,
+                          default=uuid.uuid4,
+                          editable=False)
 
     password_md5 = models.CharField(max_length=32, blank=False, null=False, verbose_name='Admin Password MD5')
 

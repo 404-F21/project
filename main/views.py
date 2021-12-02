@@ -12,35 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import base64
-from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore
+import hashlib
+import json
+import time
+import uuid
+import requests
+from typing import Dict
+
+from django.core.paginator import Paginator
+from django.db.models import F
 from django.db.models.query import QuerySet
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
-from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
 from main.decorator import need_admin
+from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
+from main.response import fetch_posts, AUTH_SUCCESS, basic_auth
 from main.response import success, failure, no_auth
-from django.db.models import F
-from django.core.paginator import Paginator
-from django.shortcuts import redirect
-from main.response import fetch_posts
-
-import uuid
-import json
-
-import time
-import hashlib
-import base64
-from django.views.decorators.csrf import csrf_exempt
-import hashlib
-from typing import Dict
+from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
+from social.settings import frontend_auth_username, frontend_auth_password
 
 
 def paginate(objects: QuerySet, params: Dict[str, str]) -> QuerySet:
@@ -53,36 +48,20 @@ def paginate(objects: QuerySet, params: Dict[str, str]) -> QuerySet:
     return objects[begin:end]
 
 
-def __basic_auth(request):
-    if 'HTTP_AUTHORIZATION' in request.META:
-        auth = request.META['HTTP_AUTHORIZATION'].split()
-        if len(auth) == 2:
-            if auth[0].lower() == "basic":
-                node_id, password = base64.b64decode(auth[1]).decode().split(':')
-                password_md5 = hashlib.md5(password.encode()).hexdigest()
-                try:
-                    node = Node.objects.get(nodeId=node_id)
-                except Node.DoesNotExist:
-                    return 'id not found'
-                if not node.if_approved or node.password_md5 != password_md5:
-                    # Password is incorrect
-                    return 'password incorrect'
-                else:
-                    return AUTH_SUCCESS
-    return 'invalid auth'
-
-
-AUTH_SUCCESS = 'success'
-
-
 # Create your views here.
 class PostList(APIView):
     """
     List all Posts in the database
     """
     def get(self, request, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
+
+
+
         all_posts = (Post.objects.filter(visibility="public")
-                     .order_by('-publishedOn'))
+                         .order_by('-publishedOn'))
         paged_posts = paginate(all_posts, request.query_params)
 
         data = []
@@ -94,31 +73,37 @@ class PostList(APIView):
         return response
 
     def post(self, request, *args, **kwargs):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         if request.content_type == "application/json":
             author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
             text = request.data['content']
             title = request.data['title']
-            new_post = Post(author=author,content=text,title=title)
+            new_post = Post(author=author, content=text, title=title)
             new_post.save()
-            
+
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()
             text = request.data['content']
             title = request.data['title']
-            new_post = Post(author=author,content=text,title=title)
+            new_post = Post(author=author, content=text, title=title)
             # new_post = Post(authorId=author,content=text,title=title)
             new_post.save()
 
-        #return Response(request.data)
-        #return Response(status=status.HTTP_201_CREATED)
+        # return Response(request.data)
+        # return Response(status=status.HTTP_201_CREATED)
         return HttpResponse("post created")
 
 
 class Register(APIView):
     def post(self, request, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         author = Author.objects.create(
-            displayName = request.data['displayName'],
-            password = request.data["password"],
+            displayName=request.data['displayName'],
+            password=request.data["password"],
         )
         author.save()
         ser = AuthorSerializer(author)
@@ -127,6 +112,9 @@ class Register(APIView):
 
 class FollowerList(APIView):
     def get(self, request, pk, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         author = Author.objects.get(pk=uuid.UUID(pk))
         follow_pairs = author.follower_set.all().order_by('follower__displayName')
         paged_pairs = paginate(follow_pairs, request.query_params)
@@ -135,20 +123,26 @@ class FollowerList(APIView):
         # this list comprehension is required to keep the serializers consistent
         items = [e['follower'] for e in serializer.data]
 
-        return Response({ 'type': 'followers', 'items': items })
+        return Response({'type': 'followers', 'items': items})
 
 
 class FollowerDetail(APIView):
     def delete(self, request, pk, fpk, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         try:
             author = Author.objects.get(pk=uuid.UUID(pk))
             follow_pair = author.follower_set.get(follower=uuid.UUID(fpk))
             follow_pair.delete()
-            return Response({ 'success': True })
+            return Response({'success': True})
         except (Author.DoesNotExist, Following.DoesNotExist):
-            return Response({ 'success': False })
+            return Response({'success': False})
 
     def put(self, request, pk, fpk, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         follower = Author.objects.get(pk=uuid.UUID(fpk))
         followee = Author.objects.get(pk=uuid.UUID(pk))
 
@@ -160,15 +154,22 @@ class FollowerDetail(APIView):
         return Response(serializer.data)
 
     def get(self, request, pk, fpk, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         try:
             author = Author.objects.get(pk=uuid.UUID(pk))
             author.followee_set.get(follower=uuid.UUID(fpk))
-            return Response({ 'isFollower': True })
+            return Response({'isFollower': True})
         except (Author.DoesNotExist, Following.DoesNotExist):
-            return Response({ 'isFollower': False })
+            return Response({'isFollower': False})
+
 
 class FriendList(APIView):
     def get(self, request, pk, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         author = Author.objects.get(pk=uuid.UUID(pk))
         followers = author.follower_set.all().values_list('follower__id')
         friend_pairs = author.followed_set.filter(followee__id__in=followers).order_by('followee__displayName')
@@ -192,19 +193,26 @@ def app_login(request):
         author = Author.objects.get(displayName=name, password=pwd)
         # login(request, author)
 
+        # return localhost username and password
         return Response({
             'succ': True,
             'id': str(author.pk),
+            'authUsername': frontend_auth_username,
+            'authPassword': frontend_auth_password
         })
     except Author.DoesNotExist:
-        return Response({ 'succ': False })
+        return Response({'succ': False})
 
 
 class PostDetail(APIView):
     """
     List an individual post
     """
+
     def get(self, request, pk, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         try:
             post = Post.objects.get(postId=uuid.UUID(pk))
         except Post.DoesNotExist:
@@ -216,47 +224,66 @@ class PostDetail(APIView):
 
 class AuthorPostList(APIView):
     def get(self, request, pk, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         author = Author.objects.get(pk=uuid.UUID(pk))
         posts = author.post_set.all().order_by('-publishedOn')
         serializer = PostSerializer(posts, many=True)
 
-        return Response({ 'type': 'posts', 'items': serializer.data })
+        return Response({'type': 'posts', 'items': serializer.data})
 
     def post(self, request, pk, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         author = Author.objects.get(pk=uuid.UUID(pk))
         text = request.data['content']
         title = request.data['title']
-        new_post = Post.objects.create(authorId=author,content=text,title=title)
+        new_post = Post.objects.create(authorId=author, content=text, title=title)
         new_post.save()
 
-        return Response({ 'success': True })
+        return Response({'success': True})
+
 
 class AuthorPostDetail(APIView):
     def get(self, request, pk, pid, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         author = Author.objects.get(pk=uuid.UUID(pk))
         post = author.post_set.get(pk=uuid.UUID(pid))
         serializer = PostSerializer(post)
 
-        data = dict({ 'type': 'post' }, **serializer.data)
+        data = dict({'type': 'post'}, **serializer.data)
         return Response(data)
 
     def post(self, request, pk, pid, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         text = request.data['content']
         title = request.data['title']
         post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
         post.update(content=text, title=title)
 
-        return Response({ 'success': True })
+        return Response({'success': True})
 
     def delete(self, request, pk, pid, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
-        post.delete()        
+        post.delete()
 
-        return Response({ 'success': True })
+        return Response({'success': True})
 
 
 @api_view(['POST'])
 def like_post(request, pk):
+    a_r = basic_auth(request)
+    if a_r != AUTH_SUCCESS:
+        return no_auth(a_r)
     post_id = uuid.UUID(pk)
     author_id = uuid.UUID(request.data['authorId'])
 
@@ -266,7 +293,7 @@ def like_post(request, pk):
     likes = LikePost.objects.filter(postId=post_id, authorId=author_id)
     if len(likes):
         # already liked can not like again
-        return Response({ 'succ': False })
+        return Response({'succ': False})
     likepost = LikePost(postId=post, authorId=author)
     likepost.save()
     # let likecount update with itself + 1
@@ -277,11 +304,15 @@ def like_post(request, pk):
         'count': post.likeCount
     })
 
-@api_view(['GET','POST'])
+
+@api_view(['GET', 'POST'])
 def comment_list(request, pk):
     """
     List all Comments of a Post
     """
+    a_r = basic_auth(request)
+    if a_r != AUTH_SUCCESS:
+        return no_auth(a_r)
     # get simply gets all comments from a single post
     if request.method == 'GET':
         comments = Comment.objects.filter(postId=uuid.UUID(pk))
@@ -296,9 +327,9 @@ def comment_list(request, pk):
         post = Post.objects.filter(postId=uuid.UUID(request.data['postId']))
         author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))
         comment = Comment(
-            postId = post[0],
-            authorId = author[0],
-            text = request.data['text']
+            postId=post[0],
+            authorId=author[0],
+            text=request.data['text']
         )
         post.update(commentCount=F('commentCount') + 1)
         comment.save()
@@ -315,6 +346,9 @@ def get_foreign_comments(request, node_id, url_base64):
     """
     Get foreign comments (used as a proxy)
     """
+    a_r = basic_auth(request)
+    if a_r != AUTH_SUCCESS:
+        return no_auth(a_r)
     if request.method == 'GET':
         url = base64.b64decode(url_base64).decode()
         try:
@@ -334,12 +368,15 @@ def get_foreign_comments(request, node_id, url_base64):
 class CommentList(APIView):
     def get(self, request, pk, format=None):
         # check if user is authenticated and if not return a 401
-        
+
         # https://docs.djangoproject.com/en/dev/ref/models/querysets/#exists
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         post = Post.objects.get(pk=pk)
         if post is not None:
             # Check if the post is visible for public/friends/whatever
-            #assuming it is visible to all
+            # assuming it is visible to all
 
             comments = Comment.objects.filter(postId=post)
             if comments.count() > 0:
@@ -354,6 +391,9 @@ class CommentList(APIView):
 
     def post(self, request, pk, format=None):
         # check if user is authenticated and if not return a 401
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         post = Post.objects.get(pk=pk)
         if post is not None:
 
@@ -361,9 +401,9 @@ class CommentList(APIView):
             if author is None:
                 return HttpResponse('Error, no such author')
             comment = Comment(
-                postId = post,
-                authorId = author,
-                text = request.data['text']
+                postId=post,
+                authorId=author,
+                text=request.data['text']
             )
             post.commentCount += 1
             post.save()
@@ -375,9 +415,11 @@ class CommentList(APIView):
             return Response("Post not found", status=404)
 
 
+@api_view(['GET'])
 def get_author(request, pk):
-    if __basic_auth(request) != AUTH_SUCCESS:
-        return no_auth()
+    a_r = basic_auth(request)
+    if a_r != AUTH_SUCCESS:
+        return no_auth(a_r)
     author = Author.objects.filter(id=pk)
     author_serializer = AuthorSerializer(author.first())
     data = dict()
@@ -390,20 +432,27 @@ class AuthorList(APIView):
     """
     List all authors in the server, or register a new author
     """
+
     def get(self, request, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         authors = paginate(Author.objects.all().order_by('displayName'), request.query_params)
         serializer = AuthorSerializer(authors, many=True)
 
-        data = { 'type': 'authors', 'items': serializer.data }
+        data = {'type': 'authors', 'items': serializer.data}
         return Response(data)
 
     def post(self, request, format=None):
+        a_r = basic_auth(request)
+        if a_r != AUTH_SUCCESS:
+            return no_auth(a_r)
         uri = request.build_absolute_uri('/')
 
         author = Author.objects.create(
-            displayName = request.data['displayName'],
-            password = request.data["password"],
-            host = uri,
+            displayName=request.data['displayName'],
+            password=request.data["password"],
+            host=uri,
         )
         author.save()
         ser = AuthorSerializer(author)
@@ -425,7 +474,7 @@ def like(request, pk):
 
 '''
 
-from django.shortcuts import render
+
 # Create your views here.
 def render_html(request):
     from django.contrib.auth.models import User
@@ -435,9 +484,6 @@ def render_html(request):
         user.is_stuff = True
         user.save()
     return render(request, 'index.html')
-
-def render_admin(request):
-    return render(request, 'ant-design-pro/index.html')
 
 
 # APIs for admin functions

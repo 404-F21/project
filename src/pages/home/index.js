@@ -14,7 +14,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {useHistory} from 'react-router-dom';
 //import Contacts from '/Users/nathandrapeza/Documents/year4/404/project/front_end/src/posts/posts'
-
 import {Card} from 'antd-mobile';
 import {Button, Form, Input, message} from 'antd';
 import './index.css';
@@ -92,7 +91,7 @@ const App = (props) => {
                     //         description={item.content}
                     //         />
                     // </Card>
-                    <Card onClick={() => {
+                    <Card style={{marginTop: '10px', marginBottom: '10px'}} onClick={() => {
                         const param = window.btoa(JSON.stringify(item))
                         history.push(`/individualpost/${param}`)
                     }}>
@@ -122,16 +121,22 @@ const App = (props) => {
                             </div>
                             <div className='like'>
                                 <div>
-                                    <i className="iconfont icon-xiaoxi"></i>
-                                    <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
-                                        {item.commentCount}
-                                    </div>
+                                    {
+                                        item.foreignNodeId ? null :
+                                            <>
+                                                <i className="iconfont icon-xiaoxi"></i>
+                                                <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
+                                                    {item.commentCount}
+                                                </div>
+                                            </>
+                                    }
+
                                     <i className="iconfont icon-dianzan"></i>
                                     <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
                                         {item.likeCount}
                                     </div>
                                     <div style={{marginLeft: 10, display: 'inline-block'}}>
-                                        { item.foreignNodeId ? `Source: ${item.foreignNodeHost}` : ''}
+                                        {item.foreignNodeId ? `Source: ${item.foreignNodeHost}` : ''}
                                     </div>
                                 </div>
                             </div>

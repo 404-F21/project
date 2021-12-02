@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import threading
+import base64
+import datetime
+import hashlib
 import json
 import time
-import datetime
+
 import requests
 from django.shortcuts import HttpResponse
-from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore
+
 from main.models import Node, Post, Author
+from social.settings import frontend_auth_username, frontend_auth_password
 
 
 def __result(code: int, message: str, data: any) -> HttpResponse:
@@ -31,6 +33,7 @@ def __result(code: int, message: str, data: any) -> HttpResponse:
         'time': time.time()
     }))
     r['Content-Type'] = 'application/json'
+    r.status_code = code
     return r
 
 
@@ -42,8 +45,8 @@ def failure(message: str) -> HttpResponse:
     return __result(500, message, None)
 
 
-def no_auth() -> HttpResponse:
-    return __result(403, 'you are not allowed to access to this api', None)
+def no_auth(message: str) -> HttpResponse:
+    return __result(401, message, None)
 
 
 # def fetch_posts():
@@ -162,6 +165,9 @@ def no_auth() -> HttpResponse:
 
 
 def fetch_posts():
+    """
+    Fetch data from foreign nodes
+    """
     print('Fetching...')
     fetch_nodes = Node.objects.filter(node_type='FETCH')
     result_posts = []
@@ -183,7 +189,6 @@ def fetch_posts():
                 result = requests.get(author_url, auth=(username, password),
                                       headers={'Origin': 'https://cmput404f21t17.herokuapp.com/service/'})
                 json_obj = result.json()
-                type(json_obj)
                 if type(json_obj) == list:
                     authors = json_obj
                 elif 'items' in json_obj.keys():
@@ -230,6 +235,7 @@ def fetch_posts():
                             categories=', '.join(list(item.get('categories', 'Categories'))) if type(
                                 item.get('categories', 'Categories')) == list else item.get('categories', 'Categories'),
                             commentCount=0,
+                            likeCount=len(list(item.get('likes', []))),
                             comments=item.get('comments', 'Comments'),
                             publishedOn=datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ'),
                             visibility=str(item.get('visibility', 'PUBLIC')).lower(),
@@ -270,6 +276,7 @@ def fetch_posts():
                         categories=', '.join(list(item.get('categories', 'Categories'))) if type(
                             item.get('categories', 'Categories')) == list else item.get('categories', 'Categories'),
                         commentCount=0,
+                        likeCount=len(list(item.get('likes', []))),
                         comments=item.get('comments', 'Comments'),
                         publishedOn=datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ'),
                         visibility=str(item.get('visibility', 'PUBLIC')).lower(),
@@ -281,3 +288,34 @@ def fetch_posts():
         except BaseException as e:
             print(e)
     return result_posts
+
+
+def basic_auth(request):
+    """
+    Basic auth for apis
+    """
+    if 'HTTP_AUTHORIZATION' in request.META:
+        auth = request.META['HTTP_AUTHORIZATION'].split()
+        if len(auth) == 2:
+            if auth[0].lower() == "basic":
+                node_id, password = base64.b64decode(auth[1]).decode().split(':')
+                # Adapt internal frontend access
+                if node_id == frontend_auth_username and password == frontend_auth_password:
+                    return AUTH_SUCCESS
+                password_md5 = hashlib.md5(password.encode()).hexdigest()
+                try:
+                    node = Node.objects.get(nodeId=node_id)
+                except Node.DoesNotExist:
+                    return 'id not found'
+                except Exception as e:
+                    print(e)
+                    return 'process error'
+                if not node.if_approved or node.password_md5 != password_md5:
+                    # Password is incorrect
+                    return 'password incorrect'
+                else:
+                    return AUTH_SUCCESS
+    return 'invalid auth'
+
+
+AUTH_SUCCESS = 'success'

@@ -18,5 +18,9 @@ const host = window.location.host;
 
 export const client = axios.create({
     baseURL: `${protocol}//${host}/service/`,
-    // baseURL: `http://localhost:8000/service/`
+    // baseURL: `http://localhost:8000/service/`,
+    auth: {
+        username: 'bc8e0ebd-c591-4e7c-81f9-89aede953302',
+        password: '440bfadd-d21e-48c3-89b3-d789b40ce83a'
+    }
 });

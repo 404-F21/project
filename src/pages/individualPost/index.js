@@ -71,10 +71,26 @@ const IndividualPost = (props) => {
 
     // update comment list function
     const updateCommentList = useCallback(async () => {
-        if (postData && (!postData.foreignNodeId)) {
-            const res = await client.get(`post/${postData.id}/comments/`)
-            if (res.status == 200) {
-                setCommentList(res.data)
+        // if (postData && (!postData.foreignNodeId)) {
+        //     const res = await client.get(`post/${postData.id}/comments/`)
+        //     if (res.status == 200) {
+        //         setCommentList(res.data)
+        //     }
+        // }
+        if (postData) {
+            let res = {status: 0};
+            if (postData.foreignNodeId) {
+                const urlBase64 = window.btoa(postData.comments)
+                res = await client.get(`foreign-post/${postData.foreignNodeId}/${urlBase64}`)
+                if (res.status === 200) {
+                    // social-dis group
+                    setCommentList(res.data.comments)
+                }
+            } else {
+                res = await client.get(`post/${postData.id}/comments/`)
+                if (res.status === 200) {
+                    setCommentList(res.data)
+                }
             }
         }
         // if (postData && postData.foreignNodeId) {
@@ -163,16 +179,12 @@ const IndividualPost = (props) => {
                 {commentList.map(item => (
                     <div className="comment-item" key={item.commentId}>
                         <div>{item.text}</div>
-                        <div>{new Date(item.publishedOn).toLocaleString()}</div>
+                        <div>{item.authorId.displayName} @ {new Date(item.publishedOn).toLocaleString()}</div>
                     </div>
                 ))}
-                {!postData?.foreignNodeId && commentList.length === 0 ? (
+                {commentList.length === 0 ? (
                         <div style={{color: '#999'}}>Oop! It seems that no one has commented</div>
                 ) : null}
-                {
-                    postData?.foreignNodeId ?
-                        <div style={{color: '#999'}}>Oop! New comments to foreign posts are not supported </div> : null
-                }
             </div>
 
             <div className="comment-input">

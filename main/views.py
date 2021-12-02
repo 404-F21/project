@@ -98,7 +98,11 @@ class PostList(APIView):
             author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
             text = request.data['content']
             title = request.data['title']
-            new_post = Post(author=author,content=text,title=title)
+            contentType = request.data.get('contentType', 'text/plain')
+            new_post = Post(author=author,
+                            content=text,
+                            title=title,
+                            contentType=contentType,)
             new_post.save()
             
         elif request.content_type == "application/x-www-form-urlencoded":

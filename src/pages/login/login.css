@@ -90,4 +90,6 @@
     margin-top: 40px;
     cursor: pointer;
     box-shadow: 0 0 3px #1D8DFD;
+	border-style: solid;
+	border-color: #1D8DFD;
 }

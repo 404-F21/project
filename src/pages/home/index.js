@@ -136,7 +136,7 @@ const App = (props) => {
                                         {item.likeCount}
                                     </div>
                                     <div style={{marginLeft: 10, display: 'inline-block'}}>
-                                        {item.foreignNodeId ? `Source: ${item.foreignNodeHost}` : 'Local User'} @ {new Date(item.published).toLocaleString()}
+                                        {item.foreignNodeId ? `Source: ${item.foreignNodeHost}` : ''}
                                     </div>
                                 </div>
                             </div>

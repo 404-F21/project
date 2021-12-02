@@ -80,14 +80,7 @@ const IndividualPost = (props) => {
         if (postData) {
             let res = {status: 0};
             if (postData.foreignNodeId) {
-                let urlBase64
-                if (postData.foreignNodeHost.indexOf('linkedspace-staging.herokuapp.com') !== -1) {
-                    const url = postData.comments.replace('linkedspace-staging.herokuapp.com/author', 'linkedspace-staging.herokuapp.com/api/author')
-                    urlBase64 = window.btoa(url)
-                }
-                if (postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1) {
-                    urlBase64 = window.btoa(postData.comments)
-                }
+                const urlBase64 = window.btoa(postData.comments)
                 res = await client.get(`foreign-data/${postData.foreignNodeId}/${urlBase64}`)
                 if (res.status === 200) {
                     // social-dis group comments
@@ -129,17 +122,17 @@ const IndividualPost = (props) => {
             const host = window.location.host
             const userInfo = JSON.parse(localStorage.getItem('userinfo'))
             const id = protocol + '//' + host + '/service/author/' + userInfo.id
-            const body = {
+            const body =  {
                 "@context": postData.remoteId,
                 "summary": `${postData.author.displayName} Likes your post`,
                 "type": "Like",
-                "author": {
-                    "type": "author",
+                "author":{
+                    "type":"author",
                     "id": id,
                     "host": userInfo.host,
                     "displayName": userInfo.displayName,
                     "url": userInfo.url,
-                    "github": userInfo.github,
+                    "github":userInfo.github,
                     "profileImage": ''
                 },
                 "object": postData.remoteId
@@ -208,9 +201,6 @@ const IndividualPost = (props) => {
                                         <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
                                             {postData?.likeCount ?? 0}
                                         </div>
-                                        <div style={{marginLeft: 10, display: 'inline-block'}}>
-                                        {postData?.foreignNodeId ? `Source: ${postData.foreignNodeHost}` : ''}
-                                    </div>
                                     </span>
                                 </div>
                             </div>
@@ -219,35 +209,21 @@ const IndividualPost = (props) => {
                     </div>
                 </div>
                 <div className="top-news bgw">
-                    <h3>Author Info</h3>
-                    <div><b>Author Name: </b><span>{postData?.author?.displayName}</span></div>
-                    <div><b>URL: </b><span><a href={postData?.author?.url}>Click to visit</a></span></div>
-                    <div><b>Github: </b><span>{postData?.author?.github}</span></div>
-                    <div><b>Host Comes From: </b><span>{postData?.author?.host}</span></div>
+                    <div>user info</div>
+                    <div>display name: <span>{postData?.author?.displayName}</span></div>
                 </div>
             </div>
 
-            <h3 style={{marginTop: '20px'}}>Comments: </h3>
             <div className="comment-list">
                 {commentList.map(item => (
                     <div className="comment-item" key={item.commentId}>
                         {
                             postData.foreignNodeId ?
-                                postData.foreignNodeHost.indexOf('linkedspace-staging.herokuapp.com') !== -1 ?
-                                    <>
-                                        {/* Foreign format(linkedspace) */}
-                                        <div>{item.content}</div>
-                                        <div>{item.author.displayName} @ {item.author.host} @ {new Date(item.published).toLocaleString()}</div>
-                                    </>
-                                    :
-                                    postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1 ?
-                                        <>
-                                            {/* Foreign format(social-dis) */}
-                                            <div>{item.comment}</div>
-                                            <div>{item.author.displayName} @ {item.author.host} @ {new Date(item.published).toLocaleString()}</div>
-                                        </>
-                                        :
-                                        null
+                                <>
+                                    {/* Foreign format(social-dis) */}
+                                    <div>{item.comment}</div>
+                                    <div>{item.author.displayName} @ {new Date(item.published).toLocaleString()}</div>
+                                </>
                                 :
                                 <>
                                     {/* Internal format */}

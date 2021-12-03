@@ -472,7 +472,7 @@ def admin_login(request):
 
         if admin.password_md5 == password_md5:
             # Password correct, admin login
-            request.session['id'] = admin.id
+            request.session['id'] = str(admin.id)
             request.session['username'] = username
             request.session['role'] = 'admin'
             return HttpResponse(json.dumps({
@@ -506,7 +506,7 @@ def admin_current_user(request):
             return HttpResponse(json.dumps({
                 'success': True,
                 'data': {
-                    'id': int(request.session['id']),
+                    'id': request.session['id'],
                     'name': request.session['username'],
                     'avatar': 'https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png',
                     'access': request.session['role']

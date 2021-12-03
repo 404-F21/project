@@ -285,6 +285,31 @@ def like_post(request, pk):
         'count': post.likeCount
     })
 
+
+@api_view(['POST'])
+def reshare_post(request, author_id, post_id):
+    """
+    Reshare post, share_aid is the author who preform the reshare action
+    """
+    if author_id == request.data['shareAid']:
+        return failure('Cannot share post by yourself')
+    try:
+        reshare_author = Author.objects.get(id=request.data['shareAid'])
+    except Author.DoesNotExist:
+        return failure('Author not found')
+    try:
+        target_post = Post.objects.get(postId=post_id, author__id=author_id)
+    except Post.DoesNotExist:
+        return failure('Post not found')
+    Post.objects.create(
+        author=reshare_author,
+        title=target_post.title,
+        content=target_post.content,
+        contentType=target_post.contentType
+    )
+    return success(None)
+
+
 @api_view(['GET','POST'])
 def comment_list(request, pk):
     """

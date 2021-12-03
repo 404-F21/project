@@ -87,6 +87,10 @@ const User = ({messData}) => {
 									item.content.split("'")[1])
                     item.imgSrc = base64
                 }
+                if (item.contentType === 'image/png;base64' ||
+					item.contentType === 'image/jpeg;base64') {
+                    item.imgSrc = item.content
+                }
                 return item
             })
             setPostList(result.data.items)
@@ -125,7 +129,6 @@ const User = ({messData}) => {
             <div className='posts'>
                 {
                     postList.map(item => {
-                            const itemBase64 = window.btoa(JSON.stringify(item))
                             return (
                                 <Card style={{marginTop: '10px', marginBottom: '10px'}}>
                                     <Card.Header
@@ -140,11 +143,16 @@ const User = ({messData}) => {
                                     />
                                     <Card.Body>
                                         <div style={{marginBottom: '3px'}}
-                                             onClick={() => history.push('/individualpost/' + itemBase64)}>
+                                             onClick={() => {
+                                                 localStorage.setItem(item.id, JSON.stringify(item))
+                                                 history.push('/individualpost/' + item.id)
+                                             }}>
                                             {
-                                                (item.contentType === 'image/png' &&
-                                                    item.contentType === 'image/jpeg' &&
-                                                    item.contentType === 'image/jpg') ?
+                                                (item.contentType === 'image/png' ||
+                                                    item.contentType === 'image/jpeg' ||
+                                                    item.contentType === 'image/jpg' ||
+                                                    item.contentType === 'image/png;base64' ||
+					                                item.contentType === 'image/jpeg;base64') ?
                                                     <img src={item.imgSrc} width={'100%'}/>
                                                     : item.contentType === 'text/markdown' ?
                                                         (<Remark

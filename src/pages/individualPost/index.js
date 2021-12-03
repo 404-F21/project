@@ -28,6 +28,9 @@ const layout = {
 const IndividualPost = (props) => {
     const [commentInput, setCommentInput] = useState('')
 
+    // Get user info
+    const userinfoLocal = JSON.parse(localStorage.getItem('userinfo'))
+
     // send comment
     const comment = async (data) => {
         if (!postData) {
@@ -129,6 +132,21 @@ const IndividualPost = (props) => {
         }
     }
 
+    const resharePost = async () => {
+        const result = await client.post(`author/${postData.author.id}/posts/${postData.id}/reshare/`, {
+            shareAid: userinfoLocal.id
+        })
+        if (result.status === 200) {
+            if (result.data.code === 200) {
+                message.success('Reshare successfully!')
+            } else {
+                message.error(result.data.message)
+            }
+        } else {
+            message.error('Something wrong...')
+        }
+    }
+
     return (
         <div className='indi w1200'>
             <div className='posts-box'>
@@ -175,6 +193,10 @@ const IndividualPost = (props) => {
                                         <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
                                             {postData?.likeCount ?? 0}
                                         </div>
+                                    </span>
+                                    <span onClick={resharePost}>
+                                        <i className="iconfont icon-fenxiang" style={{marginLeft: '10px'}}></i>
+                                        <span style={{marginLeft: 5}}>Reshare</span>
                                     </span>
                                 </div>
                             </div>

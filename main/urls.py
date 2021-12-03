@@ -53,6 +53,8 @@ urlpatterns = [
     # Get foreign comments (used as a proxy)
     path('foreign-post/<str:node_id>/<str:url_base64>', views.get_foreign_comments),
 
+    # get the inbox notifications of a user
+    path('inbox', views.notifications),
 
     # admin login
     path('admin/login/', views.admin_login),

@@ -37,7 +37,7 @@ const IndividualPost = (props) => {
             return
         }
         const result = await client.post(`post/${postData.id}/comments/`, {
-            authorId: postData.author.id,
+            authorId: store.getState().login.id,
             postId: postData.postId,
             text: commentInput,
         })

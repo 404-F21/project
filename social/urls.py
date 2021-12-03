@@ -16,6 +16,8 @@
 from django.contrib import admin
 from django.urls import path, include
 import main.views as views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,4 +25,4 @@ urlpatterns = [
     path('', views.render_html),
     path('logo.svg', views.admin_page_logo),
     path('admin-app/', views.render_admin)
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

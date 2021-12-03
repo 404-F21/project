@@ -17,8 +17,9 @@ import ReactDOM from "react-dom";
 //import Contacts from '/Users/nathandrapeza/Documents/year4/404/project/front_end/src/posts/posts'
 
 import { Card } from 'antd-mobile';
-import { Button, Form, Input, message, Switch, Radio } from 'antd';
+import { Button, Form, Input, message, Switch, Radio, Upload } from 'antd';
 import './index.css';
+import { UploadOutlined } from '@ant-design/icons';
 import "antd/dist/antd.css";
 import { client } from '../../http';
 import store from '../../store/store';
@@ -126,35 +127,38 @@ const App = _ => {
         await getPostList()
     }, []);
 
-    function handleChange(evt) {
-        console.log("value is: " + String(evt.target.value))
-        console.log(isMd)
 
+    const uploadProps = {
+      name: 'file',
+      action: 'media/posts/',
+      headers: {
+        authorization: 'authorization-text',
+      },
+      onChange(info) {
+        if (info.file.status !== 'uploading') {
+          console.log(info.file, info.fileList);
+        }
+        if (info.file.status === 'done') {
+          message.success(`${info.file.name} file uploaded successfully`);
+        } else if (info.file.status === 'error') {
+          message.error(`${info.file.name} file upload failed.`);
+        }
+      },
+    };
+
+    function handleChange(evt) {
         if (evt.target.value === "1" && !isMd) {
             setIsMd(!isMd);
             if (isBase) setIsBase(!isBase);
             if (isPng) setIsPng(!isPng);
             if (isJpeg) setIsJpeg(!isJpeg);
-            // isMd = true;
-            // isBase = false;
-            // isPng = false;
-            // isJpeg = false;
         }
         else if (evt.target.value === "2" && !isBase) {
             if (isMd) setIsMd(!isMd);
             setIsBase(!isBase);
             if (isPng) setIsPng(!isPng);
-            if (isJpeg) setIsJpeg(!isJpeg);
-            // isMd = false;
-            // isBase = true;
-            // isPng = false;
-            // isJpeg = false;
-        }
+            if (isJpeg) setIsJpeg(!isJpeg);        }
         else if (evt.target.value === "3" && !isPng) {
-            // isMd = false;
-            // isBase = false;
-            // isPng = true;
-            // isJpeg = false;    
             if (isMd) setIsMd(!isMd);
             if (isBase) setIsBase(!isBase);
             setIsPng(!isPng);
@@ -164,25 +168,13 @@ const App = _ => {
             if (isMd) setIsMd(!isMd);
             if (isBase) setIsBase(!isBase);
             if (isPng) setIsPng(!isPng);
-            setIsJpeg(!isJpeg);
-            // isMd = false;
-            // isBase = false;
-            // isPng = false;
-            // isJpeg = true;
-        }
+            setIsJpeg(!isJpeg);        }
         else {
-            setIsMd(!isMd);
-            setIsBase(!isBase);
-            setIsPng(!isPng);
-            setIsJpeg(!isJpeg);
-
-            // isMd = false;
-            // isBase = false;
-            // isPng = false;
-            // isJpeg = false;
+            if (isMd) setIsMd(!isMd);
+            if (isBase) setIsBase(!isBase);
+            if (isPng) setIsPng(!isPng);
+            if (isJpeg) setIsJpeg(!isJpeg);
         }
-        console.log(isMd)
-
     }
 
     return (
@@ -213,13 +205,23 @@ const App = _ => {
                       <Radio.Button value="4">JPEG</Radio.Button>
                     </Radio.Group>
 				</Form.Item>
-
-                <Form.Item
-					name='content'
-					label="Post Text"
-					rules={[{required: true}]}>
-                    <Input.TextArea placeholder="please input your post's text"/>
-                </Form.Item>
+                
+                {
+                    (isPng || isJpeg) ? (
+                        <Form.Item>
+                            <Upload {...uploadProps}>
+                                <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                            </Upload>
+                        </Form.Item>
+                    ) : (
+                        <Form.Item
+                            name='content'
+                            label="Post Text"
+                            rules={[{required: true}]}>
+                            <Input.TextArea placeholder="please input your post's text"/>
+                        </Form.Item>
+                    )
+                }
 
 				{isMd && hasContent ? (
 				<Form.Item label='Preview'>

@@ -13,11 +13,13 @@
 
 import React, {useCallback, useEffect, useState} from 'react';
 import {useHistory} from 'react-router-dom';
+import ReactDOM from "react-dom";
 //import Contacts from '/Users/nathandrapeza/Documents/year4/404/project/front_end/src/posts/posts'
 
 import { Card } from 'antd-mobile';
-import { Button, Form, Input, message, Switch } from 'antd';
+import { Button, Form, Input, message, Switch, Radio } from 'antd';
 import './index.css';
+import "antd/dist/antd.css";
 import { client } from '../../http';
 import store from '../../store/store';
 import { Remark, useRemark } from 'react-remark';
@@ -30,9 +32,14 @@ const layout = {
 
 
 const App = _ => {
-    const history = useHistory()
+    const history = useHistory();
 
-	const [isMd, setIsMd] = useState(false);
+    // var isMd = false, isBase = false, isPng = false, isJpeg = false; 
+
+    const [isMd, setIsMd] = useState(false);
+    const [isBase, setIsBase] = useState(false);
+    const [isPng, setIsPng] = useState(false);
+	const [isJpeg, setIsJpeg] = useState(false);
 
 	const [postForm] = Form.useForm();
 
@@ -46,13 +53,19 @@ const App = _ => {
 		setIsLoading(true);
 
         data['authorId'] = store.getState().login.id;
-		if (isMd) { data['contentType'] = 'text/markdown'; }
+        if (isMd) { data['contentType'] = 'text/markdown'; }
+        if (isBase) { data['contentType'] = 'application/base64'; }
+        if (isPng) { data['contentType'] = 'image/png;base64'; }
+		if (isJpeg) { data['contentType'] = 'image/jpeg;base64'; }
 
         const result = await client.post('posts', data);
 
 		postForm.resetFields();
 		setSwitchChecked(false);
-		setIsMd(false);
+        setIsMd(false);
+        setIsBase(false);
+        setIsPng(false);
+		setIsJpeg(false);
 		setHasContent(false);
 		setIsLoading(false);
 
@@ -113,6 +126,65 @@ const App = _ => {
         await getPostList()
     }, []);
 
+    function handleChange(evt) {
+        console.log("value is: " + String(evt.target.value))
+        console.log(isMd)
+
+        if (evt.target.value === "1" && !isMd) {
+            setIsMd(!isMd);
+            if (isBase) setIsBase(!isBase);
+            if (isPng) setIsPng(!isPng);
+            if (isJpeg) setIsJpeg(!isJpeg);
+            // isMd = true;
+            // isBase = false;
+            // isPng = false;
+            // isJpeg = false;
+        }
+        else if (evt.target.value === "2" && !isBase) {
+            if (isMd) setIsMd(!isMd);
+            setIsBase(!isBase);
+            if (isPng) setIsPng(!isPng);
+            if (isJpeg) setIsJpeg(!isJpeg);
+            // isMd = false;
+            // isBase = true;
+            // isPng = false;
+            // isJpeg = false;
+        }
+        else if (evt.target.value === "3" && !isPng) {
+            // isMd = false;
+            // isBase = false;
+            // isPng = true;
+            // isJpeg = false;    
+            if (isMd) setIsMd(!isMd);
+            if (isBase) setIsBase(!isBase);
+            setIsPng(!isPng);
+            if (isJpeg) setIsJpeg(!isJpeg);
+        }
+        else if (evt.target.value === "4" && !isJpeg) {
+            if (isMd) setIsMd(!isMd);
+            if (isBase) setIsBase(!isBase);
+            if (isPng) setIsPng(!isPng);
+            setIsJpeg(!isJpeg);
+            // isMd = false;
+            // isBase = false;
+            // isPng = false;
+            // isJpeg = true;
+        }
+        else {
+            setIsMd(!isMd);
+            setIsBase(!isBase);
+            setIsPng(!isPng);
+            setIsJpeg(!isJpeg);
+
+            // isMd = false;
+            // isBase = false;
+            // isPng = false;
+            // isJpeg = false;
+        }
+        console.log(isMd)
+
+    }
+
     return (
         <div className='home w1200'>
             <div className='today'>
@@ -132,13 +204,14 @@ const App = _ => {
                 </Form.Item>
 
 				<Form.Item
-					label='CommonMark?'>
-					<Switch
-						style={{marginLeft: '0.25em'}}
-						onChange={() => {
-							setIsMd(!isMd);
-							setSwitchChecked(!switchChecked);}}
-						checked={switchChecked}/>
+					label='Content Type?'>
+                    <Radio.Group defaultValue="0" buttonStyle="solid" onChange={handleChange}>
+                      <Radio.Button value="0">Utf-8</Radio.Button>
+                      <Radio.Button value="1">Common Mark</Radio.Button>
+                      <Radio.Button value="2">Base64</Radio.Button>
+                      <Radio.Button value="3">PNG</Radio.Button>
+                      <Radio.Button value="4">JPEG</Radio.Button>
+                    </Radio.Group>
 				</Form.Item>
 
                 <Form.Item

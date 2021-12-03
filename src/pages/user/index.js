@@ -65,7 +65,7 @@ const User = ({messData}) => {
     };
 
     const onFinishEdit = async (values) => {
-        const result = await client.post(`author/${userinfoLocal.id}/posts/${editPostData.postId}`, values)
+        const result = await client.post(`author/${userinfoLocal.id}/posts/${editPostData.id}`, values)
         if (result.status === 200) {
             message.success('Edit successfully')
         } else {
@@ -181,7 +181,7 @@ const User = ({messData}) => {
                                                     setEditModal(true)
                                                 }}/>
                                                 <i className="iconfont icon-shanchu" onClick={async () => {
-                                                    const result = await client.delete(`author/${userinfoLocal.id}/posts/${item.postId}`)
+                                                    const result = await client.delete(`author/${userinfoLocal.id}/posts/${item.id}`)
                                                     if (result.status === 200) {
                                                         message.success('Delete successfully')
                                                     } else {

@@ -11,16 +11,17 @@
  * limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { List, Tabs, NavBar, Icon } from 'antd-mobile';
-import { useHistory } from 'react-router-dom';
+import { Radio } from 'antd';
+import { client } from '../../http';
+import store from '../../store/store';
+
 const Item = List.Item;
 const Brief = Item.Brief;
 
 const UserList = () => {
-    const history = useHistory();
     return (
-
         <List className="my-list">
             <Item
                 arrow="horizontal"
@@ -40,14 +41,50 @@ const UserList = () => {
             </Item>
         </List>
     );
-};
-export default props => {
-    console.log(props);
+}
+
+const Friends = _ => {
+	const [userList, setUserList] = useState([]);
+	const [authorId, setAuthorId] = useState('');
+
+	const getUserList = async endpoint => {
+		switch (endpoint) {
+			case 'a':
+				await client.get(`author/${authorId}/friends`);
+				break;
+			case 'b':
+				await client.get(`author/${authorId}/followers`);
+				break;
+			case 'c':
+				break;
+			default:
+
+		}
+	}
+
+	useEffect(() => {
+		setAuthorId(store.getState().login.id);
+	}, []);
+
     return (
+		<>
+		<Radio.Group
+			style={{display: 'flex', justifyContent: 'center', margin: 10}}
+			defaultValue='a'
+			optionType='button'
+			size='large'>
+			<Radio.Button value='a'>Friends</Radio.Button>
+			<Radio.Button value='b'>Followers</Radio.Button>
+			<Radio.Button value='c'>Following</Radio.Button>
+		</Radio.Group>
+
         <div className="user">
             <UserList />
             <UserList />
             <UserList />
         </div>
+		</>
     );
 };
+
+export default Friends;

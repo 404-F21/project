@@ -19,7 +19,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
+from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, Notification
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -107,7 +107,7 @@ class PostList(APIView):
                             title=title,
                             contentType=contentType,)
             new_post.save()
-
+            print(f"\n\n\nREQUEST HEADERS: {request.headers}\n request data: {request.data}\n\n\n")
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()
             text = request.data['content']
@@ -493,6 +493,13 @@ def like_post(request, pk):
         return Response({ 'succ': False })
     likepost = LikePost(postId=post, authorId=author)
     likepost.save()
+    post_author_id = post.author
+    liker_display_name = Author.objects.get(id=author_id).displayName
+    like_notification = Notification(type = 'like', authorId=post_author_id, postId = post, sender_display_name=liker_display_name)
+    like_notification.save()
+    print(f"\n\n\nNOTIFICATION DATA: authorId (post owner):{like_notification.authorId}, sender_display_name: {like_notification.sender_display_name}\n\n\n")
+    print(f"\n\nLIKE REQUEST DATA: {request.data}\n\n")
+    print(f"\n\nPOST AUTHOR ID: {post_author_id}, AUTHOR ID (LIKER): {author_id}\n\n")
     # let likecount update with itself + 1
     post.likeCount += 1
     post.save()
@@ -580,12 +587,28 @@ def comment_list(request, pk):
         )
         post.update(commentCount=F('commentCount') + 1)
         comment.save()
+        #nOT USED
+        #comment_notification = Notification(type='comment', aut)
+        #print(f"\n\nREQUEST DATAAAAA FOR COMMENT: {request.data} \n\n")
+        #print("\n\nauthor: {author}, post author: {post.author}")
         return HttpResponse(str(comment))
         serializer = PostSerializer(data=request.data['post'])
         if serializer.is_valid():
             serializer.saver()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Inbox will be composed of notifications & friend requests seperately
+@api_view(['GET'])
+def notifications(request):
+    """
+    List all notification items
+    """
+    author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))
+    author_notifications = Notification.objects.filter(authorId=author)
+    print(f'author notifications: {author_notifications}')
+    #return author_notifications
+
 
 
 @csrf_exempt
@@ -626,6 +649,124 @@ def get_foreign_data(request, node_id, url_base64):
         return failure('GET')
 
 
+class CommentList(APIView):
+    def get(self, request, pk, format=None):
+        # check if user is authenticated and if not return a 401
+        
+        # https://docs.djangoproject.com/en/dev/ref/models/querysets/#exists
+        post = Post.objects.get(pk=pk)
+        if post is not None:
+            # Check if the post is visible for public/friends/whatever
+            #assuming it is visible to all
+
+            comments = Comment.objects.filter(postId=post)
+            if comments.count() > 0:
+                paged_comments = paginate(comments, request.query_params)
+                serializer = CommentSerializer(paged_comments, many=True)
+                return JsonResponse(serializer.data, safe=False)
+            else:
+                return Response("There are no comments on the post", status=404)
+        else:
+            # return a 404 response
+            return Response("Post not found", status=404)
+
+    def post(self, request, pk, format=None):
+        # check if user is authenticated and if not return a 401
+        post = Post.objects.get(pk=pk)
+        if post is not None:
+
+            author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
+            if author is None:
+                return HttpResponse('Error, no such author')
+            comment = Comment(
+                postId = post,
+                authorId = author,
+                text = request.data['text']
+            )
+            post.commentCount += 1
+            post.save()
+            comment.save()
+            print(f"\n\nCOMMENT AUTHOR: {author}, POST AUTHOR: {post.author}\n\n")
+            comment_notification = Notification(type='comment', postId = post, authorId=post.author, sender_display_name=author.displayName)
+            comment_notification.save()
+            return HttpResponse(str(comment))
+
+        else:
+            # return a 404 response
+            return Response("Post not found", status=404)
+
+
+def get_author(request, pk):
+    if __basic_auth(request) != AUTH_SUCCESS:
+        return no_auth()
+    author = Author.objects.filter(id=pk)
+    author_serializer = AuthorSerializer(author.first())
+    data = dict()
+    data['type'] = 'author'
+    data.update(author_serializer.data)
+    return JsonResponse(data)
+
+
+class AuthorList(APIView):
+    """
+    List all authors in the server, or register a new author
+    """
+    def get(self, request, format=None):
+        authors = paginate(Author.objects.all().order_by('displayName'), request.query_params)
+        serializer = AuthorSerializer(authors, many=True)
+
+        data = { 'type': 'authors', 'items': serializer.data }
+        return Response(data)
+
+    def post(self, request, format=None):
+        displayName = request.data['displayName']
+        password = request.data['password']
+        uri = request.build_absolute_uri('/')
+
+        user = User.objects.create_user(displayName, password)
+
+        author = Author.objects.create(
+            displayName = displayName,
+            password = password,
+            user = user,
+            host = uri,
+        )
+        author.save()
+        ser = AuthorSerializer(author)
+        return Response(ser.data)
+
+
+'''
+@api_view(['POST'])
+def like(request, pk):
+    """
+    Lists all likes for one Post
+    """
+    if request.method == 'POST':
+        serializer = LikeSerializer()
+        if serializer.is_valid():
+            serializer.saver()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+'''
+
+from django.shortcuts import render
+# Create your views here.
+def render_html(request):
+    # create default super user
+    if User.objects.count() == 0:
+        user = User.objects.create_user('admin', 'test@test.com', 'admin123456')
+        user.is_stuff = True
+        user.save()
+    return render(request, 'index.html')
+
+def render_admin(request):
+    return render(request, 'ant-design-pro/index.html')
+
+
+# APIs for admin functions
+# ============================
 @csrf_exempt
 def admin_login(request):
     """

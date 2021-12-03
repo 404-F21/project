@@ -56,6 +56,8 @@ urlpatterns = [
     # Get foreign data with associated auth info (used as a proxy)
     path('foreign-data/<str:node_id>/<str:url_base64>', views.get_foreign_data),
 
+    # get the inbox notifications of a user
+    path('inbox', views.notifications),
 
     # admin login
     path('admin/login/', views.admin_login),

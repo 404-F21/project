@@ -242,6 +242,15 @@ class LikePost(models.Model):
         # return self.liker.displayName + " liked your post"
         pass
 
+class Notification(models.Model):
+    
+    type = models.CharField(max_length=20, default='') # Either 'like', 'comment', 'post'
+    time = models.DateTimeField(auto_now_add=True, blank=True)
+    # authorId is the id the person recieving the notification:
+    authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
+    # sender_display_name is the displayname of the person who actually made the post
+    sender_display_name = models.CharField(max_length=100, default='')
+    postId = models.ForeignKey(Post, on_delete=models.CASCADE)
 
 # https://djangocentral.com/creating-comments-system-with-django/
 class LikeComment(models.Model):

@@ -14,8 +14,9 @@
 
 import time
 import base64
-from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore
+# from apscheduler.schedulers.background import BackgroundScheduler
+from django.contrib.auth.models import User
+# from django_apscheduler.jobstores import DjangoJobStore
 from django.db.models.query import QuerySet
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -98,7 +99,11 @@ class PostList(APIView):
             author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
             text = request.data['content']
             title = request.data['title']
-            new_post = Post(author=author,content=text,title=title)
+            contentType = request.data.get('contentType', 'text/plain')
+            new_post = Post(author=author,
+                            content=text,
+                            title=title,
+                            contentType=contentType,)
             new_post.save()
             
         elif request.content_type == "application/x-www-form-urlencoded":
@@ -398,11 +403,16 @@ class AuthorList(APIView):
         return Response(data)
 
     def post(self, request, format=None):
+        displayName = request.data['displayName']
+        password = request.data['password']
         uri = request.build_absolute_uri('/')
 
+        user = User.objects.create_user(displayName, password)
+
         author = Author.objects.create(
-            displayName = request.data['displayName'],
-            password = request.data["password"],
+            displayName = displayName,
+            password = password,
+            user = user,
             host = uri,
         )
         author.save()
@@ -428,7 +438,6 @@ def like(request, pk):
 from django.shortcuts import render
 # Create your views here.
 def render_html(request):
-    from django.contrib.auth.models import User
     # create default super user
     if User.objects.count() == 0:
         user = User.objects.create_user('admin', 'test@test.com', 'admin123456')

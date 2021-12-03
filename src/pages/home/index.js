@@ -15,13 +15,13 @@ import React, {useCallback, useEffect, useState} from 'react';
 import {useHistory} from 'react-router-dom';
 //import Contacts from '/Users/nathandrapeza/Documents/year4/404/project/front_end/src/posts/posts'
 
-import {Card} from 'antd-mobile';
-import {Button, Form, Input, message} from 'antd';
+import { Card } from 'antd-mobile';
+import { Button, Form, Input, message, Switch } from 'antd';
 import './index.css';
-import {client} from '../../http';
+import { client } from '../../http';
 import store from '../../store/store';
-
-const {Meta} = Card;
+import { Remark, useRemark } from 'react-remark';
+import remarkGemoji from 'remark-gemoji';
 
 const layout = {
     labelCol: {span: 2},
@@ -29,21 +29,64 @@ const layout = {
 };
 
 
-const App = (props) => {
+const App = _ => {
     const history = useHistory()
 
+	const [isMd, setIsMd] = useState(false);
+
+	const [postForm] = Form.useForm();
+
+	// need this to get everything reset
+	const [switchChecked, setSwitchChecked] = useState(false);
+	const [hasContent, setHasContent] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
+
     // create a post
-    const sendPost = async (data) => {
-        data['authorId'] = store.getState().login.id
-        const result = await client.post('posts', data)
-        console.log(result)
+    const sendPost = async data => {
+		setIsLoading(true);
+
+        data['authorId'] = store.getState().login.id;
+		if (isMd) { data['contentType'] = 'text/markdown'; }
+
+        const result = await client.post('posts', data);
+
+		postForm.resetFields();
+		setSwitchChecked(false);
+		setIsMd(false);
+		setHasContent(false);
+		setIsLoading(false);
+
         if (result.status == 200) {
-            message.success('post successfully!')
-            await getPostList()
+            message.success('Post successfully posted!');
+            await getPostList();
         }
     }
 
-    const [postList, setPostList] = useState([])
+    const [postList, setPostList] = useState([]);
+
+	// need this or ordered lists render all screwy
+	const customLi = props => (
+		<li style={{marginLeft: '2em'}} {...props} />
+	);
+
+	const [previewText, setPreviewText] = useRemark({
+		remarkPlugins: [ remarkGemoji ],
+		rehypeReactOptions: {
+			components: { li: customLi }
+		}
+	});
+	const checkContent = (changedFields, _) => {
+		for (let field of changedFields) {
+			if (field.name[0] === 'content') {
+				if (field.value.length > 0) {
+					setHasContent(true);
+					setPreviewText(field.value);
+				} else {
+					setHasContent(false);
+				}
+			}
+		}
+	};
 
     // get post list function
     const getPostList = useCallback(async () => {
@@ -51,38 +94,81 @@ const App = (props) => {
         if (result.status === 200) {
             console.log(result.data)
             result.data.map(item => {
-                if (item.contentType === 'image/png' || item.contentType === 'image/jpeg' || item.contentType === 'image/jpg') {
-                    const base64 = 'data:image/png;base64,' + item.content.split("'")[1]
+                if (item.contentType === 'image/png' ||
+					item.contentType === 'image/jpeg' ||
+					item.contentType === 'image/jpg')
+				{
+                    const base64 = ('data:image/png;base64,' +
+									item.content.split("'")[1])
                     item.imgSrc = base64
                 }
                 return item
             })
             setPostList(result.data)
         }
-    }, [])
+    }, []);
 
     // Get list on initialization
     useEffect(async () => {
         await getPostList()
-    }, [])
+    }, []);
 
     return (
         <div className='home w1200'>
             <div className='today'>
             </div>
-            <Form {...layout} name="nest-messages" onFinish={sendPost}>
-                <Form.Item name={['title']} label="title">
+
+            <Form {...layout}
+				name="nest-messages"
+				onFinish={sendPost}
+				onFieldsChange={checkContent}
+				form={postForm}>
+
+                <Form.Item
+					name='title'
+					label="Title"
+					rules={[{required: true}]}>
                     <Input placeholder="please input your post's title"/>
                 </Form.Item>
-                <Form.Item name={['content']} label="post text">
+
+				<Form.Item
+					label='CommonMark?'>
+					<Switch
+						style={{marginLeft: '0.25em'}}
+						onChange={() => {
+							setIsMd(!isMd);
+							setSwitchChecked(!switchChecked);}}
+						checked={switchChecked}/>
+				</Form.Item>
+
+                <Form.Item
+					name='content'
+					label="Post Text"
+					rules={[{required: true}]}>
                     <Input.TextArea placeholder="please input your post's text"/>
                 </Form.Item>
+
+				{isMd && hasContent ? (
+				<Form.Item label='Preview'>
+					<Card><div style={{
+						paddingTop: '0.2em',
+						paddingBottom: '0.2em',
+						paddingLeft: '0.4em',
+						paddingRight: '0.4em'}}>
+					{previewText}</div></Card>
+				</Form.Item>
+				) : null}
+
                 <Form.Item wrapperCol={{...layout.wrapperCol, offset: 8}}>
-                    <Button type="primary" htmlType="submit">
+                    <Button
+						type="primary"
+						htmlType="submit"
+						loading={isLoading}>
                         Post
                     </Button>
                 </Form.Item>
             </Form>
+
             <div>
                 {postList.map(item => (
                     // <Card key={item.postId} onClick={()=> history.push(`/individualpost/${item.postId}`)}>
@@ -114,10 +200,20 @@ const App = (props) => {
                             <h4>{item.title}</h4>
                             <div style={{marginBottom: '3px'}}>
                                 {
-                                    item.contentType !== 'image/png' && item.contentType !== 'image/jpeg' && item.contentType !== 'image/jpg' ?
-                                        item.content
-                                        :
+                                    (item.contentType === 'image/png' &&
+									 item.contentType === 'image/jpeg' &&
+									 item.contentType === 'image/jpg') ?
                                         <img src={item.imgSrc} width={'100%'}/>
+									: item.contentType === 'text/markdown' ?
+										(<Remark
+											remarkPlugins={[ remarkGemoji ]}
+											rehypeReactOptions={{
+												components: { li: customLi }
+											}}>
+											{item.content}
+										</Remark>)
+									:
+                                    	item.content
                                 }
                             </div>
                             <div className='like'>

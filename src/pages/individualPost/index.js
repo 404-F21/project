@@ -28,6 +28,9 @@ const layout = {
 const IndividualPost = (props) => {
     const [commentInput, setCommentInput] = useState('')
 
+    // Get user info
+    const userinfoLocal = JSON.parse(localStorage.getItem('userinfo'))
+
     // send comment
     const comment = async (data) => {
         if (!postData) {
@@ -55,19 +58,12 @@ const IndividualPost = (props) => {
     // fetch post data from server
     useEffect(async () => {
         let id = props.match?.params?.id
-        const post = window.atob(id)
         if (id) {
             // let result = await client.get(`post/${id}`)
             // setPostData(result.data)
-            const item = JSON.parse(post)
+            const jsonString = localStorage.getItem(id)
+            const item = JSON.parse(jsonString)
             console.log(item)
-            if (item.contentType === 'image/png' || item.contentType === 'image/jpeg' || item.contentType === 'image/jpg') {
-                const base64 = 'data:image/png;base64,' + item.content.split("'")[1]
-                item.imgSrc = base64
-            }
-            if (item.contentType === 'image') {
-                item.imgSrc = item.content
-            }
             setPostData(item)
         }
     }, [])
@@ -136,6 +132,21 @@ const IndividualPost = (props) => {
         }
     }
 
+    const resharePost = async () => {
+        const result = await client.post(`author/${postData.author.id}/posts/${postData.id}/reshare/`, {
+            shareAid: userinfoLocal.id
+        })
+        if (result.status === 200) {
+            if (result.data.code === 200) {
+                message.success('Reshare successfully!')
+            } else {
+                message.error(result.data.message)
+            }
+        } else {
+            message.error('Something wrong...')
+        }
+    }
+
     return (
         <div className='indi w1200'>
             <div className='posts-box'>
@@ -155,7 +166,9 @@ const IndividualPost = (props) => {
                                     (postData?.contentType === 'image/png' ||
                                         postData?.contentType === 'image/jpeg' ||
                                         postData?.contentType === 'image/jpg') ||
-                                        postData?.contentType === 'image' ?
+                                        postData?.contentType === 'image' ||
+                                        postData?.contentType === 'image/png;base64' ||
+									    postData?.contentType === 'image/jpeg;base64' ?
                                         <img src={postData?.imgSrc} width={'100%'}/>
                                         : postData?.contentType === 'text/markdown' ?
                                             (<Remark
@@ -180,6 +193,10 @@ const IndividualPost = (props) => {
                                         <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
                                             {postData?.likeCount ?? 0}
                                         </div>
+                                    </span>
+                                    <span onClick={resharePost}>
+                                        <i className="iconfont icon-fenxiang" style={{marginLeft: '10px'}}></i>
+                                        <span style={{marginLeft: 5}}>Reshare</span>
                                     </span>
                                 </div>
                             </div>

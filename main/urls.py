@@ -40,6 +40,8 @@ urlpatterns = [
 
     path('author/<pk>/posts/', views.AuthorPostList.as_view()),
     path('author/<pk>/posts/<pid>', views.AuthorPostDetail.as_view()),
+    # Reshare post
+    path('author/<author_id>/posts/<post_id>/reshare/', views.reshare_post),
 
     # get post list & create a post
     path('posts', views.PostList.as_view()),

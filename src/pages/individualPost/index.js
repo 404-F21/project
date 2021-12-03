@@ -55,19 +55,12 @@ const IndividualPost = (props) => {
     // fetch post data from server
     useEffect(async () => {
         let id = props.match?.params?.id
-        const post = window.atob(id)
         if (id) {
             // let result = await client.get(`post/${id}`)
             // setPostData(result.data)
-            const item = JSON.parse(post)
+            const jsonString = localStorage.getItem(id)
+            const item = JSON.parse(jsonString)
             console.log(item)
-            if (item.contentType === 'image/png' || item.contentType === 'image/jpeg' || item.contentType === 'image/jpg') {
-                const base64 = 'data:image/png;base64,' + item.content.split("'")[1]
-                item.imgSrc = base64
-            }
-            if (item.contentType === 'image') {
-                item.imgSrc = item.content
-            }
             setPostData(item)
         }
     }, [])
@@ -155,7 +148,9 @@ const IndividualPost = (props) => {
                                     (postData?.contentType === 'image/png' ||
                                         postData?.contentType === 'image/jpeg' ||
                                         postData?.contentType === 'image/jpg') ||
-                                        postData?.contentType === 'image' ?
+                                        postData?.contentType === 'image' ||
+                                        postData?.contentType === 'image/png;base64' ||
+									    postData?.contentType === 'image/jpeg;base64' ?
                                         <img src={postData?.imgSrc} width={'100%'}/>
                                         : postData?.contentType === 'text/markdown' ?
                                             (<Remark

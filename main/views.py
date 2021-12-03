@@ -133,7 +133,7 @@ class PostList(APIView):
                             contentType=contentType,
                             visibility=visibility)
             new_post.save()
-            print(f"\n\n\nREQUEST HEADERS: {request.headers}\n request data: {request.data}\n\n\n")
+            #print(f"\n\n\nREQUEST HEADERS: {request.headers}\n request data: {request.data}\n\n\n")
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()
             text = request.data['content']
@@ -572,9 +572,9 @@ def like_post(request, pk):
     liker_display_name = Author.objects.get(id=author_id).displayName
     like_notification = Notification(type = 'like', authorId=post_author_id, postId = post, sender_display_name=liker_display_name)
     like_notification.save()
-    print(f"\n\n\nNOTIFICATION DATA: authorId (post owner):{like_notification.authorId}, sender_display_name: {like_notification.sender_display_name}\n\n\n")
-    print(f"\n\nLIKE REQUEST DATA: {request.data}\n\n")
-    print(f"\n\nPOST AUTHOR ID: {post_author_id}, AUTHOR ID (LIKER): {author_id}\n\n")
+    #print(f"\n\n\nNOTIFICATION DATA: authorId (post owner):{like_notification.authorId}, sender_display_name: {like_notification.sender_display_name}\n\n\n")
+    #print(f"\n\nLIKE REQUEST DATA: {request.data}\n\n")
+    #print(f"\n\nPOST AUTHOR ID: {post_author_id}, AUTHOR ID (LIKER): {author_id}\n\n")
     # let likecount update with itself + 1
     post.likeCount += 1
     post.save()

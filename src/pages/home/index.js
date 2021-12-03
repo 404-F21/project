@@ -102,6 +102,9 @@ const App = _ => {
 									item.content.split("'")[1])
                     item.imgSrc = base64
                 }
+				if (item.contentType === 'image') {
+                	item.imgSrc = item.content
+            	}
                 return item
             })
             setPostList(result.data)
@@ -178,7 +181,7 @@ const App = _ => {
                     //         description={item.content}
                     //         />
                     // </Card>
-                    <Card onClick={() => {
+                    <Card style={{marginTop: '10px', marginBottom: '10px'}} onClick={() => {
                         const param = window.btoa(JSON.stringify(item))
                         history.push(`/individualpost/${param}`)
                     }}>
@@ -200,9 +203,10 @@ const App = _ => {
                             <h4>{item.title}</h4>
                             <div style={{marginBottom: '3px'}}>
                                 {
-                                    (item.contentType === 'image/png' &&
-									 item.contentType === 'image/jpeg' &&
-									 item.contentType === 'image/jpg') ?
+                                    (item.contentType === 'image/png' ||
+									item.contentType === 'image/jpeg' ||
+									item.contentType === 'image/jpg') ||
+									item.contentType === 'image' ?
                                         <img src={item.imgSrc} width={'100%'}/>
 									: item.contentType === 'text/markdown' ?
 										(<Remark
@@ -227,7 +231,7 @@ const App = _ => {
                                         {item.likeCount}
                                     </div>
                                     <div style={{marginLeft: 10, display: 'inline-block'}}>
-                                        { item.foreignNodeId ? `Source: ${item.foreignNodeHost}` : ''}
+                                        {item.foreignNodeId ? `Source: ${item.foreignNodeHost}` : null} @ {new Date(item.published).toLocaleString()}
                                     </div>
                                 </div>
                             </div>

@@ -182,7 +182,7 @@ const User = ({messData}) => {
                                                     loadData()
                                                 }} style={{marginLeft: 15}}/>
                                                 <div style={{marginLeft: 10, display: 'inline-block'}}>
-                                                    Published: {new Date(item.publishedOn).toLocaleString()}
+                                                    Published: {new Date(item.published).toLocaleString()}
                                                 </div>
                                             </div>
                                         </div>

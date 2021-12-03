@@ -50,8 +50,8 @@ urlpatterns = [
     path('post/<pk>/comments/', views.CommentList.as_view()),
     # post like
     path('post/<pk>/like/', views.like_post),
-    # Get foreign comments (used as a proxy)
-    path('foreign-post/<str:node_id>/<str:url_base64>', views.get_foreign_comments),
+    # Get foreign data with associated auth info (used as a proxy)
+    path('foreign-data/<str:node_id>/<str:url_base64>', views.get_foreign_data),
 
 
     # admin login

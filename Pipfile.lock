@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "ccc4387e3e50b4951b8564ac0550c104ea070ee2a5976b635820acde95a2c398"
+            "sha256": "ded90767fc06f4ce8e60e98f38eed3ff6d700e6fe8e5c402e24b938ca3c4c872"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -85,14 +85,6 @@
             ],
             "index": "pypi",
             "version": "==3.2.9"
-        },
-        "django-apscheduler": {
-            "hashes": [
-                "sha256:55cba8d087d358102751df71efdd209c3c8230eb69419af76858eda2f6e94fb1",
-                "sha256:9399ddcdb049eeb8f8ac8cca79e176d0b25a3cc51e034de1381375d6046c6113"
-            ],
-            "index": "pypi",
-            "version": "==0.6.0"
         },
         "django-cors-headers": {
             "hashes": [
@@ -269,6 +261,14 @@
             "index": "pypi",
             "version": "==2.26.0"
         },
+        "setuptools": {
+            "hashes": [
+                "sha256:b4c634615a0cf5b02cf83c7bedffc8da0ca439f00e79452699454da6fbd4153d",
+                "sha256:feb5ff19b354cde9efd2344ef6d5e79880ce4be643037641b49508bbb850d060"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==59.4.0"
+        },
         "six": {
             "hashes": [
                 "sha256:1e61c37477a1626458e36f7b1d82aa5c9b094fa4802892072e49de9c60c4c926",
@@ -350,14 +350,6 @@
             ],
             "index": "pypi",
             "version": "==2.0.8"
-        },
-        "colorama": {
-            "hashes": [
-                "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b",
-                "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"
-            ],
-            "markers": "sys_platform == 'win32'",
-            "version": "==0.4.4"
         },
         "defusedxml": {
             "hashes": [
@@ -481,6 +473,14 @@
                 "sha256:968089d4584ad4ad7c171454f0a5c6dac23971e9472521ea3b6d49d610aa6fc0"
             ],
             "version": "==0.9.1"
+        },
+        "setuptools": {
+            "hashes": [
+                "sha256:b4c634615a0cf5b02cf83c7bedffc8da0ca439f00e79452699454da6fbd4153d",
+                "sha256:feb5ff19b354cde9efd2344ef6d5e79880ce4be643037641b49508bbb850d060"
+            ],
+            "markers": "python_version >= '3.6'",
+            "version": "==59.4.0"
         },
         "sqlparse": {
             "hashes": [

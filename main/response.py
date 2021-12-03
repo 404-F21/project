@@ -12,14 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import threading
 import json
 import time
 import datetime
 import requests
 from django.shortcuts import HttpResponse
-from apscheduler.schedulers.background import BackgroundScheduler
-from django_apscheduler.jobstores import DjangoJobStore
 from main.models import Node, Post, Author
 
 

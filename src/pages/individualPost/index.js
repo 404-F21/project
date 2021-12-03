@@ -17,6 +17,8 @@ import {Button, Input, message} from 'antd';
 import './index.css'
 import {client} from '../../http';
 import store from '../../store/store';
+import {Remark} from "react-remark";
+import remarkGemoji from "remark-gemoji";
 
 const layout = {
     labelCol: {span: 2},
@@ -63,6 +65,9 @@ const IndividualPost = (props) => {
                 const base64 = 'data:image/png;base64,' + item.content.split("'")[1]
                 item.imgSrc = base64
             }
+            if (item.contentType === 'image') {
+                item.imgSrc = item.content
+            }
             setPostData(item)
         }
     }, [])
@@ -71,25 +76,41 @@ const IndividualPost = (props) => {
 
     // update comment list function
     const updateCommentList = useCallback(async () => {
-        if (postData && (!postData.foreignNodeId)) {
-            const res = await client.get(`post/${postData.id}/comments/`)
-            if (res.status == 200) {
-                setCommentList(res.data)
+        if (postData) {
+            let res = {status: 0};
+            if (postData.foreignNodeId) {
+                let urlBase64
+                // linkedspace comments
+                if (postData.foreignNodeHost.indexOf('linkedspace-staging.herokuapp.com') !== -1) {
+                    const url = postData.comments.replace('linkedspace-staging.herokuapp.com/author', 'linkedspace-staging.herokuapp.com/api/author')
+                    urlBase64 = window.btoa(url)
+                }
+                if (postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1) {
+                    urlBase64 = window.btoa(postData.comments)
+                }
+                res = await client.get(`foreign-data/${postData.foreignNodeId}/${urlBase64}`)
+                if (res.status === 200) {
+                    // social-dis group comments
+                    setCommentList(res.data.comments)
+                }
+            } else {
+                res = await client.get(`post/${postData.id}/comments/`)
+                if (res.status === 200) {
+                    setCommentList(res.data)
+                }
             }
         }
-        // if (postData && postData.foreignNodeId) {
-        //     const urlBase64 = window.btoa(postData.comments)
-        //     const res = await client.get(`foreign-post/${postData.foreignNodeId}/${urlBase64}`)
-        //     if (res.status == 200) {
-        //         setCommentList(res.data)
-        //     }
-        // }
     }, [postData])
 
     // fetch comments 
     useEffect(async () => {
         await updateCommentList()
     }, [postData])
+
+    // need this or ordered lists render all screwy
+    const customLi = props => (
+        <li style={{marginLeft: '2em'}} {...props} />
+    );
 
     const likePost = async () => {
         if (!postData) {
@@ -129,12 +150,25 @@ const IndividualPost = (props) => {
                                 <div className='username'>{postData?.authorId?.displayName}</div>
                             </div>
                             <h3>{postData?.title}</h3>
-                            <p>{
-                                postData?.contentType !== 'image/png' && postData?.contentType !== 'image/jpeg' && postData?.contentType !== 'image/jpg' ?
-                                    postData?.content
-                                    :
-                                    <img src={postData?.imgSrc} width={'100%'}/>
-                            }</p>
+                            <p>
+                                {
+                                    (postData?.contentType === 'image/png' ||
+                                        postData?.contentType === 'image/jpeg' ||
+                                        postData?.contentType === 'image/jpg') ||
+                                        postData?.contentType === 'image' ?
+                                        <img src={postData?.imgSrc} width={'100%'}/>
+                                        : postData?.contentType === 'text/markdown' ?
+                                            (<Remark
+                                                remarkPlugins={[remarkGemoji]}
+                                                rehypeReactOptions={{
+                                                    components: {li: customLi}
+                                                }}>
+                                                {postData?.content}
+                                            </Remark>)
+                                            :
+                                            postData?.content
+                                }
+                            </p>
                             <div className='like'>
                                 <div>
                                     <i className="iconfont icon-xiaoxi"></i>
@@ -154,25 +188,46 @@ const IndividualPost = (props) => {
                     </div>
                 </div>
                 <div className="top-news bgw">
-                    <div>user info</div>
-                    <div>display name: <span>{postData?.author?.displayName}</span></div>
+                    <h3>Author Info</h3>
+                    <div><b>Author Name: </b><span>{postData?.author?.displayName}</span></div>
+                    <div><b>URL: </b><span><a href={postData?.author?.url}>Click to visit</a></span></div>
+                    <div><b>Github: </b><span>{postData?.author?.github}</span></div>
+                    <div><b>Host Comes From: </b><span>{postData?.author?.host}</span></div>
                 </div>
             </div>
 
             <div className="comment-list">
                 {commentList.map(item => (
                     <div className="comment-item" key={item.commentId}>
-                        <div>{item.text}</div>
-                        <div>{new Date(item.publishedOn).toLocaleString()}</div>
+                        {
+                            postData.foreignNodeId ?
+                                postData.foreignNodeHost.indexOf('linkedspace-staging.herokuapp.com') !== -1 ?
+                                    <>
+                                        {/* Foreign format(linkedspace) */}
+                                        <div>{item.content}</div>
+                                        <div>{item.author.displayName} @ {item.author.host} @ {new Date(item.published).toLocaleString()}</div>
+                                    </>
+                                    :
+                                    postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1 ?
+                                        <>
+                                            {/* Foreign format(social-dis) */}
+                                            <div>{item.comment}</div>
+                                            <div>{item.author.displayName} @ {item.author.host} @ {new Date(item.published).toLocaleString()}</div>
+                                        </>
+                                        :
+                                        null
+                                :
+                                <>
+                                    {/* Internal format */}
+                                    <div>{item.text}</div>
+                                    <div>{item.authorId.displayName} @ {new Date(item.publishedOn).toLocaleString()}</div>
+                                </>
+                        }
                     </div>
                 ))}
-                {!postData?.foreignNodeId && commentList.length === 0 ? (
-                        <div style={{color: '#999'}}>Oop! It seems that no one has commented</div>
+                {commentList.length === 0 ? (
+                    <div style={{color: '#999'}}>Oop! It seems that no one has commented</div>
                 ) : null}
-                {
-                    postData?.foreignNodeId ?
-                        <div style={{color: '#999'}}>Oop! New comments to foreign posts are not supported </div> : null
-                }
             </div>
 
             <div className="comment-input">

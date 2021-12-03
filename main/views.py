@@ -12,11 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
-import base64
-# from apscheduler.schedulers.background import BackgroundScheduler
+import requests
 from django.contrib.auth.models import User
-# from django_apscheduler.jobstores import DjangoJobStore
 from django.db.models.query import QuerySet
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -37,7 +34,6 @@ import uuid
 import json
 
 import time
-import hashlib
 import base64
 from django.views.decorators.csrf import csrf_exempt
 import hashlib
@@ -105,7 +101,7 @@ class PostList(APIView):
                             title=title,
                             contentType=contentType,)
             new_post.save()
-            
+
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()
             text = request.data['content']
@@ -200,6 +196,9 @@ def app_login(request):
         return Response({
             'succ': True,
             'id': str(author.pk),
+            'url': author.url,
+            'host': author.host,
+            'github': author.github
         })
     except Author.DoesNotExist:
         return Response({ 'succ': False })
@@ -223,9 +222,11 @@ class AuthorPostList(APIView):
     def get(self, request, pk, format=None):
         author = Author.objects.get(pk=uuid.UUID(pk))
         posts = author.post_set.all().order_by('-publishedOn')
-        serializer = PostSerializer(posts, many=True)
+        result = []
+        for post in posts:
+            result.append(post.dict())
 
-        return Response({ 'type': 'posts', 'items': serializer.data })
+        return Response({ 'type': 'posts', 'items': result })
 
     def post(self, request, pk, format=None):
         author = Author.objects.get(pk=uuid.UUID(pk))
@@ -248,14 +249,16 @@ class AuthorPostDetail(APIView):
     def post(self, request, pk, pid, format=None):
         text = request.data['content']
         title = request.data['title']
-        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
-        post.update(content=text, title=title)
+        post = Post.objects.get(author__id=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post.content = text
+        post.title=title
+        post.save()
 
         return Response({ 'success': True })
 
     def delete(self, request, pk, pid, format=None):
-        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
-        post.delete()        
+        post = Post.objects.get(author__id=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post.delete()
 
         return Response({ 'success': True })
 
@@ -316,21 +319,32 @@ def comment_list(request, pk):
 
 
 @csrf_exempt
-def get_foreign_comments(request, node_id, url_base64):
+def get_foreign_data(request, node_id, url_base64):
     """
-    Get foreign comments (used as a proxy)
+    Get foreign data (used as a proxy)
+    Post dat to foreign url (used as a proxy)
     """
+    url = base64.b64decode(url_base64).decode()
+    try:
+        node = Node.objects.get(nodeId=node_id)
+    except Node.DoesNotExist:
+        return failure('Node not found')
+    username = node.http_username
+    password = node.http_password
+    if 'http://' in url:
+        url = url.replace('http:', 'https:')
+
     if request.method == 'GET':
-        url = base64.b64decode(url_base64).decode()
-        try:
-            node = Node.objects.get(nodeId=node_id)
-        except Node.DoesNotExist:
-            return failure('Node not found')
-        username = node.http_username
-        password = node.http_password
-        if 'http://' in url:
-            url = url.replace('http:', 'https:')
+        # GET
         result = requests.get(url, auth=(username, password))
+        return JsonResponse(result.json())
+    elif request.method == 'POST':
+        # POST
+        try:
+            data: dict = json.loads(request.body.decode())
+        except json.JSONDecodeError:
+            return failure('json data format incorrect')
+        result = requests.post(url, data=data, auth=(username, password))
         return JsonResponse(result.json())
     else:
         return failure('GET')
@@ -339,7 +353,7 @@ def get_foreign_comments(request, node_id, url_base64):
 class CommentList(APIView):
     def get(self, request, pk, format=None):
         # check if user is authenticated and if not return a 401
-        
+
         # https://docs.djangoproject.com/en/dev/ref/models/querysets/#exists
         post = Post.objects.get(pk=pk)
         if post is not None:
@@ -380,15 +394,31 @@ class CommentList(APIView):
             return Response("Post not found", status=404)
 
 
-def get_author(request, pk):
-    if __basic_auth(request) != AUTH_SUCCESS:
-        return no_auth()
-    author = Author.objects.filter(id=pk)
-    author_serializer = AuthorSerializer(author.first())
-    data = dict()
-    data['type'] = 'author'
-    data.update(author_serializer.data)
-    return JsonResponse(data)
+class AuthorDetail(APIView):
+    def get(self, request, pk):
+        author = Author.objects.filter(id=pk)
+        author_serializer = AuthorSerializer(author.first())
+        data = dict()
+        data['type'] = 'author'
+        data.update(author_serializer.data)
+        return JsonResponse(data)
+
+    def post(self, request, pk):
+        """
+        Update info of a user
+        """
+        display_name = request.data['displayName']
+        github = request.data['github']
+        try:
+            author = Author.objects.get(id=pk)
+        except Author.DoesNotExist:
+            return failure('id not found')
+        author.displayName = display_name
+        author.github = github
+        author.save()
+        return Response({
+            'succ': True
+        })
 
 
 class AuthorList(APIView):
@@ -435,7 +465,6 @@ def like(request, pk):
 
 '''
 
-from django.shortcuts import render
 # Create your views here.
 def render_html(request):
     # create default super user
@@ -444,9 +473,6 @@ def render_html(request):
         user.is_stuff = True
         user.save()
     return render(request, 'index.html')
-
-def render_admin(request):
-    return render(request, 'ant-design-pro/index.html')
 
 
 # APIs for admin functions

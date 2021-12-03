@@ -38,6 +38,10 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = '__all__'
 
+class NotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = '__all__'
+
 
 class FollowingSerializer(serializers.ModelSerializer):
     # rather than using the `depth` field, must do this or the password shows

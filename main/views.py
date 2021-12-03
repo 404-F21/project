@@ -21,7 +21,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, MediaFile, Notification
-from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
+from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, NotificationSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from main.decorator import need_admin
@@ -571,6 +571,8 @@ def like_post(request, pk):
     post_author_id = post.author
     liker_display_name = Author.objects.get(id=author_id).displayName
     like_notification = Notification(type = 'like', authorId=post_author_id, postId = post, sender_display_name=liker_display_name)
+    front_end_text = f'{author.displayName} has commented on your post.'
+    like_notification.front_end_text = front_end_text
     like_notification.save()
     #print(f"\n\n\nNOTIFICATION DATA: authorId (post owner):{like_notification.authorId}, sender_display_name: {like_notification.sender_display_name}\n\n\n")
     #print(f"\n\nLIKE REQUEST DATA: {request.data}\n\n")
@@ -681,7 +683,9 @@ def notifications(request):
     """
     author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))
     author_notifications = Notification.objects.filter(authorId=author)
-    print(f'author notifications: {author_notifications}')
+    serializer = NotificationSerializer(author_notifications, many=True)
+    return JsonResponse(serializer.data)
+    #print(f'author notifications: {author_notifications}')
     #return author_notifications
 
 

@@ -17,6 +17,8 @@ import {Button, Input, message} from 'antd';
 import './index.css'
 import {client} from '../../http';
 import store from '../../store/store';
+import {Remark} from "react-remark";
+import remarkGemoji from "remark-gemoji";
 
 const layout = {
     labelCol: {span: 2},
@@ -91,6 +93,11 @@ const IndividualPost = (props) => {
         await updateCommentList()
     }, [postData])
 
+    // need this or ordered lists render all screwy
+    const customLi = props => (
+        <li style={{marginLeft: '2em'}} {...props} />
+    );
+
     const likePost = async () => {
         if (!postData) {
             message.success('please waitting!')
@@ -129,12 +136,24 @@ const IndividualPost = (props) => {
                                 <div className='username'>{postData?.authorId?.displayName}</div>
                             </div>
                             <h3>{postData?.title}</h3>
-                            <p>{
-                                postData?.contentType !== 'image/png' && postData?.contentType !== 'image/jpeg' && postData?.contentType !== 'image/jpg' ?
-                                    postData?.content
-                                    :
-                                    <img src={postData?.imgSrc} width={'100%'}/>
-                            }</p>
+                            <p>
+                                {
+                                    (postData?.contentType === 'image/png' &&
+                                        postData?.contentType === 'image/jpeg' &&
+                                        postData?.contentType === 'image/jpg') ?
+                                        <img src={postData?.imgSrc} width={'100%'}/>
+                                        : postData?.contentType === 'text/markdown' ?
+                                            (<Remark
+                                                remarkPlugins={[remarkGemoji]}
+                                                rehypeReactOptions={{
+                                                    components: {li: customLi}
+                                                }}>
+                                                {postData?.content}
+                                            </Remark>)
+                                            :
+                                            postData?.content
+                                }
+                            </p>
                             <div className='like'>
                                 <div>
                                     <i className="iconfont icon-xiaoxi"></i>
@@ -167,7 +186,7 @@ const IndividualPost = (props) => {
                     </div>
                 ))}
                 {!postData?.foreignNodeId && commentList.length === 0 ? (
-                        <div style={{color: '#999'}}>Oop! It seems that no one has commented</div>
+                    <div style={{color: '#999'}}>Oop! It seems that no one has commented</div>
                 ) : null}
                 {
                     postData?.foreignNodeId ?

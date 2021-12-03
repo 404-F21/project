@@ -200,6 +200,9 @@ def app_login(request):
         return Response({
             'succ': True,
             'id': str(author.pk),
+            'url': author.url,
+            'host': author.host,
+            'github': author.github
         })
     except Author.DoesNotExist:
         return Response({ 'succ': False })
@@ -223,9 +226,11 @@ class AuthorPostList(APIView):
     def get(self, request, pk, format=None):
         author = Author.objects.get(pk=uuid.UUID(pk))
         posts = author.post_set.all().order_by('-publishedOn')
-        serializer = PostSerializer(posts, many=True)
+        result = []
+        for post in posts:
+            result.append(post.dict())
 
-        return Response({ 'type': 'posts', 'items': serializer.data })
+        return Response({ 'type': 'posts', 'items': result })
 
     def post(self, request, pk, format=None):
         author = Author.objects.get(pk=uuid.UUID(pk))
@@ -248,13 +253,15 @@ class AuthorPostDetail(APIView):
     def post(self, request, pk, pid, format=None):
         text = request.data['content']
         title = request.data['title']
-        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
-        post.update(content=text, title=title)
+        post = Post.objects.get(author__id=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post.content = text
+        post.title=title
+        post.save()
 
         return Response({ 'success': True })
 
     def delete(self, request, pk, pid, format=None):
-        post = Post.objects.get(authorId=uuid.UUID(pk), pk=uuid.UUID(pid))
+        post = Post.objects.get(author__id=uuid.UUID(pk), pk=uuid.UUID(pid))
         post.delete()        
 
         return Response({ 'success': True })
@@ -380,15 +387,31 @@ class CommentList(APIView):
             return Response("Post not found", status=404)
 
 
-def get_author(request, pk):
-    if __basic_auth(request) != AUTH_SUCCESS:
-        return no_auth()
-    author = Author.objects.filter(id=pk)
-    author_serializer = AuthorSerializer(author.first())
-    data = dict()
-    data['type'] = 'author'
-    data.update(author_serializer.data)
-    return JsonResponse(data)
+class AuthorDetail(APIView):
+    def get(self, request, pk):
+        author = Author.objects.filter(id=pk)
+        author_serializer = AuthorSerializer(author.first())
+        data = dict()
+        data['type'] = 'author'
+        data.update(author_serializer.data)
+        return JsonResponse(data)
+
+    def post(self, request, pk):
+        """
+        Update info of a user
+        """
+        display_name = request.data['displayName']
+        github = request.data['github']
+        try:
+            author = Author.objects.get(id=pk)
+        except Author.DoesNotExist:
+            return failure('id not found')
+        author.displayName = display_name
+        author.github = github
+        author.save()
+        return Response({
+            'succ': True
+        })
 
 
 class AuthorList(APIView):

@@ -213,4 +213,7 @@ if os.path.isfile(dotenv_file):
 options = DATABASES['default'].get('OPTIONS', {})
 options.pop('sslmode', None)
 
-deploy_host = 'https://cmput404f21t17.herokuapp.com'
+if os.environ.get('ON_HEROKU'):
+    deploy_host = 'https://cmput404f21t17.herokuapp.com'
+else:
+    deploy_host = 'http://localhost:8000'

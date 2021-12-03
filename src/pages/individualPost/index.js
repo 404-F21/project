@@ -95,10 +95,11 @@ const IndividualPost = (props) => {
         }
       } else {
         const result = await client.post(`post/${postData.id}/comments/`, {
-          authorId: userinfoLocal.id,
-          postId: postData.postId,
-          text: commentInput,
+            authorId: store.getState().login.id,
+            postId: postData.postId,
+            text: commentInput,
         });
+
         if (result.status == 200) {
           message.success("comment posted successfully!");
           setCommentInput("");

@@ -18,6 +18,7 @@ import {useDispatch} from 'react-redux';
 import {Button, Form, Input, message, Modal} from 'antd';
 import './index.css';
 import {client} from "../../http";
+import store from '../../store/store';
 import {Remark} from "react-remark";
 import remarkGemoji from "remark-gemoji";
 
@@ -53,6 +54,11 @@ const User = (props) => {
         if (result.status === 200) {
             setUserinfo(result.data)
         }
+    }
+
+    const followUser = async () => {
+        const result = await client.put(`author/${userId}/followers/a464d46a-6bc2-458b-abd0-71228e88565f`)
+        message.success('user page:' + {userId} + ", follower: ")
     }
 
     const onFinish = async (values) => {
@@ -124,6 +130,8 @@ const User = (props) => {
                     <h2>{userinfo?.displayName}</h2>
                     <p>{userinfo?.github}</p>
                 </div>
+                <Button type={'primary'} style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Follow User</Button>
+                <Button type={'primary'} style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Add Friend</Button>
                 {
                     loginUserInfo && userId === loginUserInfo.id ?
                         <a className='edit' onClick={edit}>

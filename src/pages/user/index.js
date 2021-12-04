@@ -125,7 +125,7 @@ const User = (props) => {
                     <p>{userinfo?.github}</p>
                 </div>
                 {
-                    userId === loginUserInfo.id ?
+                    loginUserInfo && userId === loginUserInfo.id ?
                         <a className='edit' onClick={edit}>
                             <i className='iconfont icon-bianji'><span style={{paddingLeft: 10}}>Edit</span></i>
                         </a>
@@ -185,7 +185,7 @@ const User = (props) => {
                                                     {item.likeCount}
                                                 </div>
                                                 {
-                                                    userId === loginUserInfo.id ?
+                                                    loginUserInfo && userId === loginUserInfo.id ?
                                                     <>
                                                         <i className="iconfont icon-bianji" onClick={() => {
                                                             setEditPostData(item)

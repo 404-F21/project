@@ -104,6 +104,7 @@ class PostList(APIView):
                             content=text,
                             title=title,
                             contentType=contentType,)
+            
             new_post.save()
             #print(f"\n\n\nREQUEST HEADERS: {request.headers}\n request data: {request.data}\n\n\n")
         elif request.content_type == "application/x-www-form-urlencoded":
@@ -334,7 +335,7 @@ def notifications(request):
     List all notification items
     """
     author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))
-    author_notifications = Notification.objects.filter(authorId=author)
+    author_notifications = Notification.objects.filter(authorId=author).order_by('-publishedOn')
     serializer = NotificationSerializer(author_notifications, many=True)
     return JsonResponse(serializer.data)
     #print(f'author notifications: {author_notifications}')

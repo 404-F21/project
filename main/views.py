@@ -496,7 +496,7 @@ def like_post(request, pk):
     post_author_id = post.author
     liker_display_name = Author.objects.get(id=author_id).displayName
     like_notification = Notification(type = 'like', authorId=post_author_id, postId = post, sender_display_name=liker_display_name)
-    front_end_text = f'{author.displayName} has commented on your post.'
+    front_end_text = f'{author.displayName} has liked your post.'
     like_notification.front_end_text = front_end_text
     like_notification.save()
     #print(f"\n\n\nNOTIFICATION DATA: authorId (post owner):{like_notification.authorId}, sender_display_name: {like_notification.sender_display_name}\n\n\n")

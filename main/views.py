@@ -211,7 +211,7 @@ class FollowerDetail(APIView):
             return no_auth()
         try:
             author = Author.objects.get(pk=uuid.UUID(pk))
-            author.follower_set.get(follower=uuid.UUID(fpk))
+            author.followed_set.get(follower=uuid.UUID(fpk))
             return Response({ 'isFollower': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
@@ -219,7 +219,7 @@ class FollowerDetail(APIView):
 class FollowedList(APIView):
     def get(self, request, pk, format=None):
         author = Author.objects.get(pk=uuid.UUID(pk))
-        follow_pairs = author.followee_set.all().order_by('followee__displayName')
+        follow_pairs = author.followed_set.all().order_by('followee__displayName')
         paged_pairs = paginate(follow_pairs, request.query_params)
         serializer = FollowingSerializer(paged_pairs, many=True)
 

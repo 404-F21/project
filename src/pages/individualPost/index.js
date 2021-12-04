@@ -44,15 +44,19 @@ const IndividualPost = (props) => {
             message.warn('please input your comment')
             return
         }
-        const result = await client.post(`post/${postData.id}/comments/`, {
-            authorId: postData.author.id,
-            postId: postData.postId,
-            text: commentInput,
-        })
-        if (result.status == 200) {
-            message.success('comment posted successfully!')
-            setCommentInput('')
-            updateCommentList()
+        if (userinfoLocal) {
+            const result = await client.post(`post/${postData.id}/comments/`, {
+                authorId: userinfoLocal.id,
+                postId: postData.postId,
+                text: commentInput,
+            })
+            if (result.status == 200) {
+                message.success('comment posted successfully!')
+                setCommentInput('')
+                updateCommentList()
+            }
+        } else {
+            message.warn('Please login first')
         }
     }
     // post data state
@@ -225,7 +229,16 @@ const IndividualPost = (props) => {
                 <div className="top-news bgw">
                     <h3>Author Info</h3>
                     <div><b>Author Name: </b><span>{postData?.author?.displayName}</span></div>
-                    <div><b>URL: </b><span><a href={postData?.foreignNodeId ? postData?.author.url : '/user/' + postData?.author.id}>Click to visit</a></span></div>
+                    <div><b>URL: </b><span style={{color: 'blue'}}>
+                        {
+                            postData?.foreignNodeId ?
+                                <a href={postData?.author.url} target={'_blank'}>Click to visit</a>
+                                :
+                                <span onClick={() => {
+                                    history.push('/user/' + postData?.author.id)
+                                }}>Click to visit</span>
+                        }
+                    </span></div>
                     <div><b>Github: </b><span>{postData?.author?.github}</span></div>
                     <div><b>Host Comes From: </b><span>{postData?.author?.host}</span></div>
                 </div>

@@ -212,7 +212,8 @@ class LikePost(models.Model):
         # return self.liker.displayName + " liked your post"
         pass
 
-class Notification(models.Model):
+# Notification object for Posts - likes, comments, and private posts
+class PostNotification(models.Model):
     
     type = models.CharField(max_length=20, default='') # Either 'like', 'comment', 'private post'
     # front_end_text makes it easier for notification to be implemented on front end:
@@ -223,6 +224,14 @@ class Notification(models.Model):
     # sender_display_name is the displayname of the person who actually made the post
     sender_display_name = models.CharField(max_length=100, default='')
     postId = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+# Notification object for friend requests
+class FriendNotification(models.Model):
+    # front_end_text makes it easier for notification to be implemented on front end:
+    front_end_text = models.CharField(max_length=120, default='')
+    sentOn = models.DateTimeField(auto_now_add=True, blank=True)
+    authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
+    sender_display_name = models.CharField(max_length=100, default='')
 
 # https://djangocentral.com/creating-comments-system-with-django/
 class LikeComment(models.Model):

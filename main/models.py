@@ -244,9 +244,10 @@ class LikePost(models.Model):
 
 class Notification(models.Model):
     
-    type = models.CharField(max_length=20, default='') # Either 'like', 'comment', 'post'
+    type = models.CharField(max_length=20, default='') # Either 'like', 'comment', 'private post'
+    # front_end_text makes it easier for notification to be implemented on front end:
     front_end_text = models.CharField(max_length=120, default='')
-    time = models.DateTimeField(auto_now_add=True, blank=True)
+    publishedOn = models.DateTimeField(auto_now_add=True, blank=True)
     # authorId is the id the person recieving the notification:
     authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
     # sender_display_name is the displayname of the person who actually made the post

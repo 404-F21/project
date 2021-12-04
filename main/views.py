@@ -310,6 +310,27 @@ def reshare_post(request, author_id, post_id):
     return success(None)
 
 
+@api_view(['POST'])
+def reshare_post_foreign(request, reshare_aid):
+    """
+    Reshare foreign post to target author
+    """
+    title = request.data['title']
+    content = request.data['content']
+    content_type = request.data['contentType']
+    try:
+        reshare_author = Author.objects.get(id=reshare_aid)
+    except Author.DoesNotExist:
+        return failure('Author not found')
+    Post.objects.create(
+        author=reshare_author,
+        title=title,
+        content=content,
+        contentType=content_type
+    )
+    return success(None)
+
+
 @api_view(['GET','POST'])
 def comment_list(request, pk):
     """
@@ -460,15 +481,17 @@ class AuthorList(APIView):
     def post(self, request, format=None):
         displayName = request.data['displayName']
         password = request.data['password']
+        github = request.data['github']
         uri = request.build_absolute_uri('/')
 
         user = User.objects.create_user(displayName, password)
 
         author = Author.objects.create(
-            displayName = displayName,
-            password = password,
-            user = user,
-            host = uri,
+            displayName=displayName,
+            password=password,
+            user=user,
+            host=uri,
+            github=github
         )
         author.save()
         ser = AuthorSerializer(author)

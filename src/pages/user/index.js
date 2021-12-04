@@ -26,7 +26,7 @@ const layout = {
     wrapperCol: {span: 16},
 };
 
-const User = ({messData}) => {
+const User = (props) => {
     const dispatch = useDispatch();
     const history = useHistory();
     const [postList, setPostList] = useState([])
@@ -44,9 +44,12 @@ const User = ({messData}) => {
     const edit = () => {
         setIsModalVisible(true);
     }
-    const userinfoLocal = JSON.parse(localStorage.getItem('userinfo'))
+
+    const userId = props.match?.params?.id
+    const loginUserInfo = JSON.parse(localStorage.getItem('userinfo'))
+
     const loadUser = async () => {
-        const result = await client.get(`author/${userinfoLocal.id}/`)
+        const result = await client.get(`author/${userId}/`)
         if (result.status === 200) {
             setUserinfo(result.data)
         }
@@ -54,7 +57,7 @@ const User = ({messData}) => {
 
     const onFinish = async (values) => {
         console.log(values);
-        const result = await client.post(`author/${userinfoLocal.id}/`, values)
+        const result = await client.post(`author/${userId}/`, values)
         if (result.status === 200) {
             message.success('Edit successfully')
             loadUser()
@@ -65,7 +68,7 @@ const User = ({messData}) => {
     };
 
     const onFinishEdit = async (values) => {
-        const result = await client.post(`author/${userinfoLocal.id}/posts/${editPostData.id}`, values)
+        const result = await client.post(`author/${userId}/posts/${editPostData.id}`, values)
         if (result.status === 200) {
             message.success('Edit successfully')
         } else {
@@ -76,7 +79,7 @@ const User = ({messData}) => {
     }
 
     const loadData = async () => {
-        const result = await client.get(`author/${userinfoLocal.id}/posts/`)
+        const result = await client.get(`author/${userId}/posts/`)
         if (result.status === 200) {
             result.data.items.map(item => {
                 if (item.contentType === 'image/png' ||
@@ -121,9 +124,14 @@ const User = ({messData}) => {
                     <h2>{userinfo?.displayName}</h2>
                     <p>{userinfo?.github}</p>
                 </div>
-                <a className='edit' onClick={edit}>
-                    <i className='iconfont icon-bianji'><span style={{paddingLeft: 10}}>Edit</span></i>
-                </a>
+                {
+                    userId === loginUserInfo.id ?
+                        <a className='edit' onClick={edit}>
+                            <i className='iconfont icon-bianji'><span style={{paddingLeft: 10}}>Edit</span></i>
+                        </a>
+                        :
+                        null
+                }
             </div>
             <h3 style={{marginTop: '30px'}}>My Posts</h3>
             <div className='posts'>
@@ -176,19 +184,26 @@ const User = ({messData}) => {
                                                 <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
                                                     {item.likeCount}
                                                 </div>
-                                                <i className="iconfont icon-bianji" onClick={() => {
-                                                    setEditPostData(item)
-                                                    setEditModal(true)
-                                                }}/>
-                                                <i className="iconfont icon-shanchu" onClick={async () => {
-                                                    const result = await client.delete(`author/${userinfoLocal.id}/posts/${item.id}`)
-                                                    if (result.status === 200) {
-                                                        message.success('Delete successfully')
-                                                    } else {
-                                                        message.error('Something wrong')
-                                                    }
-                                                    loadData()
-                                                }} style={{marginLeft: 15}}/>
+                                                {
+                                                    userId === loginUserInfo.id ?
+                                                    <>
+                                                        <i className="iconfont icon-bianji" onClick={() => {
+                                                            setEditPostData(item)
+                                                            setEditModal(true)
+                                                        }}/>
+                                                        <i className="iconfont icon-shanchu" onClick={async () => {
+                                                            const result = await client.delete(`author/${userId}/posts/${item.id}`)
+                                                            if (result.status === 200) {
+                                                                message.success('Delete successfully')
+                                                            } else {
+                                                                message.error('Something wrong')
+                                                            }
+                                                            loadData()
+                                                        }} style={{marginLeft: 15}}/>
+                                                    </>
+                                                        :
+                                                        null
+                                                }
                                                 <div style={{marginLeft: 10, display: 'inline-block'}}>
                                                     Published: {new Date(item.published).toLocaleString()}
                                                 </div>

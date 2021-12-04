@@ -12,6 +12,7 @@
  */
 
 import React, {useCallback, useEffect, useState} from 'react'
+import {useHistory} from "react-router-dom";
 
 import {Button, Input, message} from 'antd';
 import './index.css'
@@ -27,6 +28,8 @@ const layout = {
 
 const IndividualPost = (props) => {
     const [commentInput, setCommentInput] = useState('')
+
+    const history = useHistory()
 
     // Get user info
     const userinfoLocal = JSON.parse(localStorage.getItem('userinfo'))
@@ -133,9 +136,24 @@ const IndividualPost = (props) => {
     }
 
     const resharePost = async () => {
-        const result = await client.post(`author/${postData.author.id}/posts/${postData.id}/reshare/`, {
-            shareAid: userinfoLocal.id
-        })
+        let result
+        if (postData?.foreignNodeId) {
+            let content = postData?.content
+            let contentType = postData?.contentType
+            if (contentType.indexOf('image') !== -1) {
+                contentType = 'image/png;base64'
+                content = postData?.imgSrc
+            }
+            result = await client.post(`foreign-post/reshare/${userinfoLocal.id}/`, {
+                title: postData.title,
+                content,
+                contentType
+            })
+        } else {
+            result = await client.post(`author/${postData.author.id}/posts/${postData.id}/reshare/`, {
+                shareAid: userinfoLocal.id
+            })
+        }
         if (result.status === 200) {
             if (result.data.code === 200) {
                 message.success('Reshare successfully!')
@@ -207,7 +225,7 @@ const IndividualPost = (props) => {
                 <div className="top-news bgw">
                     <h3>Author Info</h3>
                     <div><b>Author Name: </b><span>{postData?.author?.displayName}</span></div>
-                    <div><b>URL: </b><span><a href={postData?.author?.url}>Click to visit</a></span></div>
+                    <div><b>URL: </b><span><a href={postData?.foreignNodeId ? postData?.author.url : '/user/' + postData?.author.id}>Click to visit</a></span></div>
                     <div><b>Github: </b><span>{postData?.author?.github}</span></div>
                     <div><b>Host Comes From: </b><span>{postData?.author?.host}</span></div>
                 </div>

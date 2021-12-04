@@ -83,6 +83,23 @@ const User = (_) => {
     loadData();
   };
 
+	const followUser = async () => {
+		const result = await client.put(`author/${userId}/followers/a464d46a-6bc2-458b-abd0-71228e88565f`)
+		message.success('user page:' + {userId} + ", follower: ")
+	}
+
+	const onFinish = async (values) => {
+		console.log(values);
+		const result = await client.post(`author/${userId}/`, values)
+		if (result.status === 200) {
+			message.success('Edit successfully')
+			loadUser()
+		} else {
+			message.error('Something wrong')
+		}
+		setIsModalVisible(false);
+	};
+
   const loadData = async () => {
     const result = await client.get(`author/${userId}/posts/`);
     if (result.status === 200) {
@@ -141,7 +158,6 @@ const User = (_) => {
             </i>
           </a>
         ) : null}
-      </div>
       <h3 style={{ marginTop: "30px" }}>My Posts</h3>
       <div className="posts">
         {postList.map((item) => {

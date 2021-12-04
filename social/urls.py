@@ -21,6 +21,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('service/', include('main.urls')),
     path('', views.render_html),
-    path('logo.svg', views.admin_page_logo),
-    path('admin-app/', views.render_admin)
+    path('logo.svg', views.admin_page_logo)
 ]

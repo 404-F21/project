@@ -31,7 +31,7 @@ urlpatterns = [
     # view many authors' profiles or register/update an account
     path('authors/', views.AuthorList.as_view()),
     # view one author's profile
-    path('author/<pk>/', views.get_author),
+    path('author/<pk>/', views.AuthorDetail.as_view()),
     # view all of an author's followers
     path('author/<pk>/followers', views.FollowerList.as_view()),
 
@@ -40,6 +40,9 @@ urlpatterns = [
 
     path('author/<pk>/posts/', views.AuthorPostList.as_view()),
     path('author/<pk>/posts/<pid>', views.AuthorPostDetail.as_view()),
+    # Reshare post
+    path('author/<author_id>/posts/<post_id>/reshare/', views.reshare_post),
+    path('foreign-post/reshare/<reshare_aid>/', views.reshare_post_foreign),
 
     # get post list & create a post
     path('posts', views.PostList.as_view()),
@@ -50,8 +53,8 @@ urlpatterns = [
     path('post/<pk>/comments/', views.CommentList.as_view()),
     # post like
     path('post/<pk>/like/', views.like_post),
-    # Get foreign comments (used as a proxy)
-    path('foreign-post/<str:node_id>/<str:url_base64>', views.get_foreign_comments),
+    # Get foreign data with associated auth info (used as a proxy)
+    path('foreign-data/<str:node_id>/<str:url_base64>', views.get_foreign_data),
 
     # get the inbox notifications of a user
     path('inbox', views.notifications),

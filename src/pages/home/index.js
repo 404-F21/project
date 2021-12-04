@@ -16,7 +16,7 @@ import {useHistory} from 'react-router-dom';
 //import Contacts from '/Users/nathandrapeza/Documents/year4/404/project/front_end/src/posts/posts'
 
 import { Card } from 'antd-mobile';
-import { Button, Form, Input, message, Switch } from 'antd';
+import { Button, Form, Input, message, Switch, Upload } from 'antd';
 import './index.css';
 import { client } from '../../http';
 import store from '../../store/store';
@@ -40,6 +40,7 @@ const App = _ => {
 	const [switchChecked, setSwitchChecked] = useState(false);
 	const [hasContent, setHasContent] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
+	const [contentEnable, setContentEnable] = useState(true)
 
     // create a post
     const sendPost = async data => {
@@ -47,6 +48,7 @@ const App = _ => {
 
         data['authorId'] = store.getState().login.id;
 		if (isMd) { data['contentType'] = 'text/markdown'; }
+		if (!contentEnable) { data['contentType'] = 'image/png;base64' }
 
         const result = await client.post('posts', data);
 
@@ -102,6 +104,12 @@ const App = _ => {
 									item.content.split("'")[1])
                     item.imgSrc = base64
                 }
+				if (item.contentType === 'image' ||
+					item.contentType === 'image/png;base64' ||
+					item.contentType === 'image/jpeg;base64')
+				{
+                	item.imgSrc = item.content
+            	}
                 return item
             })
             setPostList(result.data)
@@ -112,6 +120,12 @@ const App = _ => {
     useEffect(async () => {
         await getPostList()
     }, []);
+
+	// Upload image button clicked
+	const selectImgUpload = () => {
+		setContentEnable(false)
+
+	}
 
     return (
         <div className='home w1200'>
@@ -138,14 +152,29 @@ const App = _ => {
 						onChange={() => {
 							setIsMd(!isMd);
 							setSwitchChecked(!switchChecked);}}
-						checked={switchChecked}/>
+						checked={switchChecked} disabled={!contentEnable}/>
+					<Upload
+						beforeUpload={(file) => {
+							console.log(file)
+							const reader = new FileReader();
+							reader.readAsDataURL(file);
+							reader.onload = () => {
+								postForm.setFieldsValue({
+									content: reader.result
+								})
+							}
+							return false
+						}}
+					>
+						<Button type={'primary'} style={{width: '150px', marginLeft: '20px'}} onClick={selectImgUpload}>Upload image</Button>
+					</Upload>
 				</Form.Item>
 
                 <Form.Item
 					name='content'
 					label="Post Text"
 					rules={[{required: true}]}>
-                    <Input.TextArea placeholder="please input your post's text"/>
+                    <Input.TextArea placeholder="please input your post's text" disabled={!contentEnable}/>
                 </Form.Item>
 
 				{isMd && hasContent ? (
@@ -178,8 +207,9 @@ const App = _ => {
                     //         description={item.content}
                     //         />
                     // </Card>
-                    <Card onClick={() => {
-                        const param = window.btoa(JSON.stringify(item))
+                    <Card style={{marginTop: '10px', marginBottom: '10px'}} onClick={() => {
+						localStorage.setItem(item.id, JSON.stringify(item))
+                        const param = item.id
                         history.push(`/individualpost/${param}`)
                     }}>
                         <Card.Header
@@ -200,9 +230,12 @@ const App = _ => {
                             <h4>{item.title}</h4>
                             <div style={{marginBottom: '3px'}}>
                                 {
-                                    (item.contentType === 'image/png' &&
-									 item.contentType === 'image/jpeg' &&
-									 item.contentType === 'image/jpg') ?
+                                    (item.contentType === 'image/png' ||
+									item.contentType === 'image/jpeg' ||
+									item.contentType === 'image/jpg') ||
+									item.contentType === 'image' ||
+									item.contentType === 'image/png;base64' ||
+									item.contentType === 'image/jpeg;base64'?
                                         <img src={item.imgSrc} width={'100%'}/>
 									: item.contentType === 'text/markdown' ?
 										(<Remark
@@ -227,7 +260,7 @@ const App = _ => {
                                         {item.likeCount}
                                     </div>
                                     <div style={{marginLeft: 10, display: 'inline-block'}}>
-                                        { item.foreignNodeId ? `Source: ${item.foreignNodeHost}` : ''}
+                                        {item.foreignNodeId ? `Source: ${item.foreignNodeHost}` : null} @ {new Date(item.published).toLocaleString()}
                                     </div>
                                 </div>
                             </div>

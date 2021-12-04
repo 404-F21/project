@@ -48,7 +48,7 @@ class Author(models.Model):
 
     def save(self, *args, **kwargs):
         if self.url is None:
-            self.url = f'{self.host}author/{self.id}'
+            self.url = f'{self.host}service/author/{self.id}'
 
         super(Author, self).save(*args, **kwargs)
 
@@ -194,7 +194,7 @@ class Post(models.Model):
             'commentCount': self.commentCount,
             'likeCount': self.likeCount,
             'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/' if not self.comments else self.comments,
-            'published': self.publishedOn.strftime('%Y/%m/%d %H:%M:%S'),
+            'published': self.publishedOn.isoformat(),
             'foreignNodeId': self.foreign_node_id,
             'foreignNodeHost': self.foreign_node_host
         }
@@ -296,7 +296,7 @@ class Admin(models.Model):
 
     def dict(self):
         return {
-            'id': self.id,
+            'id': str(self.id),
             'username': self.username
         }
 

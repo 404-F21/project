@@ -13,11 +13,12 @@
 
 import React from 'react'
 import { List, Badge, NavBar, Icon } from 'antd-mobile';
+import store from '../../store/store';
 import './index.css';
+
 const Inbox = (props) => {
     return (
         <div className='inbox w1200'>
-
             <List style={{ marginTop: 10 }}>
                 <List.Item extra="12:00" arrow="horizontal">
                     <Badge dot>

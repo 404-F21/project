@@ -45,7 +45,7 @@ const Header = () => {
             </Link>
             <Search placeholder="input search text" onSearch={onSearch} style={{ width: 400 }} />
             {userinfo ? <div>
-                <Link to='/user'>UserPage</Link>
+                <Link to={'/user/' + userinfo.id}>UserPage</Link>
                 <Link to='/inbox'>Inbox</Link>
                 <Link to='/friends'>Friends</Link>
                 <Dropdown overlay={menu} placement="bottomCenter" arrow>

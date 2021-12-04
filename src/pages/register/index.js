@@ -21,6 +21,7 @@ const Register = _ => {
 
     const [displayName, setDisplayName] = useState('')
     const [password, setPassword] = useState('')
+    const [github, setGithub] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
 
     const reg = async event => {
@@ -28,10 +29,12 @@ const Register = _ => {
 
         if (
             judge(displayName, 'Please input display name') &&
+            judge(github, 'Please input github address') &&
             judge(password, 'Please input password') &&
-            judge(password === confirmPassword, 'The password is not equal to the confirmation password')
+            judge(password === confirmPassword, 'The password is not equal to the confirmation password') &&
+            judgePassword(password)
         ) {
-            let user = { displayName, password };
+            let user = { displayName, password, github };
             const ret = await client.post('authors/', user)
             if (ret.status >= 200 && ret.status < 400) {
                 message.success('registered successfully!')
@@ -47,6 +50,13 @@ const Register = _ => {
     const judge = (cond, msg) => {
         !cond && message.warn(msg)
         return cond
+    }
+    const judgePassword = (pass) => {
+        if (pass.length < 8) {
+            message.warn('Password length must larger than 8')
+            return false
+        }
+        return true
     }
     return (
         <div className="bg">
@@ -80,6 +90,15 @@ const Register = _ => {
 								placeholder='confirm password'
 								value={confirmPassword}
 								onChange={e => setConfirmPassword(e.target.value)}
+							/>
+
+                            <Input
+								className='input'
+								type='text'
+								placeholder='github address'
+								name='github'
+								value={github}
+								onChange={e => setGithub(e.target.value)}
 							/>
 
                             <button className='loginbtn' type='submit'>

@@ -213,6 +213,49 @@ class FollowerDetail(APIView):
             return Response({ 'isFollower': False })
 
 
+class FollowedList(APIView):
+    def get(self, request, pk, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        follow_pairs = author.followee_set.all().order_by('followee__displayName')
+        paged_pairs = paginate(follow_pairs, request.query_params)
+        serializer = FollowingSerializer(paged_pairs, many=True)
+
+        # this list comprehension is required to keep the serializers consistent
+        items = [e['followee'] for e in serializer.data]
+
+        return Response({ 'type': 'followees', 'items': items })
+
+
+class FollowedDetail(APIView):
+    def delete(self, request, pk, fpk, format=None):
+        try:
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            follow_pair = author.followed_set.get(followee=uuid.UUID(fpk))
+            follow_pair.delete()
+            return Response({ 'success': True })
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'success': False })
+
+    def put(self, request, pk, fpk, format=None):
+        follower = Author.objects.get(pk=uuid.UUID(pk))
+        followee = Author.objects.get(pk=uuid.UUID(fpk))
+
+        follow_pair = Following.objects.create(followee=followee, follower=follower)
+        follow_pair.save()
+
+        serializer = FollowingSerializer(follow_pair)
+
+        return Response(serializer.data)
+
+    def get(self, request, pk, fpk, format=None):
+        try:
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            author.follower_set.get(followee=uuid.UUID(fpk))
+            return Response({ 'isFollower': True })
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'isFollower': False })
+
+
 class FriendList(APIView):
     def get(self, request, pk, format=None):
         '''

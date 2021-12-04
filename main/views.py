@@ -100,14 +100,9 @@ class PostList(APIView):
                             content=text,
                             title=title,
                             contentType=contentType,)
-<<<<<<< HEAD
             
             new_post.save()
             #print(f"\n\n\nREQUEST HEADERS: {request.headers}\n request data: {request.data}\n\n\n")
-=======
-            new_post.save()
-
->>>>>>> b4e408db8db33b75a01f454babdc94d1b0487543
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()
             text = request.data['content']

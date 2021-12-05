@@ -50,7 +50,7 @@ const Header = () => {
                 <Link to='/friends'>Friends</Link>
                 <Dropdown overlay={menu} placement="bottomCenter" arrow>
                     <span>
-                        <img style={{ width: 30, height: 30, borderRadius: 15, marginLeft: 20 }} src={require('../assets/user.jpg').default} alt="" />
+                        <img style={{ width: 30, height: 30, borderRadius: 15, marginLeft: 20 }} src={require('../assets/default.png').default} alt="" />
                         <CaretDownOutlined style={{ color: '#fff', fontSize: 20 }} />
                     </span>
                 </Dropdown>

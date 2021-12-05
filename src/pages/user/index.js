@@ -117,7 +117,7 @@ const User = (props) => {
             <div className="userinfo bgw">
                 <img
                     className="userimg"
-                    src={require('../../assets/user.jpg').default}
+                    src={require('../../assets/default.png').default}
                     alt=""
                 />
                 <div>
@@ -144,7 +144,7 @@ const User = (props) => {
                                         thumb={
                                             <img
                                                 style={{width: 35, borderRadius: 10}}
-                                                src={require('../../assets/user.jpg').default}
+                                                src={require('../../assets/default.png').default}
                                             />
                                         }
                                         thumbStyle={{width: 35, borderRadius: 10}}

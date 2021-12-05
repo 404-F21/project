@@ -183,6 +183,7 @@ class Post(models.Model):
     def dict(self):
         return {
             'id': str(self.postId),
+            'remoteId': self.remoteId,
             'author': self.author.dict(),
             'title': self.title,
             'source': self.source,
@@ -193,7 +194,7 @@ class Post(models.Model):
             'categories': self.categories,
             'commentCount': self.commentCount,
             'likeCount': self.likeCount,
-            'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/',
+            'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/' if not self.remoteId else self.comments,
             'published': self.publishedOn.isoformat(),
             'foreignNodeId': self.foreign_node_id,
             'foreignNodeHost': self.foreign_node_host

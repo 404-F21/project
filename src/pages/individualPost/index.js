@@ -28,6 +28,7 @@ const layout = {
 
 const IndividualPost = (props) => {
     const [commentInput, setCommentInput] = useState('')
+    const [likeCount, setLikeCount] = useState(0)
 
     const history = useHistory()
 
@@ -45,15 +46,39 @@ const IndividualPost = (props) => {
             return
         }
         if (userinfoLocal) {
-            const result = await client.post(`post/${postData.id}/comments/`, {
-                authorId: userinfoLocal.id,
-                postId: postData.postId,
-                text: commentInput,
-            })
-            if (result.status == 200) {
-                message.success('comment posted successfully!')
-                setCommentInput('')
-                updateCommentList()
+            if (postData.foreignNodeId) {
+                // social-dis
+                if (postData.foreignNodeHost.indexOf('social-dis') !== -1) {
+                    const url = window.btoa(postData.comments)
+                    const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
+                        type: 'comment',
+                        comment: commentInput,
+                        "contentType": "text/plain",
+                        "published": new Date().getTime() / 1000,
+                        author: {
+                            ...userinfoLocal,
+                            id: userinfoLocal.url,
+                            type: 'author',
+                            password: '###'
+                        }
+                    })
+                    if (result.status === 200 && result.data.id) {
+                        message.success('comment posted successfully!')
+                        setCommentInput('')
+                        updateCommentList()
+                    }
+                }
+            } else {
+                const result = await client.post(`post/${postData.id}/comments/`, {
+                    authorId: userinfoLocal.id,
+                    postId: postData.postId,
+                    text: commentInput,
+                })
+                if (result.status == 200) {
+                    message.success('comment posted successfully!')
+                    setCommentInput('')
+                    updateCommentList()
+                }
             }
         } else {
             message.warn('Please login first')
@@ -72,6 +97,7 @@ const IndividualPost = (props) => {
             const item = JSON.parse(jsonString)
             console.log(item)
             setPostData(item)
+            setLikeCount(item.likeCount)
         }
     }, [])
 
@@ -120,22 +146,53 @@ const IndividualPost = (props) => {
             message.success('please waitting!')
             return
         }
-        const result = await client.post(`post/${postData.id}/like/`, {
-            authorId: store.getState().login.id
-        })
-        if (result.status == 200) {
-            let {succ, count} = result.data
-            if (succ) {
-                message.success('liked!')
-                console.log(count)
-                setPostData((data) => {
-                    data.likeCount = count
-                    return {...data}
+        let result
+        if (postData.foreignNodeId) {
+            // social-dis
+            if (postData.foreignNodeHost.indexOf('social-dis') !== -1) {
+                const postId = postData.remoteId.split('/').pop()
+                const authorId = postData.author.url.split('/').pop()
+                console.log(postId)
+                console.log(authorId)
+                console.log(postData)
+                const url = window.btoa(`https://social-dis.herokuapp.com/author/${authorId}/posts/${postId}/likes`)
+                result = await client.post(
+                    `foreign-data/${postData.foreignNodeId}/${url}`, {
+                    author: {
+                        ...userinfoLocal,
+                        id: userinfoLocal.url,
+                        type: 'author',
+                        password: '###'
+                    }
                 })
-            } else {
-                message.warn('already liked!')
+                console.log(result.data)
+                if (result.status === 200) {
+                    if (result.data.type === 'Like') {
+                        message.success('liked!')
+                        setLikeCount(likeCount + 1)
+                    }
+                    if (result.data.message[0].indexOf('duplicate key') !== -1) {
+                        message.warn('already liked!')
+                    }
+                }
             }
-
+        } else {
+            result = await client.post(`post/${postData.id}/like/`, {
+                authorId: store.getState().login.id
+            })
+            if (result.status == 200) {
+                let {succ, count} = result.data
+                if (succ) {
+                    message.success('liked!')
+                    console.log(count)
+                    setPostData((data) => {
+                        data.likeCount = count
+                        return {...data}
+                    })
+                } else {
+                    message.warn('already liked!')
+                }
+            }
         }
     }
 
@@ -178,7 +235,7 @@ const IndividualPost = (props) => {
                             <div className="user-title">
                                 <img
                                     style={{width: 30, height: 30, borderRadius: '50%'}}
-                                    src={require('../../assets/user.jpg').default}
+                                    src={require('../../assets/default.png').default}
                                 />
                                 <div className='username'>{postData?.authorId?.displayName}</div>
                             </div>
@@ -213,7 +270,7 @@ const IndividualPost = (props) => {
                                     <span className="like-btn" onClick={likePost}>
                                         <i className="iconfont icon-dianzan"></i>
                                         <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
-                                            {postData?.likeCount ?? 0}
+                                            {likeCount ?? 0}
                                         </div>
                                     </span>
                                     <span onClick={resharePost}>

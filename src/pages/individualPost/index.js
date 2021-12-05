@@ -97,7 +97,20 @@ const IndividualPost = (props) => {
             const item = JSON.parse(jsonString)
             console.log(item)
             setPostData(item)
-            setLikeCount(item.likeCount)
+            if (item.foreignNodeId && item.foreignNodeHost.indexOf('linkedspace') !== -1) {
+                // get like count from linkedspace node
+                const authorId = item.author.url.split('/').pop()
+                const urlSplit = item.remoteId.split('/')
+                urlSplit.pop()
+                const postId = urlSplit.pop()
+                const url = window.btoa(`https://linkedspace-staging.herokuapp.com/api/author/${authorId}/posts/${postId}/likes/`)
+                const result = await client.get(`foreign-data/${item.foreignNodeId}/${url}`)
+                if (result.status === 200) {
+                    setLikeCount(result.data.items.length)
+                }
+            } else {
+                setLikeCount(item.likeCount)
+            }
         }
     }, [])
 
@@ -115,6 +128,9 @@ const IndividualPost = (props) => {
                     urlBase64 = window.btoa(url)
                 }
                 if (postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1) {
+                    urlBase64 = window.btoa(postData.comments)
+                }
+                if (postData.foreignNodeHost.indexOf('project-api-404') !== -1) {
                     urlBase64 = window.btoa(postData.comments)
                 }
                 res = await client.get(`foreign-data/${postData.foreignNodeId}/${urlBase64}`)
@@ -152,9 +168,6 @@ const IndividualPost = (props) => {
             if (postData.foreignNodeHost.indexOf('social-dis') !== -1) {
                 const postId = postData.remoteId.split('/').pop()
                 const authorId = postData.author.url.split('/').pop()
-                console.log(postId)
-                console.log(authorId)
-                console.log(postData)
                 const url = window.btoa(`https://social-dis.herokuapp.com/author/${authorId}/posts/${postId}/likes`)
                 result = await client.post(
                     `foreign-data/${postData.foreignNodeId}/${url}`, {
@@ -174,6 +187,57 @@ const IndividualPost = (props) => {
                     if (result.data.message[0].indexOf('duplicate key') !== -1) {
                         message.warn('already liked!')
                     }
+                } else {
+                    message.warn('something wrong!')
+                }
+            }
+            // linked-space
+            if (postData.foreignNodeHost.indexOf('linkedspace') !== -1) {
+                const authorId = postData.author.url.split('/').pop()
+                const url = window.btoa(`https://linkedspace-staging.herokuapp.com/api/author/${authorId}/inbox/`)
+                const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
+                    type: 'like',
+                    object: postData.remoteId,
+                    '@context': "https://www.w3.org/ns/activitystreams",
+                    author: {
+                        type: 'author',
+                        ...userinfoLocal,
+                        // id: 'https://cmput404f21t17.herokuapp.com/service/author/4e9deafd-29bf-4f18-92d7-954c3322bd53',
+                        id: userinfoLocal.url,
+                        password: '###'
+                    }
+                })
+                if (result.status === 200 && result.data.type === 'inbox') {
+                    if (result.data.items.length === likeCount) {
+                        message.warn('already liked!')
+                    } else {
+                        message.success('liked!')
+                        setLikeCount(likeCount + 1)
+                    }
+                } else {
+                    message.warn('something wrong!')
+                }
+            }
+            // project-404-api
+            if (postData.foreignNodeHost.indexOf('project-api-404') !== -1) {
+                const authorId = postData.author.url.split('/').pop()
+                const url = window.btoa(`https://project-api-404.herokuapp.com/api/author/${authorId}/inbox/`)
+                const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
+                    type: "like",
+                    author: {
+                        type: 'author',
+                        ...userinfoLocal,
+                        // id: 'https://cmput404f21t17.herokuapp.com/service/author/4e9deafd-29bf-4f18-92d7-954c3322bd53',
+                        id: userinfoLocal.url,
+                        password: '###'
+                    },
+                    object: postData.remoteId
+                })
+                if (result.status === 200) {
+                    message.success('liked!')
+                    setLikeCount(likeCount + 1)
+                } else {
+                    message.warn('something wrong!')
                 }
             }
         } else {
@@ -185,10 +249,7 @@ const IndividualPost = (props) => {
                 if (succ) {
                     message.success('liked!')
                     console.log(count)
-                    setPostData((data) => {
-                        data.likeCount = count
-                        return {...data}
-                    })
+                    setLikeCount(count)
                 } else {
                     message.warn('already liked!')
                 }
@@ -265,7 +326,7 @@ const IndividualPost = (props) => {
                                 <div>
                                     <i className="iconfont icon-xiaoxi"></i>
                                     <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
-                                        {postData?.commentCount ?? 0}
+                                        {commentList.length ?? 0}
                                     </div>
                                     <span className="like-btn" onClick={likePost}>
                                         <i className="iconfont icon-dianzan"></i>

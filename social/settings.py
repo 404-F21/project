@@ -216,3 +216,6 @@ if os.environ.get('ON_HEROKU'):
     deploy_host = 'https://cmput404f21t17.herokuapp.com'
 else:
     deploy_host = 'http://localhost:8000'
+
+frontend_http_basic_username = '2de6d1ef-8177-4249-913e-32886b4da6bc'
+frontend_http_basic_password = '33485661-6487-4f56-ac15-de06e0cdcf52'

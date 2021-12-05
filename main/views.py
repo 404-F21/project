@@ -29,6 +29,7 @@ from django.db.models import F
 from django.core.paginator import Paginator
 from django.shortcuts import redirect
 from main.response import fetch_posts
+from main.response import basic_auth, AUTH_SUCCESS
 
 import uuid
 import json
@@ -50,34 +51,16 @@ def paginate(objects: QuerySet, params: Dict[str, str]) -> QuerySet:
     return objects[begin:end]
 
 
-def __basic_auth(request):
-    if 'HTTP_AUTHORIZATION' in request.META:
-        auth = request.META['HTTP_AUTHORIZATION'].split()
-        if len(auth) == 2:
-            if auth[0].lower() == "basic":
-                node_id, password = base64.b64decode(auth[1]).decode().split(':')
-                password_md5 = hashlib.md5(password.encode()).hexdigest()
-                try:
-                    node = Node.objects.get(nodeId=node_id)
-                except Node.DoesNotExist:
-                    return 'id not found'
-                if not node.if_approved or node.password_md5 != password_md5:
-                    # Password is incorrect
-                    return 'password incorrect'
-                else:
-                    return AUTH_SUCCESS
-    return 'invalid auth'
-
-
-AUTH_SUCCESS = 'success'
-
-
 # Create your views here.
 class PostList(APIView):
     """
     List all Posts in the database
     """
     def get(self, request, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         all_posts = (Post.objects.filter(visibility="public")
                      .order_by('-publishedOn'))
         paged_posts = paginate(all_posts, request.query_params)
@@ -91,6 +74,10 @@ class PostList(APIView):
         return response
 
     def post(self, request, *args, **kwargs):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         if request.content_type == "application/json":
             author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
             text = request.data['content']
@@ -128,6 +115,10 @@ class Register(APIView):
 
 class FollowerList(APIView):
     def get(self, request, pk, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         author = Author.objects.get(pk=uuid.UUID(pk))
         follow_pairs = author.follower_set.all().order_by('follower__displayName')
         paged_pairs = paginate(follow_pairs, request.query_params)
@@ -141,6 +132,10 @@ class FollowerList(APIView):
 
 class FollowerDetail(APIView):
     def delete(self, request, pk, fpk, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         try:
             author = Author.objects.get(pk=uuid.UUID(pk))
             follow_pair = author.follower_set.get(follower=uuid.UUID(fpk))
@@ -150,6 +145,10 @@ class FollowerDetail(APIView):
             return Response({ 'success': False })
 
     def put(self, request, pk, fpk, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         follower = Author.objects.get(pk=uuid.UUID(fpk))
         followee = Author.objects.get(pk=uuid.UUID(pk))
 
@@ -161,6 +160,10 @@ class FollowerDetail(APIView):
         return Response(serializer.data)
 
     def get(self, request, pk, fpk, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         try:
             author = Author.objects.get(pk=uuid.UUID(pk))
             author.followee_set.get(follower=uuid.UUID(fpk))
@@ -168,8 +171,13 @@ class FollowerDetail(APIView):
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
 
+
 class FriendList(APIView):
     def get(self, request, pk, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         author = Author.objects.get(pk=uuid.UUID(pk))
         followers = author.follower_set.all().values_list('follower__id')
         friend_pairs = author.followed_set.filter(followee__id__in=followers).order_by('followee__displayName')
@@ -209,6 +217,10 @@ class PostDetail(APIView):
     List an individual post
     """
     def get(self, request, pk, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         try:
             post = Post.objects.get(postId=uuid.UUID(pk))
         except Post.DoesNotExist:
@@ -220,6 +232,10 @@ class PostDetail(APIView):
 
 class AuthorPostList(APIView):
     def get(self, request, pk, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         author = Author.objects.get(pk=uuid.UUID(pk))
         posts = author.post_set.all().order_by('-publishedOn')
         result = []
@@ -229,6 +245,10 @@ class AuthorPostList(APIView):
         return Response({ 'type': 'posts', 'items': result })
 
     def post(self, request, pk, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         author = Author.objects.get(pk=uuid.UUID(pk))
         text = request.data['content']
         title = request.data['title']
@@ -237,8 +257,13 @@ class AuthorPostList(APIView):
 
         return Response({ 'success': True })
 
+
 class AuthorPostDetail(APIView):
     def get(self, request, pk, pid, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         author = Author.objects.get(pk=uuid.UUID(pk))
         post = author.post_set.get(pk=uuid.UUID(pid))
         serializer = PostSerializer(post)
@@ -247,6 +272,10 @@ class AuthorPostDetail(APIView):
         return Response(data)
 
     def post(self, request, pk, pid, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         text = request.data['content']
         title = request.data['title']
         post = Post.objects.get(author__id=uuid.UUID(pk), pk=uuid.UUID(pid))
@@ -257,6 +286,10 @@ class AuthorPostDetail(APIView):
         return Response({ 'success': True })
 
     def delete(self, request, pk, pid, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         post = Post.objects.get(author__id=uuid.UUID(pk), pk=uuid.UUID(pid))
         post.delete()
 
@@ -265,13 +298,38 @@ class AuthorPostDetail(APIView):
 
 @api_view(['POST'])
 def like_post(request, pk):
+    # check if user is authenticated and if not return a 401
+    r_a = basic_auth(request)
+    if r_a != AUTH_SUCCESS:
+        return no_auth()
     post_id = uuid.UUID(pk)
-    author_id = uuid.UUID(request.data['authorId'])
-
     post = Post.objects.get(postId=post_id)
-    author = Author.objects.get(id=author_id)
+    if request.data.get('authorId', None) is not None:
+        # If this api is used by internal frontend
+        author_id = uuid.UUID(request.data['authorId'])
+        try:
+            author = Author.objects.get(id=author_id, if_foreign=False)
+        except Author.DoesNotExist:
+            author = None
+    else:
+        # If this api is used by foreign nodes
+        author_input = request.data['author']
+        try:
+            author = Author.objects.get(url=author_input['url'], if_foreign=True)
+        except Author.DoesNotExist:
+            # If foreign node want to create comment for our post, create their author
+            user = User.objects.create_user(author_input['displayName'], '12345_FOREIGN_INNER_AUTHOR')
+            author = Author.objects.create(
+                displayName=author_input['displayName'],
+                password='12345_FOREIGN_INNER_AUTHOR',
+                user=user,
+                url=author_input['url'],
+                host=author_input['host'],
+                github=author_input['github'],
+                if_foreign=True
+            )
     # check if already exists 
-    likes = LikePost.objects.filter(postId=post_id, authorId=author_id)
+    likes = LikePost.objects.filter(postId=post, authorId=author)
     if len(likes):
         # already liked can not like again
         return Response({ 'succ': False })
@@ -291,6 +349,10 @@ def reshare_post(request, author_id, post_id):
     """
     Reshare post, share_aid is the author who preform the reshare action
     """
+    # check if user is authenticated and if not return a 401
+    r_a = basic_auth(request)
+    if r_a != AUTH_SUCCESS:
+        return no_auth()
     if author_id == request.data['shareAid']:
         return failure('Cannot share post by yourself')
     try:
@@ -315,6 +377,10 @@ def reshare_post_foreign(request, reshare_aid):
     """
     Reshare foreign post to target author
     """
+    # check if user is authenticated and if not return a 401
+    r_a = basic_auth(request)
+    if r_a != AUTH_SUCCESS:
+        return no_auth()
     title = request.data['title']
     content = request.data['content']
     content_type = request.data['contentType']
@@ -370,6 +436,10 @@ def get_foreign_data(request, node_id, url_base64):
     Get foreign data (used as a proxy)
     Post dat to foreign url (used as a proxy)
     """
+    # check if user is authenticated and if not return a 401
+    r_a = basic_auth(request)
+    if r_a != AUTH_SUCCESS:
+        return no_auth()
     url = base64.b64decode(url_base64).decode()
     try:
         node = Node.objects.get(nodeId=node_id)
@@ -393,7 +463,10 @@ def get_foreign_data(request, node_id, url_base64):
             return failure('json data format incorrect')
         print(data)
         result = requests.post(url, json=data, auth=(username, password))
-        return JsonResponse(result.json())
+        print(result.text)
+        if not result.text:
+            return JsonResponse({})
+        return JsonResponse(result.json(), safe=False)
     else:
         return failure('GET')
 
@@ -401,7 +474,9 @@ def get_foreign_data(request, node_id, url_base64):
 class CommentList(APIView):
     def get(self, request, pk, format=None):
         # check if user is authenticated and if not return a 401
-
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         # https://docs.djangoproject.com/en/dev/ref/models/querysets/#exists
         post = Post.objects.get(pk=pk)
         if post is not None:
@@ -421,10 +496,34 @@ class CommentList(APIView):
 
     def post(self, request, pk, format=None):
         # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         post = Post.objects.get(pk=pk)
         if post is not None:
-
-            author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
+            if request.data.get('authorId', None) is not None:
+                # If this api is used by internal frontend
+                try:
+                    author = Author.objects.get(pk=uuid.UUID(request.data['authorId']), if_foreign=False)
+                except Author.DoesNotExist:
+                    author = None
+            else:
+                # If this api is used by foreign nodes
+                author_input = request.data['author']
+                try:
+                    author = Author.objects.get(url=author_input['url'], if_foreign=True)
+                except Author.DoesNotExist:
+                    # If foreign node want to create comment for our post, create their author
+                    user = User.objects.create_user(author_input['displayName'], '12345_FOREIGN_INNER_AUTHOR')
+                    author = Author.objects.create(
+                        displayName=author_input['displayName'],
+                        password='12345_FOREIGN_INNER_AUTHOR',
+                        user=user,
+                        url=author_input['url'],
+                        host=author_input['host'],
+                        github=author_input['github'],
+                        if_foreign=True
+                    )
             if author is None:
                 return HttpResponse('Error, no such author')
             comment = Comment(
@@ -444,6 +543,10 @@ class CommentList(APIView):
 
 class AuthorDetail(APIView):
     def get(self, request, pk):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         author = Author.objects.filter(id=pk)
         author_serializer = AuthorSerializer(author.first())
         data = dict()
@@ -455,6 +558,10 @@ class AuthorDetail(APIView):
         """
         Update info of a user
         """
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         display_name = request.data['displayName']
         github = request.data['github']
         try:
@@ -474,6 +581,10 @@ class AuthorList(APIView):
     List all authors in the server, or register a new author
     """
     def get(self, request, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         authors = paginate(Author.objects.all().order_by('displayName'), request.query_params)
         serializer = AuthorSerializer(authors, many=True)
 
@@ -481,6 +592,10 @@ class AuthorList(APIView):
         return Response(data)
 
     def post(self, request, format=None):
+        # check if user is authenticated and if not return a 401
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
         displayName = request.data['displayName']
         password = request.data['password']
         github = request.data['github']
@@ -877,7 +992,7 @@ def get_public_author(request):
                     if not node.if_approved or node.password_md5 != password_md5:
                         # Password is incorrect
                         return no_auth()
-                    authors = Author.objects.all()
+                    authors = Author.objects.filter(if_foreign=False)
                     result = []
                     for author in authors:
                         a = author.dict()

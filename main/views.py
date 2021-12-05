@@ -318,10 +318,10 @@ def like_post(request, pk):
             author = Author.objects.get(url=author_input['url'], if_foreign=True)
         except Author.DoesNotExist:
             # If foreign node want to create comment for our post, create their author
-            user = User.objects.create_user(author_input['displayName'], '12345_FOREIGN_INNER_AUTHOR')
+            user = User.objects.create_user(author_input['displayName'], 'FOREIGN_INNER_AUTHOR')
             author = Author.objects.create(
                 displayName=author_input['displayName'],
-                password='12345_FOREIGN_INNER_AUTHOR',
+                password='FOREIGN_INNER_AUTHOR',
                 user=user,
                 url=author_input['url'],
                 host=author_input['host'],
@@ -514,10 +514,10 @@ class CommentList(APIView):
                     author = Author.objects.get(url=author_input['url'], if_foreign=True)
                 except Author.DoesNotExist:
                     # If foreign node want to create comment for our post, create their author
-                    user = User.objects.create_user(author_input['displayName'], '12345_FOREIGN_INNER_AUTHOR')
+                    user = User.objects.create_user(author_input['displayName'], 'FOREIGN_INNER_AUTHOR')
                     author = Author.objects.create(
                         displayName=author_input['displayName'],
-                        password='12345_FOREIGN_INNER_AUTHOR',
+                        password='FOREIGN_INNER_AUTHOR',
                         user=user,
                         url=author_input['url'],
                         host=author_input['host'],

@@ -379,6 +379,7 @@ def get_foreign_data(request, node_id, url_base64):
     password = node.http_password
     if 'http://' in url:
         url = url.replace('http:', 'https:')
+    print(url)
 
     if request.method == 'GET':
         # GET
@@ -390,7 +391,8 @@ def get_foreign_data(request, node_id, url_base64):
             data: dict = json.loads(request.body.decode())
         except json.JSONDecodeError:
             return failure('json data format incorrect')
-        result = requests.post(url, data=data, auth=(username, password))
+        print(data)
+        result = requests.post(url, json=data, auth=(username, password))
         return JsonResponse(result.json())
     else:
         return failure('GET')

@@ -118,6 +118,9 @@ const App = _ => {
 
     // Get list on initialization
     useEffect(async () => {
+		const loginUser = localStorage.getItem('userinfo')
+		localStorage.clear()
+		localStorage.setItem('userinfo', loginUser)
         await getPostList()
     }, []);
 
@@ -221,7 +224,7 @@ const App = _ => {
                             thumb={
                                 <img
                                     style={{width: 35, borderRadius: 10}}
-                                    src={require('../../assets/user.jpg').default}
+                                    src={require('../../assets/default.png').default}
                                 />
                             }
                             thumbStyle={{width: 35, borderRadius: 10}}

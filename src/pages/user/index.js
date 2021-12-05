@@ -135,12 +135,11 @@ const User = (_) => {
         const current_user = store.getState().login.id;
         const result = await client.get(`author/${userId}/followers/` + current_user)
         if (result.data.isFollower === true) {
+            document.querySelector('#followButton').textContent = 'Unfollow';
             return true;
-            //message.success('already following')
         }
         else {
             return false;
-            //message.success('not following')
         }
 
     }
@@ -161,15 +160,17 @@ const User = (_) => {
         const current_user = store.getState().login.id;
         const result = await client.get(`author/${userId}/followers/` + current_user)
         if (result.data.isFollower === true) {
-            message.success('already following')
+            await client.delete(`author/${userId}/followers/` + current_user)
+            message.success('Unfollowed user!')
+            document.querySelector('#followButton').textContent = 'Follow User';
         }
         else {
             const result = await client.put(`author/${userId}/followers/` + current_user)
-            message.success('Now following!')
+            message.success('Now following user!')
+            document.querySelector('#followButton').textContent = 'Unfollow';
         }
-        //const result = await client.get(`author/${userId}/followers/a464d46a-6bc2-458b-abd0-71228e88565f`)
-
     }
+    
 
     const onFinish = async (values) => {
         console.log(values);
@@ -183,6 +184,7 @@ const User = (_) => {
   useEffect(async () => {
     await loadData();
     await loadUser();
+	await checkFollowing();
   }, []);
 
   // need this or ordered lists render all screwy
@@ -204,14 +206,19 @@ const User = (_) => {
                     loginUserInfo && userId !== loginUserInfo.id ?
                     <div>
                     <Button type={'primary'} id='followButton' style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Follow User</Button>
-                    <Button type={'primary'} style={{width: '150px', marginLeft: '20px'}} onClick={checkFollowing}>Follow User</Button>
-                    <Button type={'primary'} style={{width: '150px', marginLeft: '20px'}} onClick={nuke}>Delete FDB</Button>
+                    <Button id='friendButton' style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Add Friend</Button>
+                    <script>
+                    var current_user = store.getState().login.id;
+                    var result = await client.get(`author/${userId}/followers/` + current_user);
+                    document.querySelector('#followButton').textContent = 'Hide';
+                    </script>
                     </div>
                     
 
                         :
                         null
                 }
+
                 {
                     loginUserInfo && userId === loginUserInfo.id ?
                         <a className='edit' onClick={edit}>

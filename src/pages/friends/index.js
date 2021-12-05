@@ -16,72 +16,97 @@ import { List, Tabs, NavBar, Icon } from 'antd-mobile';
 import { Radio } from 'antd';
 import { client } from '../../http';
 import store from '../../store/store';
+import { useHistory } from 'react-router-dom';
 
 const Item = List.Item;
 const Brief = Item.Brief;
 
-const UserList = () => {
+const UserList = props => {
+  const history = useHistory();
+
+  return (
     <List className="my-list">
+			{ props.users.map( user => (
       <Item
         arrow="horizontal"
         thumb={
           <img
             style={{ width: 45, height: 45, borderRadius: 10 }}
-            src={require("../../assets/user.jpg").default}
+            src={require('../../assets/user.jpg').default}
           />
         }
         onClick={() => {
+          history.push('/user/' + user.id)
         }}
       >
-        username
-        <Brief>summary</Brief>
+        { user.displayName }
+        <Brief>{ user.host }</Brief>
       </Item>
+      ))}
     </List>
   );
-};
+}
+
+const pullUsers = async endpoint => {
+	const result = await client.get(endpoint);
+	if (result.status === 200) {
+		console.log(result.data.type);
+		return result.data.items;
+	} else {
+		return [];
+	}
+}
 
 const Friends = _ => {
-  const [userList, setUserList] = useState([]);
-  const [authorId, setAuthorId] = useState('');
+	const [userList, setUserList] = useState([]);
+	const [loading, setLoading] = useState(false);
 
-  const getUserList = async endpoint => {
-    switch (endpoint) {
-      case 'a':
-        await client.get(`author/${authorId}/friends`);
-        break;
-      case 'b':
-        await client.get(`author/${authorId}/followers`);
-        break;
-      case 'c':
-        break;
-      default:
+	const authorId = store.getState().login.id;
 
-    }
-  }
+	const getUserList = async endpoint => {
+		setLoading(true);
+		switch (endpoint) {
+			case 'a':
+				setUserList(await pullUsers(`author/${authorId}/friends`));
+				break;
+			case 'b':
+				setUserList(await pullUsers(`author/${authorId}/followers`));
+				break;
+			case 'c':
+				setUserList(await pullUsers(`author/${authorId}/followed`));
+				break;
+			default:
+		}
+		setLoading(false);
+	}
 
-  useEffect(() => {
-    setAuthorId(store.getState().login.id);
-  }, []);
+	const radioChange = e => {
+		getUserList(e.target.value);
+	}
 
-  return (
-      <>
-      <Radio.Group
-        style={{display: 'flex', justifyContent: 'center', margin: 10}}
-        defaultValue='a'
-        optionType='button'
-        size='large'>
-        <Radio.Button value='a'>Friends</Radio.Button>
-        <Radio.Button value='b'>Followers</Radio.Button>
-        <Radio.Button value='c'>Following</Radio.Button>
-      </Radio.Group>
+	useEffect(() => {
+		getUserList('a');
+	}, []);
 
-      <div className="user">
-        <UserList />
-        <UserList />
-        <UserList />
-      </div>
-      </>
-  );
+    return (
+		<>
+		<Radio.Group
+			style={{display: 'flex', justifyContent: 'center', margin: 10}}
+			defaultValue='a'
+			optionType='button'
+			size='large'
+			onChange={radioChange}
+			disabled={loading}>
+			<Radio.Button value='a'>Friends</Radio.Button>
+			<Radio.Button value='b'>Followers</Radio.Button>
+			<Radio.Button value='c'>Following</Radio.Button>
+		</Radio.Group>
+
+        <div className="user">
+            <UserList users={userList} />
+        </div>
+		</>
+    );
 };
 
 export default Friends;

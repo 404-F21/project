@@ -56,9 +56,44 @@ const User = (props) => {
         }
     }
 
+    const checkFollowing = async () => {
+        const current_user = store.getState().login.id;
+        const result = await client.get(`author/${userId}/followers/` + current_user)
+        if (result.data.isFollower === true) {
+            return true;
+            //message.success('already following')
+        }
+        else {
+            return false;
+            //message.success('not following')
+        }
+
+    }
+
+    const nuke = async () => {
+        const current_user = store.getState().login.id;
+        const result = await client.delete(`author/${userId}/followers/` + current_user)
+        if (result.data.success === true) {
+            message.success('lebron')
+        }
+        else {
+            message.success('fail')
+        }
+
+    }
+
     const followUser = async () => {
-        const result = await client.put(`author/${userId}/followers/a464d46a-6bc2-458b-abd0-71228e88565f`)
-        message.success('user page:' + {userId} + ", follower: ")
+        const current_user = store.getState().login.id;
+        const result = await client.get(`author/${userId}/followers/` + current_user)
+        if (result.data.isFollower === true) {
+            message.success('already following')
+        }
+        else {
+            const result = await client.put(`author/${userId}/followers/` + current_user)
+            message.success('Now following!')
+        }
+        //const result = await client.get(`author/${userId}/followers/a464d46a-6bc2-458b-abd0-71228e88565f`)
+
     }
 
     const onFinish = async (values) => {
@@ -130,8 +165,18 @@ const User = (props) => {
                     <h2>{userinfo?.displayName}</h2>
                     <p>{userinfo?.github}</p>
                 </div>
-                <Button type={'primary'} style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Follow User</Button>
-                <Button type={'primary'} style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Add Friend</Button>
+                {
+                    loginUserInfo && userId !== loginUserInfo.id ?
+                    <div>
+                    <Button type={'primary'} id='followButton' style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Follow User</Button>
+                    <Button type={'primary'} style={{width: '150px', marginLeft: '20px'}} onClick={checkFollowing}>Follow User</Button>
+                    <Button type={'primary'} style={{width: '150px', marginLeft: '20px'}} onClick={nuke}>Delete FDB</Button>
+                    </div>
+                    
+
+                        :
+                        null
+                }
                 {
                     loginUserInfo && userId === loginUserInfo.id ?
                         <a className='edit' onClick={edit}>

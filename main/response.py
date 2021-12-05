@@ -16,8 +16,11 @@ import json
 import time
 import datetime
 import requests
+import base64
+import hashlib
 from django.shortcuts import HttpResponse
 from main.models import Node, Post, Author
+from social.settings import frontend_http_basic_password, frontend_http_basic_username
 
 
 def __result(code: int, message: str, data: any) -> HttpResponse:
@@ -40,7 +43,12 @@ def failure(message: str) -> HttpResponse:
 
 
 def no_auth() -> HttpResponse:
-    return __result(403, 'you are not allowed to access to this api', None)
+    r = HttpResponse(json.dumps({
+        'message': 'you are not allowed to access to this api'
+    }))
+    r.status_code = 401
+    r['Content-Type'] = 'application/json'
+    return r
 
 
 def fetch_posts():
@@ -107,7 +115,7 @@ def fetch_posts():
                         )
                         post = Post(
                             author=author,
-                            remoteId=item.get('id', ''),
+                            remoteId=item.get('id', item.get('post_id', '')),
                             title=item.get('title', 'Title'),
                             source=item.get('source', 'Source'),
                             origin=item.get('origin', 'Origin'),
@@ -172,3 +180,28 @@ def fetch_posts():
         except BaseException as e:
             print(e)
     return result_posts
+
+
+def basic_auth(request):
+    if 'HTTP_AUTHORIZATION' in request.META:
+        auth = request.META['HTTP_AUTHORIZATION'].split()
+        if len(auth) == 2:
+            if auth[0].lower() == "basic":
+                node_id, password = base64.b64decode(auth[1]).decode().split(':')
+                if node_id == frontend_http_basic_username and password == frontend_http_basic_password:
+                    # Internal use
+                    return AUTH_SUCCESS
+                password_md5 = hashlib.md5(password.encode()).hexdigest()
+                try:
+                    node = Node.objects.get(nodeId=node_id)
+                except Node.DoesNotExist:
+                    return 'id not found'
+                if not node.if_approved or node.password_md5 != password_md5:
+                    # Password is incorrect
+                    return 'password incorrect'
+                else:
+                    return AUTH_SUCCESS
+    return 'invalid auth'
+
+
+AUTH_SUCCESS = 'success'

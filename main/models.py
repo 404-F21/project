@@ -46,6 +46,9 @@ class Author(models.Model):
 
     profilePic = models.ImageField(upload_to='profilePics/', blank=True)
 
+    # If the author is from goreign node
+    if_foreign = models.BooleanField(null=False, default=False)
+
     def save(self, *args, **kwargs):
         if self.url is None:
             self.url = f'{self.host}service/author/{self.id}'
@@ -194,7 +197,7 @@ class Post(models.Model):
             'categories': self.categories,
             'commentCount': self.commentCount,
             'likeCount': self.likeCount,
-            'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/' if not self.remoteId else self.comments,
+            'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/' if not self.foreign_node_id else self.comments,
             'published': self.publishedOn.isoformat(),
             'foreignNodeId': self.foreign_node_id,
             'foreignNodeHost': self.foreign_node_host

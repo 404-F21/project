@@ -14,15 +14,18 @@
 import React, { useState } from 'react'
 import './login.css';
 import { useHistory } from 'react-router-dom';
-import { Input, message } from 'antd';
+import { Button, Input, message,Upload } from 'antd';
 import { client } from '../../http';
 const Register = _ => {
     const history = useHistory();
+
+    const [profilePic] = '';
 
     const [displayName, setDisplayName] = useState('')
     const [password, setPassword] = useState('')
     const [github, setGithub] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
+    const [hasProfilePic, sethasProfilePic] = useState(false)
 
     const reg = async event => {
 		event.preventDefault()
@@ -34,7 +37,8 @@ const Register = _ => {
             judge(password === confirmPassword, 'The password is not equal to the confirmation password') &&
             judgePassword(password)
         ) {
-            let user = { displayName, password, github };
+            let user = { displayName, password, github, profilePic };
+            // let user = { displayName, password, github };
             const ret = await client.post('authors/', user)
             if (ret.status >= 200 && ret.status < 400) {
                 message.success('registered successfully!')
@@ -45,6 +49,12 @@ const Register = _ => {
         // localStorage.setItem('userinfo', JSON.stringify({ username: 'lili', token: 'abcdef' }))
         // dispatch(loginAction({ username: 'lili', token: 'abcdef' }))
         // history.replace('/')
+    }
+
+    // Upload image button clicked
+    const selectImgUpload = () => {
+        sethasProfilePic(!hasProfilePic)
+
     }
 
     const judge = (cond, msg) => {
@@ -64,6 +74,19 @@ const Register = _ => {
                     <div className="logincon">
                         <div style={{textAlign:'center',margin:'50px 0 30px'}}> 
                             <img src={require('../../assets/logo.png').default} alt="" />
+                            <Upload
+                                beforeUpload={(file) => {
+                                    console.log(file)
+                                    // const reader = new FileReader();
+                                    // reader.readAsDataURL(file);
+                                    // reader.onload = () => {
+                                    //     profilePic: reader.result
+                                    // }
+                                    // return false
+                                }}
+                            >
+                                <Button type={'primary'} onClick={selectImgUpload}>Upload Profile Picture</Button>
+                            </Upload>
                         </div>
                         <form className="loginform" onSubmit={reg}>
                             <Input

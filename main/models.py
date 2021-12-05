@@ -44,7 +44,8 @@ class Author(models.Model):
     # HATEOS url for GITHUB API???
     github = models.URLField(default="")
 
-    profilePic = models.ImageField(upload_to='profilePics/', blank=True)
+    profilePic = models.CharField(max_length=256, null=True, blank=True)
+    # profilePic = models.ImageField(upload_to='profilePics/', blank=True)
 
     def save(self, *args, **kwargs):
         if self.url is None:

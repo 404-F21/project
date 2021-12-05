@@ -160,3 +160,8 @@ yarn-error.log*
 *.sln
 *.sw*
 .env
+
+
+profilePics/*
+media/*
+

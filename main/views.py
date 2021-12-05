@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+from django.db.models import query
 import requests
 from django.contrib.auth.models import User
 from django.db.models.query import QuerySet
@@ -27,6 +28,7 @@ from django.shortcuts import render
 from main.decorator import need_admin
 from main.response import success, failure, no_auth
 from django.db.models import F
+from django.db.models.query import EmptyQuerySet
 from django.core.paginator import Paginator
 from django.shortcuts import redirect
 from main.response import fetch_posts
@@ -178,8 +180,9 @@ class FollowerDetail(APIView):
         if r_a != AUTH_SUCCESS:
             return no_auth()
         try:
-            author = Author.objects.get(pk=uuid.UUID(pk))
-            follow_pair = author.follower_set.get(follower=uuid.UUID(fpk))
+            followee = Author.objects.get(pk=uuid.UUID(pk))
+            follower = Author.objects.get(pk=uuid.UUID(fpk))
+            follow_pair = Following.objects.get(followee=followee, follower=follower)
             follow_pair.delete()
             return Response({ 'success': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
@@ -199,6 +202,7 @@ class FollowerDetail(APIView):
         serializer = FollowingSerializer(follow_pair)
 
         return Response(serializer.data)
+        
 
     def get(self, request, pk, fpk, format=None):
         # check if user is authenticated and if not return a 401
@@ -211,7 +215,6 @@ class FollowerDetail(APIView):
             return Response({ 'isFollower': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
-
 
 class FollowedList(APIView):
     def get(self, request, pk, format=None):
@@ -249,9 +252,15 @@ class FollowedDetail(APIView):
 
     def get(self, request, pk, fpk, format=None):
         try:
-            author = Author.objects.get(pk=uuid.UUID(pk))
-            author.follower_set.get(followee=uuid.UUID(fpk))
-            return Response({ 'isFollower': True })
+            #author = Author.objects.get(pk=uuid.UUID(pk))
+            #author.follower_set.get(followee=uuid.UUID(fpk))
+            follower = Author.objects.get(pk=uuid.UUID(pk))
+            followee = Author.objects.get(pk=uuid.UUID(fpk))
+            #if Following.objects.filter(followee=followee, follower=follower) is not None:
+             #   return Response({ 'isFollower': True })
+            #else: return Response({ 'isFollower': False })
+            print(f'QUERY: {Following.objects.filter(followee=followee, follower=follower)}')
+            return Response({ 'isFollower': False })  
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
 

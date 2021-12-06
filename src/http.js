@@ -11,16 +11,16 @@
  * limitations under the License.
  */
 
-import axios from "axios"
+import axios from "axios";
 
 const protocol = window.location.protocol;
 const host = window.location.host;
 
 export const client = axios.create({
-    baseURL: `${protocol}//${host}/service/`,
-    // baseURL: `http://localhost:8000/service/`
-    auth: {
-        username: '2de6d1ef-8177-4249-913e-32886b4da6bc',
-        password: '33485661-6487-4f56-ac15-de06e0cdcf52'
-    }
+  baseURL: `${protocol}//${host}/service/`,
+  // baseURL: `http://localhost:8000/service/`
+  auth: {
+    username: "2de6d1ef-8177-4249-913e-32886b4da6bc",
+    password: "33485661-6487-4f56-ac15-de06e0cdcf52",
+  },
 });

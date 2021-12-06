@@ -21,7 +21,7 @@ import { client } from "../../http";
 import store from "../../store/store";
 import { Remark } from "react-remark";
 import remarkGemoji from "remark-gemoji";
-import visCheck from '../../posts';
+import visCheck from "../../posts";
 
 const layout = {
   labelCol: { span: 6 },
@@ -86,7 +86,12 @@ const User = (_) => {
   const loadData = async () => {
     const result = await client.get(`author/${userId}/posts/`);
     if (result.status === 200) {
-      result.data.items.map((item) => {
+      let filteredData = [];
+      for (const item of result.data.items) {
+        if (!(await visCheck(item, store.getState().login.id))) {
+          break;
+        }
+
         if (
           item.contentType === "image/png" ||
           item.contentType === "image/jpeg" ||
@@ -101,9 +106,9 @@ const User = (_) => {
         ) {
           item.imgSrc = item.content;
         }
-        return item;
-      }).filter(item => visCheck(item, store.getState().login.id));
-      setPostList(result.data.items);
+        filteredData.push(item);
+      }
+      setPostList(filteredData);
     } else {
       message.error("Something wrong");
     }

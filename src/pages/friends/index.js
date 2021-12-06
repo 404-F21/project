@@ -29,8 +29,7 @@ const UserList = () => {
             src={require("../../assets/user.jpg").default}
           />
         }
-        onClick={() => {
-        }}
+        onClick={() => {}}
       >
         username
         <Brief>summary</Brief>

@@ -201,6 +201,7 @@ class Post(models.Model):
             'commentCount': self.commentCount,
             'likeCount': self.likeCount,
             'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/' if not self.foreign_node_id else self.comments,
+            'visibility': self.visibility,
             'published': self.publishedOn.isoformat(),
             'foreignNodeId': self.foreign_node_id,
             'foreignNodeHost': self.foreign_node_host

@@ -11,21 +11,24 @@
  * limitations under the License.
  */
 
-import { client } from 'http';
+import { client } from "./http";
 
 const visCheck = async (postData, userId) => {
   const visibility = postData.visibility.toLowerCase();
+  const authorIsYou = postData.author.id === userId;
 
-  if (visibility.includes('friends')) {
+  if (visibility.includes("friends")) {
     const authorId = postData.author.id;
     const result = await client.get(`author/${userId}/friends/${authorId}`);
     if (result.status === 200) {
-      return result.data.isFriend;
-    } else { return false; }
-  } else if (visibility.includes('author')) {
-    return postData.author.id === userId;
+      return result.data.isFriend || authorIsYou;
+    } else {
+      return false;
+    }
+  } else if (visibility.includes("author")) {
+    return authorIsYou;
   }
   return true;
-}
+};
 
 export default visCheck;

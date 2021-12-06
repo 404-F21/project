@@ -72,9 +72,9 @@ class Author(models.Model):
             'profilePic': self.profilePic
         }
 
+# remains to avoid breaking the database
 class FriendRequest(models.Model):
     # https://medium.com/analytics-vidhya/add-friends-with-689a2fa4e41d
-
     option = (
         ('Accept', 'Accept'),
         ('Decline', 'Decline'),

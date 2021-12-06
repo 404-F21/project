@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+from django.db.models.query_utils import Q
 import requests
 from django.contrib.auth.models import User
 from django.db.models.query import QuerySet
@@ -84,11 +85,11 @@ class PostList(APIView):
             return no_auth()
         fetcher_id = request.GET.get('fid', None)
 
-        public_posts = Post.objects.filter(visibility='PUBLIC')
+        public_posts = Post.objects.filter(Q(visibility='PUBLIC') | Q(visibility='public'))
         all_posts = public_posts.order_by('-publishedOn')
 
         if fetcher_id is not None:
-            private_posts = Post.objects.filter(visibility='AUTHOR ONLY', author__id=fetcher_id)
+            private_posts = Post.objects.filter(Q(visibility='AUTHOR ONLY') | Q(visibility='toAuthor'), author__id=fetcher_id)
 
             author = Author.objects.get(pk=uuid.UUID(fetcher_id))
             followers = (author.follower_set.all()
@@ -97,7 +98,7 @@ class PostList(APIView):
                     .filter(followee__id__in=followers)
                     .order_by('followee__displayName')
                     .values('followee'))
-            friend_posts = Post.objects.filter(visibility='FRIENDS ONLY', author__in=friends)
+            friend_posts = Post.objects.filter(Q(visibility='FRIENDS ONLY') | Q(visibility='friends'), author__in=friends)
 
             all_posts = (all_posts | private_posts | friend_posts).order_by('-publishedOn')
 

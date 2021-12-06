@@ -89,7 +89,7 @@ const User = (_) => {
       let filteredData = [];
       for (const item of result.data.items) {
         if (userId !== null && !(await visCheck(item, userId))) {
-          break;
+          continue;
         }
 
         if (

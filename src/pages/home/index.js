@@ -103,9 +103,8 @@ const App = (_) => {
       const myId = store.getState().login?.id;
       let filteredData = [];
       for (const item of result.data) {
-        console.log(`${item.source}: ${item.visibility}`);
         if (myId !== null && !(await visCheck(item, myId))) {
-          break;
+          continue;
         }
 
         if (

@@ -114,12 +114,13 @@ def fetch_posts():
                             host=author['host'],
                             displayName=author['displayName'],
                             github=author['github'],
-                            profilePic=author['profileImage']
+                            profilePic=author.get('profileImage', item.get('avatar'))
                         )
-                        if 'data' not in json_obj.keys():
-                            publish_time = datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ')
-                        else:
+                        if 'glowing-palm-tree1' in node.host:
                             publish_time = datetime.datetime.strptime(item['published'], '%Y-%m-%d %H:%M:%S.%f')
+                        else:
+                            publish_time = datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ')
+
                         post = Post(
                             author=author,
                             remoteId=item.get('id', item.get('post_id', '')),
@@ -163,7 +164,7 @@ def fetch_posts():
                         host=author['host'],
                         displayName=author['displayName'],
                         github=author['github'],
-                        profilePic=author['profileImage']
+                        profilePic=author.get('profileImage', item.get('avatar'))
                     )
                     post = Post(
                         author=author,

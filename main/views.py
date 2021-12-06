@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import requests
 from django.contrib.auth.models import User
 from django.db.models.query import QuerySet
@@ -19,7 +20,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import Author, Comment, Following, Post, LikePost, Admin, Node
+from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, MediaFile
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -30,6 +31,7 @@ from django.core.paginator import Paginator
 from django.shortcuts import redirect
 from main.response import fetch_posts
 from main.response import basic_auth, AUTH_SUCCESS
+from social.settings import BASE_DIR
 
 import uuid
 import json
@@ -381,12 +383,26 @@ class AuthorDetail(APIView):
             return no_auth()
         display_name = request.data['displayName']
         github = request.data['github']
+        # save new profile image
+        profile_pic_base64 = request.data.get('headPic', None)
+
+        file = None
+        if profile_pic_base64 is not None and profile_pic_base64 != '':
+            file_path = os.path.join(BASE_DIR, 'media', str(uuid.uuid4()))
+            file = MediaFile.objects.create(file_path=file_path)
+
+            # Save the image
+            with open(file_path, 'wb+') as f:
+                f.write(base64.b64decode(profile_pic_base64))
+
         try:
             author = Author.objects.get(id=pk)
         except Author.DoesNotExist:
             return failure('id not found')
         author.displayName = display_name
         author.github = github
+        if file:
+            author.profilePic = request.build_absolute_uri('/') + 'service/media/' + str(file.id) + '/'
         author.save()
         return Response({
             'succ': True
@@ -416,7 +432,17 @@ class AuthorList(APIView):
         displayName = request.data['displayName']
         password = request.data['password']
         github = request.data['github']
+        profile_pic_base64 = request.data.get('headPic', None)
         uri = request.build_absolute_uri('/')
+
+        file = None
+        if profile_pic_base64 is not None and profile_pic_base64 != '':
+            file_path = os.path.join(BASE_DIR, 'media', str(uuid.uuid4()))
+            file = MediaFile.objects.create(file_path=file_path)
+
+            # Save the image
+            with open(file_path, 'wb+') as f:
+                f.write(base64.b64decode(profile_pic_base64))
 
         user = User.objects.create_user(displayName, password)
 
@@ -425,7 +451,8 @@ class AuthorList(APIView):
             password=password,
             user=user,
             host=uri,
-            github=github
+            github=github,
+            profilePic=(request.build_absolute_uri('/') + 'service/media/' + str(file.id) + '/') if file else ''
         )
         author.save()
         ser = AuthorSerializer(author)
@@ -448,7 +475,8 @@ def app_login(request):
             'id': str(author.pk),
             'url': author.url,
             'host': author.host,
-            'github': author.github
+            'github': author.github,
+            'profilePic': author.profilePic
         })
     except Author.DoesNotExist:
         return Response({ 'succ': False })
@@ -981,3 +1009,20 @@ def get_public_author(request):
         return no_auth()
     else:
         return failure('GET')
+
+
+@api_view(['GET'])
+def download_media_file(request, file_id):
+    """
+    Download media file (for user profile pic)
+    """
+    try:
+        file = MediaFile.objects.get(id=file_id)
+    except MediaFile.DoesNotExist:
+        return failure('file not found')
+    with open(file.file_path, 'rb') as f:
+        file_content = f.read()
+    r = HttpResponse(file_content, content_type='image/png')
+    r['Content-Disposition'] = "attachment; filename=default.png"
+    r["Access-Control-Allow-Origin"] = '*'
+    return r

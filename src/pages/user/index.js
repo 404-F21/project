@@ -15,7 +15,7 @@ import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { Card } from "antd-mobile";
 import { useDispatch } from "react-redux";
-import { Button, Form, Input, message, Modal } from "antd";
+import {Button, Form, Input, message, Modal, Upload} from "antd";
 import "./index.css";
 import { client } from "../../http";
 import { Remark } from "react-remark";
@@ -34,6 +34,7 @@ const User = (props) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [editPostData, setEditPostData] = useState();
+  const [profileImage, setProfileImage] = useState('');
   const handleOk = () => {
     setIsModalVisible(false);
   };
@@ -56,6 +57,7 @@ const User = (props) => {
   };
 
   const onFinish = async (values) => {
+    values.headPic = profileImage
     const result = await client.post(`author/${userId}/`, values);
     if (result.status === 200) {
       message.success("Edit successfully");
@@ -119,7 +121,7 @@ const User = (props) => {
       <div className="userinfo bgw">
         <img
           className="userimg"
-          src={require("../../assets/default.png").default}
+          src={userinfo?.profilePic ? userinfo.profilePic : require("../../assets/default.png").default}
           alt=""
         />
         <div>
@@ -144,7 +146,7 @@ const User = (props) => {
                 thumb={
                   <img
                     style={{ width: 35, borderRadius: 10 }}
-                    src={require("../../assets/default.png").default}
+                    src={userinfo?.profilePic ? userinfo.profilePic : require("../../assets/default.png").default}
                   />
                 }
                 thumbStyle={{ width: 35, borderRadius: 10 }}
@@ -255,6 +257,22 @@ const User = (props) => {
             rules={[{ required: true }]}
           >
             <Input />
+          </Form.Item>
+          <Form.Item
+            label={'Profile Picutre'}
+          >
+            <Upload
+              beforeUpload={(file) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                  setProfileImage(reader.result.replace('data:image/png;base64,', ''))
+                };
+                return false;
+              }}
+            >
+              <Button type={'primary'} size={'small'}>Select</Button>
+            </Upload>
           </Form.Item>
           <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
             <Button type="primary" htmlType="submit">

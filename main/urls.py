@@ -81,5 +81,8 @@ urlpatterns = [
     # provide public posts to other nodes
     path('connect/public/', views.get_public_post),
     # provide authors to other nodes
-    path('connect/public/author/', views.get_public_author)
+    path('connect/public/author/', views.get_public_author),
+
+    # download media file
+    path('media/<file_id>/', views.download_media_file)
 ]

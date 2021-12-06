@@ -124,7 +124,7 @@ def fetch_posts():
                             contentType=item.get('contentType', 'text/plain'),
                             categories=', '.join(list(item.get('categories', 'Categories'))) if type(
                                 item.get('categories', 'Categories')) == list else item.get('categories', 'Categories'),
-                            commentCount=0,
+                            commentCount=len(list(item.get('comment', []))),
                             likeCount=len(list(item.get('likes', []))),
                             comments=item.get('comments', 'Comments'),
                             publishedOn=datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ'),

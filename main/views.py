@@ -199,7 +199,7 @@ class FollowerDetail(APIView):
         follow_pair.save()
 
         follower_display_name = follower.displayName
-        front_end_text = f'{follower_display_name} has started following you.'
+        front_end_text = f'Friend request: {follower_display_name} has started following you. Follow them back to become friends with {follower_display_name}.'
         #comment_notification = PostNotification(type='comment', postId = post, senderId=author, authorId=post_author, sender_display_name=author.displayName)
         follow_notification = FollowNotification(front_end_text=front_end_text, senderId=follower, authorId=followee, sender_display_name=follower_display_name)
         follow_notification.save()

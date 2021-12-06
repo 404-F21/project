@@ -28,7 +28,7 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-const User = (_) => {
+const User = (props) => {
   const history = useHistory();
   const [postList, setPostList] = useState([]);
   const [userinfo, setUserinfo] = useState();
@@ -47,13 +47,22 @@ const User = (_) => {
     setIsModalVisible(true);
   };
 
-  const userId = store.getState().login?.id;
+  const userId = props.match?.params?.id
   const loginUserInfo = JSON.parse(localStorage.getItem("userinfo"));
 
   const loadUser = async () => {
     const result = await client.get(`author/${userId}/`);
     if (result.status === 200) {
       setUserinfo(result.data);
+      localStorage.setItem('userinfo', JSON.stringify({
+        displayName: result.data.displayName,
+        password: result.data.password,
+        id: result.data.id,
+        url: result.data.url,
+        host: result.data.host,
+        github: result.data.github,
+        profilePic: result.data.profilePic
+      }))
     }
   };
 
@@ -89,7 +98,7 @@ const User = (_) => {
       let filteredData = [];
       for (const item of result.data.items) {
         if (userId !== null && !(await visCheck(item, userId))) {
-          break;
+          continue;
         }
 
         if (

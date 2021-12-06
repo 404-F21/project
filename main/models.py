@@ -241,7 +241,7 @@ class LikePost(models.Model):
 class PostNotification(models.Model):
     
     #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    type = models.CharField(max_length=20, default='') # Either 'like', 'comment', 'private post'
+    type = models.CharField(max_length=20, default='') # Either 'like', 'comment', 'friends post'
     # front_end_text makes it easier for notification to be implemented on front end:
     front_end_text = models.CharField(max_length=120, default='') # E.g.: ____ liked your post.
     comment_text = models.CharField(max_length=120, default='')

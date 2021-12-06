@@ -135,6 +135,8 @@ class PostList(APIView):
                             contentType=contentType,
                             visibility=visibility)
             new_post.save()
+            
+            friend_post_notification = PostNotification(type = 'friends post', authorId=post_author, senderId=liker, postId = post, sender_display_name=liker_display_name)
             #print(f"\n\n\nREQUEST HEADERS: {request.headers}\n request data: {request.data}\n\n\n")
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()

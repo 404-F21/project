@@ -70,8 +70,6 @@ import "./index.css";
 import { client } from "../../http";
 import ListItem from "antd-mobile/lib/list/ListItem";
 
-
-
 /*
 Source: https://www.youtube.com/watch?v=hzLDsxPGctY&t=385s&ab_channel=FullstackDevelopment
 Repo: https://github.com/nordin-johan/tutorial-reactjs-fetch
@@ -82,86 +80,70 @@ Used for:
   - used his code to fetch from our API and fill in front end
 */
 class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      post_items: [],
+      follow_items: [],
+      isLoaded: false,
+    };
+  }
 
-    constructor(props) {
-      
-        super(props);
-        this.state = {
-          post_items: [],
-          follow_items: [],
-          isLoaded: false,
-        }
-    }
+  componentDidMount() {
+    const protocol = window.location.protocol;
+    const host = window.location.host;
+    const baseURL = `${protocol}//${host}/service/`;
+    const current_user = store.getState().login.id;
 
-    componentDidMount() {
-      
-      const protocol = window.location.protocol;
-      const host = window.location.host;
-      const baseURL= `${protocol}//${host}/service/`
-      const current_user = store.getState().login.id;
-      
-      fetch(baseURL +'/inbox_posts/' + current_user)
+    fetch(baseURL + "/inbox_posts/" + current_user)
       .then((res) => res.json())
-      .then(json => {
+      .then((json) => {
         this.setState({
           isLoaded: true,
           post_items: json,
-        })
+        });
       });
-      
-      // call another fetch for the other url endpoint
-      fetch(baseURL +'/inbox_follows/' + current_user)
+
+    // call another fetch for the other url endpoint
+    fetch(baseURL + "/inbox_follows/" + current_user)
       .then((res) => res.json())
-      .then(json => {
+      .then((json) => {
         this.setState({
           isLoaded: true,
           follow_items: json,
-        })
+        });
       });
-    }
+  }
 
-    render() {
-
-      
-      var { isLoaded, follow_items, post_items } = this.state;
-      if (!isLoaded) {
-        return <div>Loading</div>
-      }
-      else {
-        
+  render() {
+    var { isLoaded, follow_items, post_items } = this.state;
+    if (!isLoaded) {
+      return <div>Loading</div>;
+    } else {
       return (
-      
-          <div className="App">
-              <br></br>
-              <h1>
-                New Followers:
-              </h1>
-              <List style={{ marginTop: 10 }}>
-              {follow_items.map(item => (
-                  <List.Item extra={item.sentOn} arrow="horizontal">
-                    {item.front_end_text}
-                  </List.Item>
-
-                ))}
-                </List>
-                <br></br>
-              <h1>
-                Like and Comment Notifications:
-              </h1>
-              <List style={{ marginTop: 10 }}>
-              {post_items.map(item => (
-                  <List.Item extra={item.publishedOn} arrow="horizontal">
-                    {item.front_end_text}
-                  </List.Item>
-
-                ))}
-                </List>
-                
-            </div>
-        );
-      }
+        <div className="App">
+          <br></br>
+          <h1>New Followers:</h1>
+          <List style={{ marginTop: 10 }}>
+            {follow_items.map((item) => (
+              <List.Item extra={item.sentOn} arrow="horizontal">
+                {item.front_end_text}
+              </List.Item>
+            ))}
+          </List>
+          <br></br>
+          <h1>Like and Comment Notifications:</h1>
+          <List style={{ marginTop: 10 }}>
+            {post_items.map((item) => (
+              <List.Item extra={item.publishedOn} arrow="horizontal">
+                {item.front_end_text}
+              </List.Item>
+            ))}
+          </List>
+        </div>
+      );
+    }
   }
 }
-
 
 export default App;

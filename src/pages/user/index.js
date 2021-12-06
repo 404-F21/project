@@ -15,7 +15,7 @@ import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { Card } from "antd-mobile";
 import { useDispatch } from "react-redux";
-import {Button, Form, Input, message, Modal, Upload} from "antd";
+import { Button, Form, Input, message, Modal, Upload } from "antd";
 import "./index.css";
 import { client } from "../../http";
 import store from "../../store/store";
@@ -35,7 +35,7 @@ const User = (_) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [editPostData, setEditPostData] = useState();
-  const [profileImage, setProfileImage] = useState('');
+  const [profileImage, setProfileImage] = useState("");
   const handleOk = () => {
     setIsModalVisible(false);
   };
@@ -58,7 +58,7 @@ const User = (_) => {
   };
 
   const onFinish = async (values) => {
-    values.headPic = profileImage
+    values.headPic = profileImage;
     const result = await client.post(`author/${userId}/`, values);
     if (result.status === 200) {
       message.success("Edit successfully");
@@ -154,140 +154,184 @@ const User = (_) => {
   // need this or ordered lists render all screwy
   const customLi = (props) => <li style={{ marginLeft: "2em" }} {...props} />;
 
-    return (
-        <div className="user">
-            <div className="userinfo bgw">
-                <img
-                    className="userimg"
-                    src={require('../../assets/user.jpg').default}
-                    alt=""
-                />
-                <div>
-                    <h2>{userinfo?.displayName}</h2>
-                    <p>{userinfo?.github}</p>
-                </div>
-                {
-                    loginUserInfo && userId !== loginUserInfo.id ?
-                    <div>
-                    
-                    <Button type={'primary'} id='followButton' style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Follow</Button>
-                    </div>
-                        :
-                        null}
-            </div>
-            <h3 style={{marginTop: '30px'}}>My Posts</h3>
-            <div className='posts'>
-                {
-                    postList.map(item => {
-                            return (
-                                <Card style={{marginTop: '10px', marginBottom: '10px'}}>
-                                    <Card.Header
-                                        title={item.title}
-                                        thumb={
-                                            <img
-                                                style={{width: 35, borderRadius: 10}}
-                                                src={require('../../assets/user.jpg').default}
-                                            />
-                                        }
-                                        thumbStyle={{width: 35, borderRadius: 10}}
-                                    />
-                                    <Card.Body>
-                                        <div style={{marginBottom: '3px'}}
-                                             onClick={() => {
-                                                 localStorage.setItem(item.id, JSON.stringify(item))
-                                                 history.push('/individualpost/' + item.id)
-                                             }}>
-                                            {
-                                                (item.contentType === 'image/png' ||
-                                                    item.contentType === 'image/jpeg' ||
-                                                    item.contentType === 'image/jpg' ||
-                                                    item.contentType === 'image/png;base64' ||
-					                                item.contentType === 'image/jpeg;base64') ?
-                                                    <img src={item.imgSrc} width={'100%'}/>
-                                                    : item.contentType === 'text/markdown' ?
-                                                        (<Remark
-                                                            remarkPlugins={[remarkGemoji]}
-                                                            rehypeReactOptions={{
-                                                                components: {li: customLi}
-                                                            }}>
-                                                            {item.content}
-                                                        </Remark>)
-                                                        :
-                                                        item.content
-                                            }
-                                        </div>
-                                        <div className='like'>
-                                            <div>
-                                                <i className="iconfont icon-xiaoxi"></i>
-                                                <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
-                                                    {item.commentCount}
-                                                </div>
-                                                <i className="iconfont icon-dianzan"></i>
-                                                <div style={{marginLeft: 5, display: 'inline-block', width: 35}}>
-                                                    {item.likeCount}
-                                                </div>
-                                                {
-                                                    loginUserInfo && userId === loginUserInfo.id ?
-                                                    <>
-                                                        <i className="iconfont icon-bianji" onClick={() => {
-                                                            setEditPostData(item)
-                                                            setEditModal(true)
-                                                        }}/>
-                                                        <i className="iconfont icon-shanchu" onClick={async () => {
-                                                            const result = await client.delete(`author/${userId}/posts/${item.id}`)
-                                                            if (result.status === 200) {
-                                                                message.success('Delete successfully')
-                                                            } else {
-                                                                message.error('Something wrong')
-                                                            }
-                                                            loadData()
-                                                        }} style={{marginLeft: 15}}/>
-                                                    </>
-                                                        :
-                                                        null
-                                                }
-                                                <div style={{marginLeft: 10, display: 'inline-block'}}>
-                                                    Published: {new Date(item.published).toLocaleString()}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </Card.Body>
-                                </Card>
-                            )
-                        }
-                    )
+  return (
+    <div className="user">
+      <div className="userinfo bgw">
+        <img
+          className="userimg"
+          src={require("../../assets/user.jpg").default}
+          alt=""
+        />
+        <div>
+          <h2>{userinfo?.displayName}</h2>
+          <p>{userinfo?.github}</p>
+        </div>
+        {loginUserInfo && userId !== loginUserInfo.id ? (
+          <div>
+            <Button
+              type={"primary"}
+              id="followButton"
+              style={{ width: "150px", marginLeft: "20px" }}
+              onClick={followUser}
+            >
+              Follow
+            </Button>
+          </div>
+        ) : null}
+      </div>
+      <h3 style={{ marginTop: "30px" }}>My Posts</h3>
+      <div className="posts">
+        {postList.map((item) => {
+          return (
+            <Card style={{ marginTop: "10px", marginBottom: "10px" }}>
+              <Card.Header
+                title={item.title}
+                thumb={
+                  <img
+                    style={{ width: 35, borderRadius: 10 }}
+                    src={require("../../assets/user.jpg").default}
+                  />
                 }
-            </div>
-            <Modal footer={null} title="Edit Userinfo" visible={isModalVisible} onOk={handleOk} onCancel={handleCancel}>
-                <Form {...layout} name="nest-messages" onFinish={onFinish}>
-                    <Form.Item name={'displayName'} label="Name" rules={[{required: true}]}>
-                        <Input/>
-                    </Form.Item>
-                    <Form.Item name={'github'} label="Github" rules={[{required: true}]}>
-                        <Input/>
-                    </Form.Item>
-                    <Form.Item wrapperCol={{...layout.wrapperCol, offset: 8}}>
-                        <Button type="primary" htmlType="submit">
-                            Submit
-                        </Button>
-                    </Form.Item>
-                </Form>
-            </Modal>
-            <Modal footer={null} title="Edit Post" visible={editModal} onCancel={() => setEditModal(false)}>
-                <Form {...layout} name="nest-messages" onFinish={onFinishEdit}>
-                    <Form.Item name={'title'} label="Title" rules={[{required: true}]}>
-                        <Input type={'text'}/>
-                    </Form.Item>
-                    <Form.Item name={'content'} label="Content" rules={[{required: true}]}>
-                        <textarea/>
-                    </Form.Item>
-                    <Form.Item wrapperCol={{...layout.wrapperCol, offset: 8}}>
-                        <Button type="primary" htmlType="submit">
-                            Submit
-                        </Button>
-                    </Form.Item>
-                </Form>
-            </Modal>
+                thumbStyle={{ width: 35, borderRadius: 10 }}
+              />
+              <Card.Body>
+                <div
+                  style={{ marginBottom: "3px" }}
+                  onClick={() => {
+                    localStorage.setItem(item.id, JSON.stringify(item));
+                    history.push("/individualpost/" + item.id);
+                  }}
+                >
+                  {item.contentType === "image/png" ||
+                  item.contentType === "image/jpeg" ||
+                  item.contentType === "image/jpg" ||
+                  item.contentType === "image/png;base64" ||
+                  item.contentType === "image/jpeg;base64" ? (
+                    <img src={item.imgSrc} width={"100%"} />
+                  ) : item.contentType === "text/markdown" ? (
+                    <Remark
+                      remarkPlugins={[remarkGemoji]}
+                      rehypeReactOptions={{
+                        components: { li: customLi },
+                      }}
+                    >
+                      {item.content}
+                    </Remark>
+                  ) : (
+                    item.content
+                  )}
+                </div>
+                <div className="like">
+                  <div>
+                    <i className="iconfont icon-xiaoxi"></i>
+                    <div
+                      style={{
+                        marginLeft: 5,
+                        display: "inline-block",
+                        width: 35,
+                      }}
+                    >
+                      {item.commentCount}
+                    </div>
+                    <i className="iconfont icon-dianzan"></i>
+                    <div
+                      style={{
+                        marginLeft: 5,
+                        display: "inline-block",
+                        width: 35,
+                      }}
+                    >
+                      {item.likeCount}
+                    </div>
+                    {loginUserInfo && userId === loginUserInfo.id ? (
+                      <>
+                        <i
+                          className="iconfont icon-bianji"
+                          onClick={() => {
+                            setEditPostData(item);
+                            setEditModal(true);
+                          }}
+                        />
+                        <i
+                          className="iconfont icon-shanchu"
+                          onClick={async () => {
+                            const result = await client.delete(
+                              `author/${userId}/posts/${item.id}`
+                            );
+                            if (result.status === 200) {
+                              message.success("Delete successfully");
+                            } else {
+                              message.error("Something wrong");
+                            }
+                            loadData();
+                          }}
+                          style={{ marginLeft: 15 }}
+                        />
+                      </>
+                    ) : null}
+                    <div style={{ marginLeft: 10, display: "inline-block" }}>
+                      Published: {new Date(item.published).toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+              </Card.Body>
+            </Card>
+          );
+        })}
+      </div>
+      <Modal
+        footer={null}
+        title="Edit Userinfo"
+        visible={isModalVisible}
+        onOk={handleOk}
+        onCancel={handleCancel}
+      >
+        <Form {...layout} name="nest-messages" onFinish={onFinish}>
+          <Form.Item
+            name={"displayName"}
+            label="Name"
+            rules={[{ required: true }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name={"github"}
+            label="Github"
+            rules={[{ required: true }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+      <Modal
+        footer={null}
+        title="Edit Post"
+        visible={editModal}
+        onCancel={() => setEditModal(false)}
+      >
+        <Form {...layout} name="nest-messages" onFinish={onFinishEdit}>
+          <Form.Item name={"title"} label="Title" rules={[{ required: true }]}>
+            <Input type={"text"} />
+          </Form.Item>
+          <Form.Item
+            name={"content"}
+            label="Content"
+            rules={[{ required: true }]}
+          >
+            <textarea />
+          </Form.Item>
+          <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
+            <Button type="primary" htmlType="submit">
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

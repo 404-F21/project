@@ -37,7 +37,7 @@ const Login = (_) => {
         url: ret.data.url,
         host: ret.data.host,
         github: ret.data.github,
-        profilePic: ret.data.profilePic
+        profilePic: ret.data.profilePic,
       };
       dispatch(loginAction(data));
       localStorage.setItem("userinfo", JSON.stringify(data));

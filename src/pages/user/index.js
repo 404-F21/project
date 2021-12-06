@@ -144,6 +144,11 @@ const User = (_) => {
 
     }
 
+    const nuke = async () => {
+        const current_user = store.getState().login.id;
+        const result = await client.delete(`author/` + current_user + `/friends/${userId}/NUKE`)
+        message.success('NUKED')
+    }
     const checkFriendStatus = async () => {
         const current_user = store.getState().login.id;
         const result = await client.get(`author/${userId}/friends/` + current_user + '/null')
@@ -160,7 +165,9 @@ const User = (_) => {
         else if (result.data.status === 'accepted') {
             document.querySelector('#declineButton').style.visibility = "visible";
             document.querySelector('#declineButton').textContent = "Remove Friend";
+            message.success('WTF!')
         }
+        else if (result.data.status === 'non'){}
         return true;
     }
 
@@ -187,14 +194,14 @@ const User = (_) => {
 
     const deleteFriend = async () => {
         const current_user = store.getState().login.id;
-        const result = await client.delete(`author/${userId}/friends/` + current_user + `/accept`)
-        document.querySelector('#acceptButton').style.visibility = "hidden";
-        document.querySelector('#declineButton').style.visibility = "visible";
-        document.querySelector('#declineButton').textContent = "Delete Friend";
-        message.success('Accepted friend request!')
+        const result = await client.delete(`author/${userId}/friends/` + current_user + `/null`)
+        document.querySelector('#acceptButton').style.visibility = "visible";
+        document.querySelector('#declineButton').style.visibility = "hidden";
+        message.success('Bye :(!')
         return true;
     }
 
+    /*
     const nuke = async () => {
         const current_user = store.getState().login.id;
         const result = await client.delete(`author/${userId}/followers/` + current_user)
@@ -206,7 +213,7 @@ const User = (_) => {
         }
 
     }
-
+    */
     const followUser = async () => {
         const current_user = store.getState().login.id;
         const result = await client.get(`author/${userId}/followers/` + current_user)
@@ -261,7 +268,8 @@ const User = (_) => {
                     <Button type={'primary'} id='followButton' style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Follow</Button>
                     <Button type={'primary'} id='friendButton' style={{width: '150px', marginLeft: '20px', visibility: 'visible'}} onClick={addFriend}>Add Friend</Button>
                     <Button type={'primary'} id='acceptButton' style={{width: '150px', marginLeft: '20px', visibility: 'hidden'}} onClick={acceptFriend}>Accept Friend</Button>
-                    <Button  id='declineButton' style={{width: '150px', marginLeft: '20px', visibility: 'hidden'}} onClick={followUser}>Decline Friend</Button>
+                    <Button  id='declineButton' style={{width: '150px', marginLeft: '20px', visibility: 'hidden'}} onClick={deleteFriend}>Decline Friend</Button>
+                    <Button  id='declineButton' style={{width: '150px', marginLeft: '20px'}} onClick={nuke}>nuke</Button>
                     </div>
                         :
                         null

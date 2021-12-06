@@ -510,11 +510,9 @@ const IndividualPost = (props) => {
                       {/* Foreign format(social-dis, team13) */}
                       <div>{item.comment}</div>
                       <div>
-                        {
-                          item.author.displayName}
+                        {item.author.displayName}
                         @ {item.author.host}
-                        @ {new Date(item.published).toLocaleString()
-                      }
+                        @ {new Date(item.published).toLocaleString()}
                       </div>
                     </>
                     :
@@ -524,10 +522,9 @@ const IndividualPost = (props) => {
                   {/* Internal format */}
                   <div>{item.text}</div>
                   <div>
-                    {
-                      item.authorId.displayName}
-                    @ {new Date(item.publishedOn).toLocaleString()
-                  }
+                    {item.authorId.displayName}
+                    @ {item.authorId.host}
+                    @ {new Date(item.publishedOn).toLocaleString()}
                   </div>
                 </>
             }

@@ -20,7 +20,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, MediaFile
+from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, MediaFile, FriendRequest
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -82,8 +82,16 @@ class PostList(APIView):
         r_a = basic_auth(request)
         if r_a != AUTH_SUCCESS:
             return no_auth()
-        all_posts = (Post.objects.filter(visibility="public")
-                     .order_by('-publishedOn'))
+        fetcher_id = request.GET.get('fid', None)
+        public_posts = Post.objects.filter(visibility="public").order_by('-publishedOn')
+        if fetcher_id is None:
+            all_posts = public_posts
+        else:
+            # fetcher's private posts, friends of fetcher's posts and public posts
+            private_posts = Post.objects.filter(visibility='toAuthor', author__id=fetcher_id).order_by('-publishedOn')
+            friends = FriendRequest.objects.filter(author__id=fetcher_id, status='Accept').values('friend')
+            friend_posts = Post.objects.filter(visibility='friends', author__in=friends).order_by('-publishedOn')
+            all_posts = private_posts | friend_posts | public_posts
         paged_posts = paginate(all_posts, request.query_params)
 
         data = []
@@ -103,18 +111,22 @@ class PostList(APIView):
             author = Author.objects.get(pk=uuid.UUID(request.data['authorId']))
             text = request.data['content']
             title = request.data['title']
+            visibility = request.data['visibility']
             contentType = request.data.get('contentType', 'text/plain')
-            new_post = Post(author=author,
-                            content=text,
-                            title=title,
-                            contentType=contentType,)
+            new_post = Post(
+                author=author,
+                content=text,
+                title=title,
+                contentType=contentType,
+                visibility=visibility
+            )
             new_post.save()
 
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()
             text = request.data['content']
             title = request.data['title']
-            new_post = Post(author=author,content=text,title=title)
+            new_post = Post(author=author, content=text, title=title)
             new_post.save()
 
         return HttpResponse("post created")

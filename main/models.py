@@ -243,21 +243,31 @@ class PostNotification(models.Model):
     
     type = models.CharField(max_length=20, default='') # Either 'like', 'comment', 'private post'
     # front_end_text makes it easier for notification to be implemented on front end:
-    front_end_text = models.CharField(max_length=120, default='')
+    front_end_text = models.CharField(max_length=120, default='') # E.g.: ____ liked your post.
+    comment_text = models.CharField(max_length=120, default='')
     publishedOn = models.DateTimeField(auto_now_add=True, blank=True)
     # authorId is the id the person recieving the notification:
-    authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
-    # sender_display_name is the displayname of the person who actually made the post
+    authorId = models.ForeignKey(Author, related_name='sent_to_authorID', on_delete=models.CASCADE)
+    # sender_display_name is the displayname of the person who commented/liked
+    senderId = models.ForeignKey(Author, related_name='sent_from_senderId', on_delete=models.CASCADE)
     sender_display_name = models.CharField(max_length=100, default='')
     postId = models.ForeignKey(Post, on_delete=models.CASCADE)
 
+    class Meta:
+        unique_together = ('authorId', 'senderId',)
+
 # Notification object for friend requests
-class FriendNotification(models.Model):
+class FollowNotification(models.Model):
     # front_end_text makes it easier for notification to be implemented on front end:
     front_end_text = models.CharField(max_length=120, default='')
     sentOn = models.DateTimeField(auto_now_add=True, blank=True)
-    authorId = models.ForeignKey(Author, on_delete=models.CASCADE)
+    authorId = models.ForeignKey(Author, related_name='follow_to_authorID', on_delete=models.CASCADE)
+    # sender_display_name is the displayname of the person who commented/liked
+    senderId = models.ForeignKey(Author, related_name='follow_by_senderId', on_delete=models.CASCADE)
     sender_display_name = models.CharField(max_length=100, default='')
+
+    class Meta:
+        unique_together = ('authorId', 'senderId',)
 
 # https://djangocentral.com/creating-comments-system-with-django/
 class LikeComment(models.Model):

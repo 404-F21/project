@@ -65,9 +65,11 @@ urlpatterns = [
 
     # get the post inbox notifications of a user
     path('inbox_posts/<pk>', views.post_notifications),
+    # get the follow notifications of a user
+    path('inbox_follows/<pk>', views.follow_notifications),
 
     # get the post inbox notifications of a user
-    path('inbox_friends', views.friend_notifications),
+    path('inbox_friends', views.follow_notifications),
 
     # admin login
     path('admin/login/', views.admin_login),

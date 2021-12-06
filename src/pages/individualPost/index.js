@@ -272,6 +272,10 @@ const IndividualPost = (props) => {
       message.success('please waitting!')
       return
     }
+    if (!userinfoLocal) {
+      message.warn('please login first')
+      return
+    }
     let result
     if (postData.foreignNodeId) {
       // social-dis
@@ -389,7 +393,7 @@ const IndividualPost = (props) => {
         const url = window.btoa(
           `https://glowing-palm-tree1.herokuapp.com/service/author/${authorId}/inbox/`
         )
-        const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
+        client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
           "@context": "https://www.w3.org/ns/activitystreams",
           summary: `${userinfoLocal.displayName} Likes your post`,
           type: "Like",
@@ -402,13 +406,17 @@ const IndividualPost = (props) => {
             profileImage: userinfoLocal.profilePic
           },
           object: postData.remoteId
+        }).then(result => {
+          console.log(result)
+          if (result.status === 200) {
+            message.success('liked!')
+            setLikeCount(likeCount + 1)
+          } else {
+            message.warn('something wrong!')
+          }
+        }).catch(e => {
+          message.warn('already liked')
         })
-        if (result.status === 200) {
-          message.success('liked!')
-          setLikeCount(likeCount + 1)
-        } else {
-          message.warn('something wrong!')
-        }
       }
     } else {
       result = await client.post(`post/${postData.id}/like/`, {

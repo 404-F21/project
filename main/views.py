@@ -82,16 +82,7 @@ class PostList(APIView):
         r_a = basic_auth(request)
         if r_a != AUTH_SUCCESS:
             return no_auth()
-        fetcher_id = request.GET.get('fid', None)
-        public_posts = Post.objects.filter(visibility="public").order_by('-publishedOn')
-        if fetcher_id is None:
-            all_posts = public_posts
-        else:
-            # fetcher's private posts, friends of fetcher's posts and public posts
-            private_posts = Post.objects.filter(visibility='toAuthor', author__id=fetcher_id).order_by('-publishedOn')
-            friends = FriendRequest.objects.filter(author__id=fetcher_id, status='Accept').values('friend')
-            friend_posts = Post.objects.filter(visibility='friends', author__in=friends).order_by('-publishedOn')
-            all_posts = private_posts | friend_posts | public_posts
+        all_posts = Post.objects.filter(visibility="public").order_by('-publishedOn')
         paged_posts = paginate(all_posts, request.query_params)
 
         data = []

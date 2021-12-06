@@ -82,7 +82,8 @@ class PostList(APIView):
         r_a = basic_auth(request)
         if r_a != AUTH_SUCCESS:
             return no_auth()
-        all_posts = Post.objects.filter(visibility="public").order_by('-publishedOn')
+        all_posts = (Post.objects.all()
+                     .order_by('-publishedOn'))
         paged_posts = paginate(all_posts, request.query_params)
 
         data = []
@@ -94,6 +95,11 @@ class PostList(APIView):
         return response
 
     def post(self, request, *args, **kwargs):
+        '''
+        make a post, giving `authorId`, `content`, `title`, and potentially
+        `contentType` and `visibility`.
+        '''
+
         # check if user is authenticated and if not return a 401
         r_a = basic_auth(request)
         if r_a != AUTH_SUCCESS:
@@ -103,12 +109,12 @@ class PostList(APIView):
             text = request.data['content']
             title = request.data['title']
             contentType = request.data.get('contentType', 'text/plain')
-            new_post = Post(
-                author=author,
-                content=text,
-                title=title,
-                contentType=contentType
-            )
+            visibility = request.data.get('visibility', 'PUBLIC')
+            new_post = Post(author=author,
+                            content=text,
+                            title=title,
+                            contentType=contentType,
+                            visibility=visibility)
             new_post.save()
 
         elif request.content_type == "application/x-www-form-urlencoded":
@@ -140,8 +146,7 @@ class FollowerList(APIView):
             return no_auth()
         author = Author.objects.get(pk=uuid.UUID(pk))
         follow_pairs = author.follower_set.all().order_by('follower__displayName')
-        paged_pairs = paginate(follow_pairs, request.query_params)
-        serializer = FollowingSerializer(paged_pairs, many=True)
+        serializer = FollowingSerializer(follow_pairs, many=True)
 
         # this list comprehension is required to keep the serializers consistent
         items = [e['follower'] for e in serializer.data]
@@ -185,7 +190,7 @@ class FollowerDetail(APIView):
             return no_auth()
         try:
             author = Author.objects.get(pk=uuid.UUID(pk))
-            author.followee_set.get(follower=uuid.UUID(fpk))
+            author.follower_set.get(follower=uuid.UUID(fpk))
             return Response({ 'isFollower': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
@@ -193,18 +198,42 @@ class FollowerDetail(APIView):
 
 class FriendList(APIView):
     def get(self, request, pk, format=None):
+        '''
+        get a list all of the user with id <pk>'s friends; that being those who
+        the user follows, and those who follow the user back
+        '''
+
         # check if user is authenticated and if not return a 401
         r_a = basic_auth(request)
         if r_a != AUTH_SUCCESS:
             return no_auth()
+
         author = Author.objects.get(pk=uuid.UUID(pk))
         followers = author.follower_set.all().values_list('follower__id')
         friend_pairs = author.followed_set.filter(followee__id__in=followers).order_by('followee__displayName')
-        paged_pairs = paginate(friend_pairs, request.query_params)
 
-        serializer = FollowingSerializer(paged_pairs, many=True)
+        serializer = FollowingSerializer(friend_pairs, many=True)
         items = [e['followee'] for e in serializer.data]
         return Response({'type': 'friends', 'items': items})
+
+class FriendDetail(APIView):
+    def get(self, request, pk, fpk):
+        '''
+        find out whether the user with id <fpk> is friends with the user with
+        id <pk>.
+        '''
+
+        r_a = basic_auth(request)
+        if r_a != AUTH_SUCCESS:
+            return no_auth()
+        try:
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            followers = author.follower_set.all().values_list('follower__id')
+            friend_pairs = author.followed_set.filter(followee__id__in=followers)
+            friend_pairs.get(followee=fpk)
+            return Response({ 'isFriend': True })
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'isFriend': False })
 
 
 class PostDetail(APIView):

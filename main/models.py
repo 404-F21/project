@@ -72,6 +72,31 @@ class Author(models.Model):
             'profilePic': self.profilePic
         }
 
+# remains to avoid breaking the database
+class FriendRequest(models.Model):
+    # https://medium.com/analytics-vidhya/add-friends-with-689a2fa4e41d
+    option = (
+        ('Accept', 'Accept'),
+        ('Decline', 'Decline'),
+        ('Pending', 'Pending'),
+    )
+
+    #reqId = models.UUIDField(primary_key=True,
+    #                         default=uuid.uuid4,
+    #                         editable=False)
+    sender = models.ForeignKey(Author,
+                               related_name='from_user',
+                               on_delete=models.CASCADE, default=uuid.uuid4)
+    reciever = models.ForeignKey(Author,
+                               related_name='to_user',
+                               on_delete=models.CASCADE, default=uuid.uuid4)
+    status = models.CharField(max_length=50,
+                              choices=option,
+                              default='Pending')
+
+    class Meta:
+        unique_together = ('sender', 'reciever',)
+
 
 class Following(models.Model):
     follower = models.ForeignKey(Author,
@@ -211,6 +236,34 @@ class LikePost(models.Model):
     def __str__(self):
         # return self.liker.displayName + " liked your post"
         pass
+
+# Notification object for Posts - likes, comments, and private posts
+class PostNotification(models.Model):
+    
+    #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    type = models.CharField(max_length=20, default='') # Either 'like', 'comment', 'friends post'
+    # front_end_text makes it easier for notification to be implemented on front end:
+    front_end_text = models.CharField(max_length=120, default='') # E.g.: ____ liked your post.
+    comment_text = models.CharField(max_length=120, default='')
+    publishedOn = models.DateTimeField(auto_now_add=True, blank=True)
+    # authorId is the id the person recieving the notification:
+    authorId = models.ForeignKey(Author, related_name='sent_to_authorID', on_delete=models.CASCADE)
+    # sender_display_name is the displayname of the person who commented/liked
+    senderId = models.ForeignKey(Author, related_name='sent_from_senderId', on_delete=models.CASCADE)
+    sender_display_name = models.CharField(max_length=100, default='')
+    postId = models.ForeignKey(Post, on_delete=models.CASCADE)
+
+
+
+# Notification object for friend requests
+class FollowNotification(models.Model):
+    # front_end_text makes it easier for notification to be implemented on front end:
+    front_end_text = models.CharField(max_length=120, default='')
+    sentOn = models.DateTimeField(auto_now_add=True, blank=True)
+    authorId = models.ForeignKey(Author, related_name='follow_to_authorID', on_delete=models.CASCADE)
+    # sender_display_name is the displayname of the person who commented/liked
+    senderId = models.ForeignKey(Author, related_name='follow_by_senderId', on_delete=models.CASCADE)
+    sender_display_name = models.CharField(max_length=100, default='')
 
 
 # https://djangocentral.com/creating-comments-system-with-django/

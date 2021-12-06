@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+from django.db.models import query
 import requests
 from django.contrib.auth.models import User
 from django.db.models.query import QuerySet
@@ -20,13 +21,14 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, MediaFile
-from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
+from main.models import Author, Comment, Following, FollowNotification, Post, LikePost, Admin, Node, MediaFile, PostNotification
+from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostNotificationSerializer, FollowNotificationSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from main.decorator import need_admin
 from main.response import success, failure, no_auth
 from django.db.models import F
+from django.db.models.query import EmptyQuerySet
 from django.core.paginator import Paginator
 from django.shortcuts import redirect
 from main.response import fetch_posts
@@ -133,7 +135,9 @@ class PostList(APIView):
                             contentType=contentType,
                             visibility=visibility)
             new_post.save()
-
+            
+            #friend_post_notification = PostNotification(type = 'friends post', authorId=post_author, senderId=liker, postId = post, sender_display_name=liker_display_name)
+            #print(f"\n\n\nREQUEST HEADERS: {request.headers}\n request data: {request.data}\n\n\n")
         elif request.content_type == "application/x-www-form-urlencoded":
             author = Author.objects.all().first()
             text = request.data['content']
@@ -142,7 +146,6 @@ class PostList(APIView):
             new_post.save()
 
         return HttpResponse("post created")
-
 
 class Register(APIView):
     def post(self, request, format=None):
@@ -178,8 +181,9 @@ class FollowerDetail(APIView):
         if r_a != AUTH_SUCCESS:
             return no_auth()
         try:
-            author = Author.objects.get(pk=uuid.UUID(pk))
-            follow_pair = author.follower_set.get(follower=uuid.UUID(fpk))
+            followee = Author.objects.get(pk=uuid.UUID(pk))
+            follower = Author.objects.get(pk=uuid.UUID(fpk))
+            follow_pair = Following.objects.get(followee=followee, follower=follower)
             follow_pair.delete()
             return Response({ 'success': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
@@ -196,9 +200,15 @@ class FollowerDetail(APIView):
         follow_pair = Following.objects.create(followee=followee, follower=follower)
         follow_pair.save()
 
+        follower_display_name = follower.displayName
+        front_end_text = f'Friend request: {follower_display_name} has started following you. Follow them back to become friends with {follower_display_name}.'
+        #comment_notification = PostNotification(type='comment', postId = post, senderId=author, authorId=post_author, sender_display_name=author.displayName)
+        follow_notification = FollowNotification(front_end_text=front_end_text, senderId=follower, authorId=followee, sender_display_name=follower_display_name)
+        follow_notification.save()
         serializer = FollowingSerializer(follow_pair)
 
         return Response(serializer.data)
+        
 
     def get(self, request, pk, fpk, format=None):
         # check if user is authenticated and if not return a 401
@@ -206,12 +216,62 @@ class FollowerDetail(APIView):
         if r_a != AUTH_SUCCESS:
             return no_auth()
         try:
-            author = Author.objects.get(pk=uuid.UUID(pk))
-            author.follower_set.get(follower=uuid.UUID(fpk))
-            return Response({ 'isFollower': True })
+            followee = Author.objects.get(pk=uuid.UUID(pk))
+            follower = Author.objects.get(pk=uuid.UUID(fpk))
+            
+            #author.followed_set.get(follower=uuid.UUID(fpk))
+            follow_query= Following.objects.filter(follower=follower, followee=followee)
+            #print(f"follow_query: {follow_query}")
+            #print(f"follow_query str: {str(follow_query)}")
+            if str(follow_query) == '<QuerySet []>':
+            
+                return Response({ 'isFollower': False })
+            else:
+                return Response({ 'isFollower': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
 
+
+class FollowedList(APIView):
+    def get(self, request, pk, format=None):
+        author = Author.objects.get(pk=uuid.UUID(pk))
+        follow_pairs = author.followed_set.all().order_by('followee__displayName')
+        paged_pairs = paginate(follow_pairs, request.query_params)
+        serializer = FollowingSerializer(paged_pairs, many=True)
+
+        # this list comprehension is required to keep the serializers consistent
+        items = [e['followee'] for e in serializer.data]
+
+        return Response({ 'type': 'followees', 'items': items })
+
+class FollowedDetail(APIView):
+    def delete(self, request, pk, fpk, format=None):
+        try:
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            follow_pair = author.followed_set.get(followee=uuid.UUID(fpk))
+            follow_pair.delete()
+            return Response({ 'success': True })
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'success': False })
+
+    def put(self, request, pk, fpk, format=None):
+        follower = Author.objects.get(pk=uuid.UUID(pk))
+        followee = Author.objects.get(pk=uuid.UUID(fpk))
+
+        follow_pair = Following.objects.create(followee=followee, follower=follower)
+        follow_pair.save()
+
+        serializer = FollowingSerializer(follow_pair)
+
+        return Response(serializer.data)
+
+    def get(self, request, pk, fpk, format=None):
+        try:
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            author.follower_set.get(followee=uuid.UUID(fpk))
+            return Response({ 'isFollower': True })
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'isFollower': False })
 
 class FriendList(APIView):
     def get(self, request, pk, format=None):
@@ -400,6 +460,17 @@ class CommentList(APIView):
             post.commentCount += 1
             post.save()
             comment.save()
+            post_author = Author.objects.get(id=post.author.id)
+            # So you don't get notifications from your own comments
+            if post_author.id != author.id:
+                comment_notification = PostNotification(type='comment', postId = post, senderId=author, authorId=post_author, sender_display_name=author.displayName)
+                front_end_text = f'{author.displayName} has commented on your post.'
+                comment_notification.front_end_text = front_end_text
+                comment_notification.comment_text = request.data['text']
+                comment_notification.save()
+                print(f"comment notification: {comment_notification}")
+                serializer = PostNotificationSerializer(comment_notification)
+                print(f"data: {serializer.data}")
             return HttpResponse(str(comment))
 
         else:
@@ -568,7 +639,26 @@ def like_post(request, pk):
         return Response({ 'succ': False })
     likepost = LikePost(postId=post, authorId=author)
     likepost.save()
-    # let likecount update with itself + 1
+    author_id = uuid.UUID(request.data['authorId'])
+    #print(f"authorID from request: {author_id}")
+    #print(f"POST: {post}")
+    #print(f"POST AUTHOR: {post.author.id}")
+    liker = Author.objects.get(id=author_id)
+    post_author = Author.objects.get(id=post.author.id)
+
+    #post_author_id = Author.objects.get(id=post.author)
+    # So you don't get notifications from your own comments
+    if liker.id != post_author.id:
+        liker_display_name = liker.displayName
+        like_notification = PostNotification(type = 'like', authorId=post_author, senderId=liker, postId = post, sender_display_name=liker_display_name)
+        front_end_text = f'{author.displayName} has liked your post.'
+        like_notification.front_end_text = front_end_text
+        like_notification.save()
+    #serializer = PostNotificationSerializer(like_notification)
+    #data = serializer.data
+    #print(f"DATA: {data}")
+    #like_notification.save()
+    #print(f"lIKE NOTIFICAITON: {like_notification}")
     post.likeCount += 1
     post.save()
     return Response({
@@ -655,12 +745,37 @@ def comment_list(request, pk):
         )
         post.update(commentCount=F('commentCount') + 1)
         comment.save()
+        #nOT USED
+        #comment_notification = Notification(type='comment', aut)
+        #print(f"\n\nREQUEST DATAAAAA FOR COMMENT: {request.data} \n\n")
+        #print("\n\nauthor: {author}, post author: {post.author}")
         return HttpResponse(str(comment))
         serializer = PostSerializer(data=request.data['post'])
         if serializer.is_valid():
             serializer.saver()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# Inbox will be composed of notifications & friend requests seperately
+@api_view(['GET'])
+def post_notifications(request, pk):
+    """
+    List all post notification items
+    """
+    author = Author.objects.get(id=uuid.UUID(pk))
+    author_notifications = PostNotification.objects.filter(authorId=author).order_by('-publishedOn')
+    serializer = PostNotificationSerializer(author_notifications, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+@api_view(['GET'])
+def follow_notifications(request, pk):
+    """
+    List all post notification items
+    """
+    author = Author.objects.get(id=uuid.UUID(pk))
+    author_notifications = FollowNotification.objects.filter(authorId=author).order_by('-sentOn')
+    serializer = FollowNotificationSerializer(author_notifications, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 
 @csrf_exempt
@@ -701,6 +816,8 @@ def get_foreign_data(request, node_id, url_base64):
         return failure('GET')
 
 
+# APIs for admin functions
+# ============================
 @csrf_exempt
 def admin_login(request):
     """

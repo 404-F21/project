@@ -32,13 +32,19 @@ urlpatterns = [
     path('authors/', views.AuthorList.as_view()),
     # view one author's profile
     path('author/<pk>/', views.AuthorDetail.as_view()),
+
     # view all of an author's followers
     path('author/<pk>/followers', views.FollowerList.as_view()),
-    path('author/<pk>/friends', views.FriendList.as_view()),
-
     path('author/<pk>/followers/<fpk>', views.FollowerDetail.as_view()),
+    path('author/<pk>/followed', views.FollowedList.as_view()),
+    path('author/<pk>/followed/<fpk>', views.FollowedDetail.as_view()),
+
+    path('author/<pk>/friends', views.FriendList.as_view()),
     path('author/<pk>/friends/<fpk>', views.FriendDetail.as_view()),
 
+    # add friends: (<d> stands for decision)
+    #path('author/<pk>/friends/<fpk>/<d>', views.FriendDetail.as_view()),
+    
     path('author/<pk>/posts/', views.AuthorPostList.as_view()),
     path('author/<pk>/posts/<pid>', views.AuthorPostDetail.as_view()),
     # Reshare post
@@ -57,6 +63,13 @@ urlpatterns = [
     # Get foreign data with associated auth info (used as a proxy)
     path('foreign-data/<str:node_id>/<str:url_base64>', views.get_foreign_data),
 
+    # get the post inbox notifications of a user
+    path('inbox_posts/<pk>', views.post_notifications),
+    # get the follow notifications of a user
+    path('inbox_follows/<pk>', views.follow_notifications),
+
+    # get the post inbox notifications of a user
+    path('inbox_friends', views.follow_notifications),
 
     # admin login
     path('admin/login/', views.admin_login),

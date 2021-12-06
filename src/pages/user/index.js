@@ -53,15 +53,6 @@ const User = (props) => {
     const result = await client.get(`author/${userId}/`);
     if (result.status === 200) {
       setUserinfo(result.data);
-      localStorage.setItem('userinfo', JSON.stringify({
-        displayName: result.data.displayName,
-        password: result.data.password,
-        id: result.data.id,
-        url: result.data.url,
-        host: result.data.host,
-        github: result.data.github,
-        profilePic: result.data.profilePic
-      }))
     }
   };
 

@@ -1,4 +1,4 @@
-/* Copyright 2021 Nathan Drapeza, Xingjie He, Yifan Wu
+/* Copyright 2021 Nathan Drapeza
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,27 +15,26 @@ import React, { useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 import { Card } from "antd-mobile";
 import { useDispatch } from "react-redux";
-import {Button, Form, Input, message, Modal, Upload} from "antd";
+import { Button, Form, Input, message, Modal } from "antd";
 import "./index.css";
 import { client } from "../../http";
 import store from "../../store/store";
 import { Remark } from "react-remark";
 import remarkGemoji from "remark-gemoji";
-import visCheck from "../../posts";
 
 const layout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
 };
 
-const User = (_) => {
+const User = (props) => {
+  const dispatch = useDispatch();
   const history = useHistory();
   const [postList, setPostList] = useState([]);
   const [userinfo, setUserinfo] = useState();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editModal, setEditModal] = useState(false);
   const [editPostData, setEditPostData] = useState();
-  const [profileImage, setProfileImage] = useState('');
   const handleOk = () => {
     setIsModalVisible(false);
   };
@@ -47,7 +46,7 @@ const User = (_) => {
     setIsModalVisible(true);
   };
 
-  const userId = store.getState().login?.id;
+  const userId = props.match?.params?.id;
   const loginUserInfo = JSON.parse(localStorage.getItem("userinfo"));
 
   const loadUser = async () => {
@@ -58,7 +57,6 @@ const User = (_) => {
   };
 
   const onFinish = async (values) => {
-    values.headPic = profileImage
     const result = await client.post(`author/${userId}/`, values);
     if (result.status === 200) {
       message.success("Edit successfully");
@@ -86,12 +84,7 @@ const User = (_) => {
   const loadData = async () => {
     const result = await client.get(`author/${userId}/posts/`);
     if (result.status === 200) {
-      let filteredData = [];
-      for (const item of result.data.items) {
-        if (userId !== null && !(await visCheck(item, userId))) {
-          break;
-        }
-
+      result.data.items.map((item) => {
         if (
           item.contentType === "image/png" ||
           item.contentType === "image/jpeg" ||
@@ -106,17 +99,49 @@ const User = (_) => {
         ) {
           item.imgSrc = item.content;
         }
-        filteredData.push(item);
-      }
-      setPostList(filteredData);
+        return item;
+      });
+      setPostList(result.data.items);
     } else {
       message.error("Something wrong");
+    }
+  };
+
+  const checkFollowing = async () => {
+    const current_user = store.getState().login.id;
+    const result = await client.get(
+      `author/${userId}/followers/` + current_user
+    );
+    if (result.data.isFollower === true) {
+      document.querySelector("#followButton").textContent = "Unfollow";
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const followUser = async () => {
+    const current_user = store.getState().login.id;
+    const result = await client.get(
+      `author/${userId}/followers/` + current_user
+    );
+    if (result.data.isFollower === true) {
+      await client.delete(`author/${userId}/followers/` + current_user);
+      message.success("Unfollowed user!");
+      document.querySelector("#followButton").textContent = "Follow";
+    } else {
+      const result = await client.put(
+        `author/${userId}/followers/` + current_user
+      );
+      message.success("Now following user!");
+      document.querySelector("#followButton").textContent = "Unfollow";
     }
   };
 
   useEffect(async () => {
     await loadData();
     await loadUser();
+    await checkFollowing();
   }, []);
 
   // need this or ordered lists render all screwy
@@ -127,13 +152,26 @@ const User = (_) => {
       <div className="userinfo bgw">
         <img
           className="userimg"
-          src={userinfo?.profilePic ? userinfo.profilePic : require("../../assets/default.png").default}
+          src={require("../../assets/default.png").default}
           alt=""
         />
         <div>
           <h2>{userinfo?.displayName}</h2>
           <p>{userinfo?.github}</p>
         </div>
+        {loginUserInfo && userId !== loginUserInfo.id ? (
+          <div>
+            <Button
+              type={"primary"}
+              id="followButton"
+              style={{ width: "150px", marginLeft: "20px" }}
+              onClick={followUser}
+            >
+              Follow
+            </Button>
+          </div>
+        ) : null}
+
         {loginUserInfo && userId === loginUserInfo.id ? (
           <a className="edit" onClick={edit}>
             <i className="iconfont icon-bianji">
@@ -152,7 +190,7 @@ const User = (_) => {
                 thumb={
                   <img
                     style={{ width: 35, borderRadius: 10 }}
-                    src={userinfo?.profilePic ? userinfo.profilePic : require("../../assets/default.png").default}
+                    src={require("../../assets/default.png").default}
                   />
                 }
                 thumbStyle={{ width: 35, borderRadius: 10 }}
@@ -263,22 +301,6 @@ const User = (_) => {
             rules={[{ required: true }]}
           >
             <Input />
-          </Form.Item>
-          <Form.Item
-            label={'Profile Picutre'}
-          >
-            <Upload
-              beforeUpload={(file) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => {
-                  setProfileImage(reader.result.replace('data:image/png;base64,', ''))
-                };
-                return false;
-              }}
-            >
-              <Button type={'primary'} size={'small'}>Select</Button>
-            </Upload>
           </Form.Item>
           <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
             <Button type="primary" htmlType="submit">

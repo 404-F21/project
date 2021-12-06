@@ -98,7 +98,7 @@ const App = (_) => {
   // get post list function
   const getPostList = useCallback(async () => {
     const userLogin = JSON.parse(localStorage.getItem('userinfo'))
-    const result = await client.get("posts?fid=" + userLogin.id);
+    const result = await client.get("posts");
     if (result.status === 200) {
       console.log(result.data);
       const myId = store.getState().login?.id;

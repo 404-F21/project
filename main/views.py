@@ -218,7 +218,8 @@ class FollowerDetail(APIView):
             followee = Author.objects.get(pk=uuid.UUID(fpk))
             #author.followed_set.get(follower=uuid.UUID(fpk))
             follow_query= Following.objects.filter(follower=follower, followee=followee)
-            if follow_query == '<QuerySet[]>':
+            
+            if str(follow_query) == '<QuerySet[]>':
                 return Response({ 'isFollower': False })
             else:
                 return Response({ 'isFollower': True })

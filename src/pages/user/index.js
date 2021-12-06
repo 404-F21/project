@@ -120,7 +120,7 @@ const User = (_) => {
       `author/${userId}/followers/` + current_user
     );
     if (result.data.isFollower === true) {
-      document.querySelector("#followButton").textContent= "Unfollow";
+      document.querySelector("#followButton").textContent = "Unfollow";
       return true;
     } else {
       return false;
@@ -174,15 +174,6 @@ const User = (_) => {
                     </div>
                         :
                         null}
-
-                {
-                    loginUserInfo && userId === loginUserInfo.id ?
-                        <a className='edit' onClick={edit}>
-                            <i className='iconfont icon-bianji'><span style={{paddingLeft: 10}}>Edit</span></i>
-                        </a>
-                        :
-                        null
-                }
             </div>
             <h3 style={{marginTop: '30px'}}>My Posts</h3>
             <div className='posts'>

@@ -73,6 +73,32 @@ class Author(models.Model):
         }
 
 
+class FriendRequest(models.Model):
+    # https://medium.com/analytics-vidhya/add-friends-with-689a2fa4e41d
+
+    option = (
+        ('Accept', 'Accept'),
+        ('Decline', 'Decline'),
+        ('Pending', 'Pending'),
+    )
+
+    #reqId = models.UUIDField(primary_key=True,
+    #                         default=uuid.uuid4,
+    #                         editable=False)
+    sender = models.ForeignKey(Author,
+                               related_name='from_user',
+                               on_delete=models.CASCADE, default=uuid.uuid4)
+    reciever = models.ForeignKey(Author,
+                               related_name='to_user',
+                               on_delete=models.CASCADE, default=uuid.uuid4)
+    status = models.CharField(max_length=50,
+                              choices=option,
+                              default='Pending')
+
+    class Meta:
+        unique_together = ('sender', 'reciever',)
+
+
 class Following(models.Model):
     follower = models.ForeignKey(Author,
                                  related_name='followed_set',

@@ -144,6 +144,57 @@ const User = (_) => {
 
     }
 
+    const checkFriendStatus = async () => {
+        const current_user = store.getState().login.id;
+        const result = await client.get(`author/${userId}/friends/` + current_user + '/null')
+        if (result.data.status === 'pendingmydecision') {
+            document.querySelector('#friendButton').style.visibility = "hidden";
+            document.querySelector('#acceptButton').style.visibility = "visible";
+            document.querySelector('#declineButton').style.visibility = "visible";
+        }
+        else if (result.data.status === 'pendingtheirdecision') {
+            document.querySelector('#friendButton').style.visibility = "hidden";
+            document.querySelector('#declineButton').style.visibility = "visible";
+            document.querySelector('#declineButton').textContent = "Undo Friend Request";
+        }
+        else if (result.data.status === 'accepted') {
+            document.querySelector('#declineButton').style.visibility = "visible";
+            document.querySelector('#declineButton').textContent = "Remove Friend";
+        }
+        return true;
+    }
+
+    const addFriend = async () => {
+        const current_user = store.getState().login.id;
+        const result = await client.put(`author/` + current_user + `/friends/${userId}/send`)
+        message.success('Sent a friend request!')
+        document.querySelector('#friendButton').style.visibility = "hidden";
+        document.querySelector('#acceptButton').style.visibility = "hidden";
+        document.querySelector('#declineButton').style.visibility = "visible";
+        document.querySelector('#declineButton').textContent = "Undo Friend Request";
+        return true;
+    }
+
+    const acceptFriend = async () => {
+        const current_user = store.getState().login.id;
+        const result = await client.put(`author/${userId}/friends/` + current_user + `/accept`)
+        document.querySelector('#acceptButton').style.visibility = "hidden";
+        document.querySelector('#declineButton').style.visibility = "visible";
+        document.querySelector('#declineButton').textContent = "Delete Friend";
+        message.success('Accepted friend request!')
+        return true;
+    }
+
+    const deleteFriend = async () => {
+        const current_user = store.getState().login.id;
+        const result = await client.delete(`author/${userId}/friends/` + current_user + `/accept`)
+        document.querySelector('#acceptButton').style.visibility = "hidden";
+        document.querySelector('#declineButton').style.visibility = "visible";
+        document.querySelector('#declineButton').textContent = "Delete Friend";
+        message.success('Accepted friend request!')
+        return true;
+    }
+
     const nuke = async () => {
         const current_user = store.getState().login.id;
         const result = await client.delete(`author/${userId}/followers/` + current_user)
@@ -162,7 +213,7 @@ const User = (_) => {
         if (result.data.isFollower === true) {
             await client.delete(`author/${userId}/followers/` + current_user)
             message.success('Unfollowed user!')
-            document.querySelector('#followButton').textContent = 'Follow User';
+            document.querySelector('#followButton').textContent = 'Follow';
         }
         else {
             const result = await client.put(`author/${userId}/followers/` + current_user)
@@ -184,7 +235,8 @@ const User = (_) => {
   useEffect(async () => {
     await loadData();
     await loadUser();
-	await checkFollowing();
+		await checkFollowing();
+		await checkFriendStatus()
   }, []);
 
   // need this or ordered lists render all screwy
@@ -205,16 +257,12 @@ const User = (_) => {
                 {
                     loginUserInfo && userId !== loginUserInfo.id ?
                     <div>
-                    <Button type={'primary'} id='followButton' style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Follow User</Button>
-                    <Button id='friendButton' style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Add Friend</Button>
-                    <script>
-                    var current_user = store.getState().login.id;
-                    var result = await client.get(`author/${userId}/followers/` + current_user);
-                    document.querySelector('#followButton').textContent = 'Hide';
-                    </script>
-                    </div>
                     
-
+                    <Button type={'primary'} id='followButton' style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Follow</Button>
+                    <Button type={'primary'} id='friendButton' style={{width: '150px', marginLeft: '20px', visibility: 'visible'}} onClick={addFriend}>Add Friend</Button>
+                    <Button type={'primary'} id='acceptButton' style={{width: '150px', marginLeft: '20px', visibility: 'hidden'}} onClick={acceptFriend}>Accept Friend</Button>
+                    <Button  id='declineButton' style={{width: '150px', marginLeft: '20px', visibility: 'hidden'}} onClick={followUser}>Decline Friend</Button>
+                    </div>
                         :
                         null
                 }

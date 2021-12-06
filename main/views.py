@@ -21,7 +21,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import Author, Comment, Following, FriendNotification, Post, LikePost, Admin, Node, MediaFile, PostNotification
+from main.models import Author, FriendRequest, Comment, Following, FriendNotification, Post, LikePost, Admin, Node, MediaFile, PostNotification
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, NotificationSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -216,6 +216,59 @@ class FollowerDetail(APIView):
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
 
+
+class FriendDetail(APIView):
+    def delete(self, request, pk, fpk, d, format=None):
+        #NUKE
+        #FriendRequest.objects.all().delete()
+        request_sender = Author.objects.get(pk=uuid.UUID(pk))
+        request_reciever = Author.objects.get(pk=uuid.UUID(fpk))
+
+        # Delete Friend relationship either way:
+        request_query_1 = FriendRequest.objects.filter(sender=request_sender, reciever=request_reciever)
+        request_query_2 = FriendRequest.objects.filter(sender=request_reciever, reciever=request_sender)
+        
+        if str(request_query_1) == '<QuerySet []>': # Sorta cheese way of doing it
+            request_query_1.delete()
+        else:
+            request_query_2.delete()
+        
+
+    # Sending a friend request:
+    def put(self, request, pk, fpk, d,format=None):
+        
+        request_sender = Author.objects.get(pk=uuid.UUID(pk))
+        request_reciever = Author.objects.get(pk=uuid.UUID(fpk))
+        if d == 'send':
+            friend_request = FriendRequest.objects.create(sender=request_sender, reciever=request_reciever)
+            friend_request.save()
+            return Response({ 'sent': True })
+        elif d == 'accept':
+            friend_request = FriendRequest.objects.get(sender=request_sender, reciever=request_reciever)
+            friend_request.status = 'Accept'
+            return Response({ 'status': 'accept' })
+
+    # Checking the status of a friend request, or if one exists:
+    def get(self, request, pk, fpk, d, format=None):
+        try:
+            request_sender = Author.objects.get(pk=uuid.UUID(pk))
+            request_reciever = Author.objects.get(pk=uuid.UUID(fpk))
+            
+            friend_request_sent_to_me = FriendRequest.objects.filter(sender=request_sender, reciever=request_reciever)
+            friend_request_sent_from_me = FriendRequest.objects.filter(sender=request_reciever, reciever=request_sender)
+            #print(f"query: {query}, strquery: {str(query)}")
+            if (str(friend_request_sent_to_me) == '<QuerySet []>') and (str(friend_request_sent_from_me) == '<QuerySet []>'): # Sorta cheese way of doing it
+                return Response({ 'status': 'nonexistent' }) # No friend request exists, either way
+            elif friend_request_sent_to_me == 'Pending': # in other words, the other user sent ME, the current user, a friend request
+                return Response({ 'status': 'pendingmydecision' })
+            elif friend_request_sent_from_me == 'Pending':
+                return Response({ 'status': 'pendingtheirdecision' })
+            else:
+                return Response({ 'status': 'accepted' })
+
+        except (Author.DoesNotExist, Following.DoesNotExist):
+            return Response({ 'dogs': False })
+
 class FollowedList(APIView):
     def get(self, request, pk, format=None):
         author = Author.objects.get(pk=uuid.UUID(pk))
@@ -251,7 +304,7 @@ class FollowedDetail(APIView):
         return Response(serializer.data)
 
     def get(self, request, pk, fpk, format=None):
-        try:
+        try: #
             #author = Author.objects.get(pk=uuid.UUID(pk))
             #author.follower_set.get(followee=uuid.UUID(fpk))
             follower = Author.objects.get(pk=uuid.UUID(pk))
@@ -733,11 +786,11 @@ def comment_list(request, pk):
 
 # Inbox will be composed of notifications & friend requests seperately
 @api_view(['GET'])
-def post_notifications(request):
+def post_notifications(request, pk):
     """
     List all post notification items
     """
-    author = Author.objects.filter(id=uuid.UUID(request.data['authorId']))
+    author = Author.objects.filter(id=uuid.UUID(pk))
     author_notifications = PostNotification.objects.filter(authorId=author).order_by('-publishedOn')
     serializer = NotificationSerializer(author_notifications, many=True)
     return JsonResponse(serializer.data)

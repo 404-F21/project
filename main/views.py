@@ -128,7 +128,7 @@ class PostList(APIView):
             text = request.data['content']
             title = request.data['title']
             contentType = request.data.get('contentType', 'text/plain')
-            visibility = request.data.get('visibility', 'PUBLIC')
+            visibility = request.data.get('visibility', 'public')
             new_post = Post(author=author,
                             content=text,
                             title=title,

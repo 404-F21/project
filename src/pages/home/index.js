@@ -42,7 +42,7 @@ const App = (_) => {
   const [hasContent, setHasContent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [contentEnable, setContentEnable] = useState(true);
-  const [visibility, setVisibility] = useState("PUBLIC");
+  const [visibility, setVisibility] = useState("public");
 
   // create a post
   const sendPost = async (data) => {

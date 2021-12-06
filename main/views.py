@@ -216,6 +216,7 @@ class FollowerDetail(APIView):
             return Response({ 'isFollower': False })
 
 
+'''
 class FriendDetail(APIView):
     def delete(self, request, pk, fpk, d, format=None):
         #NUKe
@@ -279,7 +280,7 @@ class FriendDetail(APIView):
 
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'dogs': False })
-
+'''
 class FollowedList(APIView):
     def get(self, request, pk, format=None):
         author = Author.objects.get(pk=uuid.UUID(pk))

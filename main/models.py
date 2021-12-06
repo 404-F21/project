@@ -13,11 +13,12 @@
 # limitations under the License.
 
 import time
+import os
 from django.db import models
 import uuid
 from django.contrib.auth.models import User
 from django.contrib.auth.models import AbstractBaseUser
-from social.settings import deploy_host
+from social.settings import deploy_host, BASE_DIR
 from django.utils.translation import gettext_lazy as _
 
 
@@ -44,7 +45,7 @@ class Author(models.Model):
     # HATEOS url for GITHUB API???
     github = models.URLField(default="")
 
-    profilePic = models.ImageField(upload_to='profilePics/', blank=True)
+    profilePic = models.CharField(max_length=512, blank=True)
 
     # If the author is from goreign node
     if_foreign = models.BooleanField(null=False, default=False)
@@ -62,11 +63,14 @@ class Author(models.Model):
     # for the record, these dict() methods should not exist, and we should be
     #  using serializers. they are much faster and safer.
     def dict(self):
-        return {'id': str(self.id),
-                'url': self.url,
-                'host': self.host,
-                'displayName': self.displayName,
-                'github': self.github}
+        return {
+            'id': str(self.id),
+            'url': self.url,
+            'host': self.host,
+            'displayName': self.displayName,
+            'github': self.github,
+            'profilePic': self.profilePic
+        }
 
 
 class FriendRequest(models.Model):
@@ -339,3 +343,17 @@ class Node(models.Model):
             'nodeType': self.node_type,
             'ifApproved': self.if_approved
         }
+
+
+def get_path():
+    return os.path.join(BASE_DIR, 'media')
+
+
+class MediaFile(models.Model):
+    """
+    Media File Model for author head picture
+    """
+
+    id = models.UUIDField(default=uuid.uuid4, primary_key=True)
+
+    file_path = models.FilePathField(path=get_path, allow_folders=False, allow_files=True)

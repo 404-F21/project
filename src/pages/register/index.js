@@ -14,7 +14,7 @@
 import React, { useState } from "react";
 import "./login.css";
 import { useHistory } from "react-router-dom";
-import { Input, message } from "antd";
+import {Button, Form, Input, message, Upload} from "antd";
 import { client } from "../../http";
 const Register = (_) => {
   const history = useHistory();
@@ -23,6 +23,7 @@ const Register = (_) => {
   const [password, setPassword] = useState("");
   const [github, setGithub] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [profileImage, setProfileImage] = useState("");
 
   const reg = async (event) => {
     event.preventDefault();
@@ -37,7 +38,7 @@ const Register = (_) => {
       ) &&
       judgePassword(password)
     ) {
-      let user = { displayName, password, github };
+      let user = { displayName, password, github , headPic: profileImage};
       const ret = await client.post("authors/", user);
       if (ret.status >= 200 && ret.status < 400) {
         message.success("registered successfully!");
@@ -99,6 +100,19 @@ const Register = (_) => {
               value={github}
               onChange={(e) => setGithub(e.target.value)}
             />
+
+            <Upload
+              beforeUpload={(file) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                  setProfileImage(reader.result.replace('data:image/png;base64,', ''))
+                };
+                return false;
+              }}
+            >
+              <Button style={{marginTop: '20px'}} type={'primary'} size={'small'}>Select Profile Image</Button>
+            </Upload>
 
             <button className="loginbtn" type="submit">
               Sign Up

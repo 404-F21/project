@@ -192,10 +192,10 @@ const App = (_) => {
         </Form.Item>
 
         <Form.Item name="visibility" label="visibility">
-          <Select defaultValue="PUBLIC" onChange={(v) => setVisibility(v)}>
-            <Option value="PUBLIC">Public</Option>
-            <Option value="FRIENDS ONLY">Friends Only</Option>
-            <Option value="AUTHOR ONLY">Self</Option>
+          <Select defaultValue="public" onChange={(v) => setVisibility(v)}>
+            <Option value="public">Public</Option>
+            <Option value="friends">Friends Only</Option>
+            <Option value="toAuthor">Self</Option>
           </Select>
         </Form.Item>
 

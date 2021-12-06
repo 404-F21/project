@@ -15,7 +15,7 @@
     <div className="user-title">
         <img
             style={{ width: 30, height: 30, borderRadius: '50%' }}
-            src={require('../../assets/user.jpg').default}/>
+            src={require('../../assets/default.png').default}/>
             <div className='username'>aaaaa</div>
             </div>
             <p>comment detail xxx  yyyy</p>

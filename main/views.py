@@ -458,28 +458,17 @@ class CommentList(APIView):
             post.commentCount += 1
             post.save()
             comment.save()
-
-            '''
-            liker = Author.objects.get(id=author_id)
             post_author = Author.objects.get(id=post.author.id)
-
-            #post_author_id = Author.objects.get(id=post.author)
-            liker_display_name = liker.displayName
-            like_notification = PostNotification(type = 'like', authorId=post_author, senderId=liker, postId = post, sender_display_name=liker_display_name)
-            
-            front_end_text = f'{author.displayName} has liked your post.'
-            like_notification.front_end_text = front_end_text
-            like_notification.save()'''
-            post_author = Author.objects.get(id=post.author.id)
-            comment_notification = PostNotification(type='comment', postId = post, senderId=author, authorId=post_author, sender_display_name=author.displayName)
-            front_end_text = f'{author.displayName} has commented on your post.'
-            comment_notification.front_end_text = front_end_text
-            comment_notification.comment_text = request.data['text']
-            comment_notification.save()
-            print(f"comment notification: {comment_notification}")
-            serializer = PostNotificationSerializer(comment_notification)
-            print(f"data: {serializer.data}")
-            return HttpResponse(str(comment))
+            # So you don't get notifications from your own comments
+            if post_author.id != author.id:
+                comment_notification = PostNotification(type='comment', postId = post, senderId=author, authorId=post_author, sender_display_name=author.displayName)
+                front_end_text = f'{author.displayName} has commented on your post.'
+                comment_notification.front_end_text = front_end_text
+                comment_notification.comment_text = request.data['text']
+                comment_notification.save()
+                print(f"comment notification: {comment_notification}")
+                serializer = PostNotificationSerializer(comment_notification)
+                print(f"data: {serializer.data}")
             return HttpResponse(str(comment))
 
         else:
@@ -656,11 +645,13 @@ def like_post(request, pk):
     post_author = Author.objects.get(id=post.author.id)
 
     #post_author_id = Author.objects.get(id=post.author)
-    liker_display_name = liker.displayName
-    like_notification = PostNotification(type = 'like', authorId=post_author, senderId=liker, postId = post, sender_display_name=liker_display_name)
-    front_end_text = f'{author.displayName} has liked your post.'
-    like_notification.front_end_text = front_end_text
-    like_notification.save()
+    # So you don't get notifications from your own comments
+    if liker.id != post_author.id:
+        liker_display_name = liker.displayName
+        like_notification = PostNotification(type = 'like', authorId=post_author, senderId=liker, postId = post, sender_display_name=liker_display_name)
+        front_end_text = f'{author.displayName} has liked your post.'
+        like_notification.front_end_text = front_end_text
+        like_notification.save()
     #serializer = PostNotificationSerializer(like_notification)
     #data = serializer.data
     #print(f"DATA: {data}")

@@ -113,9 +113,9 @@ const IndividualPost = (props) => {
             comment: commentInput,
             contentType: "text/markdown",
             published: "",
-            id: postData.remoteId + '/'
+            id: postData.remoteId + '/comments/'
           })
-          if (result.status === 201) {
+          if (result.status === 200) {
             message.success("comment posted successfully!");
             setCommentInput("");
             updateCommentList();
@@ -400,7 +400,7 @@ const IndividualPost = (props) => {
           },
           object: postData.remoteId
         })
-        if (result.status === 201) {
+        if (result.status === 200) {
           message.success('liked!')
           setLikeCount(likeCount + 1)
         } else {
@@ -467,12 +467,12 @@ const IndividualPost = (props) => {
                   postData?.foreignNodeId ?
                     <img
                       style={{width: 30, height: 30, borderRadius: "50%"}}
-                      src={postData.author.profileImage ? postData.author.profileImage : require("../../assets/default.png").default}
+                      src={postData?.author.profileImage ? postData.author.profileImage : require("../../assets/default.png").default}
                     />
                     :
                     <img
                       style={{width: 30, height: 30, borderRadius: "50%"}}
-                      src={postData.author.profilePic ? postData.author.profilePic : require("../../assets/default.png").default}
+                      src={postData?.author.profilePic ? postData.author.profilePic : require("../../assets/default.png").default}
                     />
                 }
                 <div className="username">
@@ -591,7 +591,8 @@ const IndividualPost = (props) => {
                   </>
                   :
                   postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1
-                  || postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1 ?
+                  || postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1
+                  || postData.foreignNodeHost.indexOf('glowing-palm-tree1') !== -1?
                     <>
                       {/* Foreign format(social-dis, team13) */}
                       <div>{item.comment}</div>

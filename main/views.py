@@ -701,6 +701,8 @@ def get_foreign_data(request, node_id, url_base64):
         return failure('GET')
 
 
+# APIs for admin functions
+# ============================
 @csrf_exempt
 def admin_login(request):
     """

@@ -43,7 +43,7 @@ const Header = () => {
   );
 
   const userinfo = useSelector((state) => state.login);
-  console.log(userinfo);
+
   return (
     <header className="pheader bgw p15">
       <Link to="/">

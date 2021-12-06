@@ -407,14 +407,16 @@ const IndividualPost = (props) => {
           },
           object: postData.remoteId
         }).then(result => {
-          console.log
+          console.log(result)
+          if (result.status === 200) {
+            message.success('liked!')
+            setLikeCount(likeCount + 1)
+          } else {
+            message.warn('something wrong!')
+          }
+        }).catch(e => {
+          message.warn('already liked')
         })
-        if (result.status === 200) {
-          message.success('liked!')
-          setLikeCount(likeCount + 1)
-        } else {
-          message.warn('something wrong!')
-        }
       }
     } else {
       result = await client.post(`post/${postData.id}/like/`, {

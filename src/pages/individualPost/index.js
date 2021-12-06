@@ -71,7 +71,7 @@ const IndividualPost = (props) => {
             updateCommentList();
           }
         }
-        if (postData.foreignNodeHost.indexOf("cmput404-team13-socialapp") !== 1) {
+        if (postData.foreignNodeHost.indexOf("cmput404-team13-socialapp") !== -1) {
           // team 13
           const authorId = postData.author.url.split('/').pop()
           const url = window.btoa(
@@ -88,6 +88,34 @@ const IndividualPost = (props) => {
             "contentType": "PLAIN"
           })
           if (result.status === 200 && result.data.success === 'Updated Successfully') {
+            message.success("comment posted successfully!");
+            setCommentInput("");
+            updateCommentList();
+          }
+        }
+        if (postData.foreignNodeHost.indexOf('glowing-palm-tree1') !== -1) {
+          // team 12
+          const authorId = postData.author.url.split('/').pop()
+          const postId = postData.remoteId.split('/').pop()
+          const url = window.btoa(
+            `https://glowing-palm-tree1.herokuapp.com/service/author/${authorId}/posts/${postId}/comments`
+          )
+          const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
+            type: "comment",
+            author: {
+                type: "author",
+                ...userinfoLocal,
+                id: userinfoLocal.url,
+                type: "author",
+                password: "###",
+                profileImage: userinfoLocal.profilePic
+            },
+            comment: commentInput,
+            contentType: "text/markdown",
+            published: "",
+            id: postData.remoteId + '/'
+          })
+          if (result.status === 201) {
             message.success("comment posted successfully!");
             setCommentInput("");
             updateCommentList();
@@ -148,6 +176,18 @@ const IndividualPost = (props) => {
             setLikeCount(result.data.length)
           }
         }
+        if (item.foreignNodeHost.indexOf('glowing-palm-tree1') !== -1) {
+          // get likes from team12
+          const authorId = item.author.url.split('/').pop()
+          const postId = item.remoteId.split('/').pop()
+          const url = window.btoa(
+            `https://glowing-palm-tree1.herokuapp.com/service/author/${authorId}/posts/${postId}/likes`
+          )
+          const result = await client.get(`foreign-data/${item.foreignNodeId}/${url}`)
+          if (result.status === 200) {
+            setLikeCount(result.data.data.length)
+          }
+        }
       } else {
         setLikeCount(item.likeCount)
       }
@@ -180,6 +220,14 @@ const IndividualPost = (props) => {
             `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/posts/${postData.remoteId}/comments/`
           )
         }
+        if (postData.foreignNodeHost.indexOf('glowing-palm-tree1') !== -1) {
+          // get likes from team12
+          const authorId = postData.author.url.split('/').pop()
+          const postId = postData.remoteId.split('/').pop()
+          urlBase64 = window.btoa(
+            `https://glowing-palm-tree1.herokuapp.com/service/author/${authorId}/posts/${postId}/comments`
+          )
+        }
         res = await client.get(`foreign-data/${postData.foreignNodeId}/${urlBase64}`)
         if (res.status === 200) {
           if (postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
@@ -191,6 +239,9 @@ const IndividualPost = (props) => {
               // they do have comment
               setCommentList(res.data)
             }
+          } else if (postData.foreignNodeHost.indexOf('glowing-palm-tree1') !== -1) {
+            // team 12 comments
+            setCommentList(res.data.data)
           } else {
             // social-dis, linkedspace, api-404 team comments
             setCommentList(res.data.comments)
@@ -309,20 +360,47 @@ const IndividualPost = (props) => {
           `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/inbox/`
         )
         const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
-          "summary": "Team17 likes your post.",
-          "type": "like",
-          "author": {
-            "type": "author",
-            "id": "40aec04a-a040-412b-b77d-a2c6744d9d7e",
-            "url": "https://cmput404f21t17.herokuapp.com/service/author/40aec04a-a040-412b-b77d-a2c6744d9d7e",
-            "host": "https://cmput404f21t17.herokuapp.com/",
-            "displayName": "NewUser",
-            "github": "http://github.com",
-            "avatar": null
+          summary: `${userinfoLocal.displayName} likes your post.`,
+          type: "like",
+          author: {
+            type: "author",
+            id: userinfoLocal.id,
+            url: userinfoLocal.url,
+            host: userinfoLocal.host,
+            displayName: userinfoLocal.displayName,
+            github: userinfoLocal.github,
+            avatar: userinfoLocal.profilePic
           },
           "object": postData.remoteId
         })
         if (result.status === 200 && result.data.message === 'success') {
+          message.success('liked!')
+          setLikeCount(likeCount + 1)
+        } else {
+          message.warn('something wrong!')
+        }
+      }
+      if (postData.foreignNodeHost.indexOf('glowing-palm-tree1') !== -1) {
+        // team 12
+        const authorId = postData.author.url.split('/').pop()
+        const url = window.btoa(
+          `https://glowing-palm-tree1.herokuapp.com/service/author/${authorId}/inbox/`
+        )
+        const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
+          "@context": "https://www.w3.org/ns/activitystreams",
+          summary: `${userinfoLocal.displayName} Likes your post`,
+          type: "Like",
+          author:{
+            type:"author",
+            ...userinfoLocal,
+            // id: 'https://cmput404f21t17.herokuapp.com/service/author/4e9deafd-29bf-4f18-92d7-954c3322bd53',
+            id: userinfoLocal.url,
+            password: '###',
+            profileImage: userinfoLocal.profilePic
+          },
+          object: postData.remoteId
+        })
+        if (result.status === 201) {
           message.success('liked!')
           setLikeCount(likeCount + 1)
         } else {
@@ -385,10 +463,18 @@ const IndividualPost = (props) => {
           <div className="comments p15 bgw mt10">
             <div className="comments-item">
               <div className="user-title">
-                <img
-                  style={{width: 30, height: 30, borderRadius: "50%"}}
-                  src={require("../../assets/default.png").default}
-                />
+                {
+                  postData?.foreignNodeId ?
+                    <img
+                      style={{width: 30, height: 30, borderRadius: "50%"}}
+                      src={postData.author.profileImage ? postData.author.profileImage : require("../../assets/default.png").default}
+                    />
+                    :
+                    <img
+                      style={{width: 30, height: 30, borderRadius: "50%"}}
+                      src={postData.author.profilePic ? postData.author.profilePic : require("../../assets/default.png").default}
+                    />
+                }
                 <div className="username">
                   {postData?.authorId?.displayName}
                 </div>

@@ -82,14 +82,15 @@ def fetch_posts():
                     authors = json_obj
                 elif 'items' in json_obj.keys():
                     authors = json_obj['items']
+                elif 'data' in json_obj.keys():
+                    authors = json_obj['data']
                 else:
                     print(f"\t\tnot supported")
                     continue
                 # Fetch posts
                 print(f"\tPost,{post_url}(With Authors)")
-                print('Authors: ' + str(authors))
                 for author in authors:
-                    print('author: ' + author['id'])
+                    print('\t\tAuthor: ' + author['id'])
                     author_id = author['id']
                     temp_url = post_url.replace('{author_id}', str(author_id).split('/')[-1])
                     # Fetch posts
@@ -100,19 +101,25 @@ def fetch_posts():
                         posts = json_obj
                     elif 'items' in json_obj.keys():
                         posts = json_obj['items']
+                    elif 'data' in json_obj.keys():
+                        posts = json_obj['data']
                     else:
                         print(f"\t\tnot supported")
                         continue
-                    print('\tposts: ' + str(posts))
                     for item in posts:
-                        print('\t\tProcessing: ' + str(item))
+                        print('\t\tPost: ' + item.get('id', item.get('post_id', '')))
                         author = item['author']
                         author = Author(
                             url=author['url'],
                             host=author['host'],
                             displayName=author['displayName'],
-                            github=author['github']
+                            github=author['github'],
+                            profilePic=author['profileImage']
                         )
+                        if 'data' not in json_obj.keys():
+                            publish_time = datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ')
+                        else:
+                            publish_time = datetime.datetime.strptime(item['published'], '%Y-%m-%d %H:%M:%S.%f')
                         post = Post(
                             author=author,
                             remoteId=item.get('id', item.get('post_id', '')),
@@ -127,7 +134,7 @@ def fetch_posts():
                             commentCount=len(list(item.get('comment', []))),
                             likeCount=len(list(item.get('likes', []))),
                             comments=item.get('comments', 'Comments'),
-                            publishedOn=datetime.datetime.strptime(item['published'], '%Y-%m-%dT%H:%M:%S.%fZ'),
+                            publishedOn=publish_time,
                             visibility=str(item.get('visibility', 'PUBLIC')).lower(),
                             unlisted=item.get('unlisted', False),
                         )
@@ -149,12 +156,14 @@ def fetch_posts():
                     print(f"\t\tnot supported")
                     continue
                 for item in posts:
+                    print('\t\tPost: ' + item.get('id', item.get('post_id', '')))
                     author = item['author']
                     author = Author(
                         url=author['url'],
                         host=author['host'],
                         displayName=author['displayName'],
-                        github=author['github']
+                        github=author['github'],
+                        profilePic=author['profileImage']
                     )
                     post = Post(
                         author=author,

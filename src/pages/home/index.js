@@ -252,9 +252,8 @@ const App = (_) => {
               thumb={
                 <img
                   style={{ width: 35, borderRadius: 10 }}
-                  src={require("../../assets/default.png").default}
-                />
-              }
+                  src={item.author.profilePic ? item.author.profilePic : require("../../assets/default.png").default}
+                />}
               thumbStyle={{ width: 35, borderRadius: 10 }}
             />
             <Card.Body>
@@ -319,63 +318,3 @@ const App = (_) => {
 };
 
 export default App;
-{
-  /* <Card  onClick={()=>history.push('/individualpost')}>
-<Card.Header
-    title={
-        <div style={{ marginLeft: 10, fontSize: 14 }}>username</div>
-    }
-    thumb={
-        <img
-            style={{ width: 35, borderRadius: 10 }}
-            src={require('../assets/user.jpg').default}
-        />
-    }
-    thumbStyle={{ width: 35, borderRadius: 10 }}
-/>
-<Card.Body>
-    <div style={{ marginBottom: '3px' }}>messData.detail</div>
-    <div className='like'>
-        <div>
-            <i className="iconfont icon-xiaoxi"></i>
-            <div style={{ marginLeft: 5, display: 'inline-block', width: 35 }}>
-                {99}
-            </div>
-            <i className="iconfont icon-dianzan"></i>
-            <div style={{ marginLeft: 5, display: 'inline-block', width: 35 }}>
-                {99}
-            </div>
-        </div>
-    </div>
-</Card.Body>
-</Card>
-<Card  onClick={()=>history.push('/individualpost')}>
-<Card.Header
-    title={
-        <div style={{ marginLeft: 10, fontSize: 14 }}>username</div>
-    }
-    thumb={
-        <img
-            style={{ width: 35, borderRadius: 10 }}
-            src={require('../assets/user.jpg').default}
-        />
-    }
-    thumbStyle={{ width: 35, borderRadius: 10 }}
-/>
-<Card.Body>
-    <div style={{ marginBottom: '3px' }}>messData.detail</div>
-    <div className='like'>
-        <div>
-            <i className="iconfont icon-xiaoxi"></i>
-            <div style={{ marginLeft: 5, display: 'inline-block', width: 35 }}>
-                {99}
-            </div>
-            <i className="iconfont icon-dianzan"></i>
-            <div style={{ marginLeft: 5, display: 'inline-block', width: 35 }}>
-                {99}
-            </div>
-        </div>
-    </div>
-</Card.Body>
-</Card> */
-}

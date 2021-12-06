@@ -11,34 +11,29 @@
  * limitations under the License.
  */
 
-import {
-    createStore,
-    combineReducers,
-    applyMiddleware,
-    compose
-} from 'redux';
-import thunk from 'redux-thunk';
+import { createStore, combineReducers, applyMiddleware, compose } from "redux";
+import thunk from "redux-thunk";
 
-const loginReducer = (state=JSON.parse(localStorage.getItem('userinfo')),action)=>{
-    switch (action.type) {
-        case 'loginSuccess':
-            return action.payload;
-        default:
-            return state;
-    }
-}
-const homeReducer = (state={},action)=>{
-    switch (action.type) {
-        default:
-            return state;
-    }
-}
+const loginReducer = (
+  state = JSON.parse(localStorage.getItem("userinfo")),
+  action
+) => {
+  switch (action.type) {
+    case "loginSuccess":
+      return action.payload;
+    default:
+      return state;
+  }
+};
+const homeReducer = (state = {}, action) => {
+  switch (action.type) {
+    default:
+      return state;
+  }
+};
 const rootReducer = combineReducers({
-    login:loginReducer,
-    home:homeReducer
-})
-const store = createStore( 
-    rootReducer, 
-    applyMiddleware(thunk),
-);
+  login: loginReducer,
+  home: homeReducer,
+});
+const store = createStore(rootReducer, applyMiddleware(thunk));
 export default store;

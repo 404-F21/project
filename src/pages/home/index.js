@@ -15,12 +15,15 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 
 import { Card } from "antd-mobile";
-import {Button, Form, Input, message, Radio, Switch, Upload} from "antd";
+import { Button, Form, Input, message, Switch, Upload, Select } from "antd";
 import "./index.css";
 import { client } from "../../http";
 import store from "../../store/store";
+import visCheck from "../../posts";
 import { Remark, useRemark } from "react-remark";
 import remarkGemoji from "remark-gemoji";
+
+const { Option } = Select;
 
 const layout = {
   labelCol: { span: 2 },
@@ -39,6 +42,7 @@ const App = (_) => {
   const [hasContent, setHasContent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [contentEnable, setContentEnable] = useState(true);
+  const [visibility, setVisibility] = useState("PUBLIC");
 
   // create a post
   const sendPost = async (data) => {
@@ -51,6 +55,7 @@ const App = (_) => {
     if (!contentEnable) {
       data["contentType"] = "image/png;base64";
     }
+    data["visibility"] = visibility;
 
     const result = await client.post("posts", data);
 
@@ -95,7 +100,13 @@ const App = (_) => {
     const result = await client.get("posts");
     if (result.status === 200) {
       console.log(result.data);
-      result.data.map((item) => {
+      const myId = store.getState().login?.id;
+      let filteredData = [];
+      for (const item of result.data) {
+        if (myId !== null && !(await visCheck(item, myId))) {
+          break;
+        }
+
         if (
           item.contentType === "image/png" ||
           item.contentType === "image/jpeg" ||
@@ -111,9 +122,10 @@ const App = (_) => {
         ) {
           item.imgSrc = item.content;
         }
-        return item;
-      });
-      setPostList(result.data);
+        filteredData.push(item);
+      }
+
+      setPostList(filteredData);
     }
   }, []);
 
@@ -176,6 +188,14 @@ const App = (_) => {
               Upload image
             </Button>
           </Upload>
+        </Form.Item>
+
+        <Form.Item name="visibility" label="visibility">
+          <Select defaultValue="PUBLIC" onChange={(v) => setVisibility(v)}>
+            <Option value="PUBLIC">Public</Option>
+            <Option value="FRIENDS ONLY">Friends Only</Option>
+            <Option value="AUTHOR ONLY">Self</Option>
+          </Select>
         </Form.Item>
 
         <Form.Item

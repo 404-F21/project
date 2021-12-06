@@ -11,5 +11,5 @@
  * limitations under the License.
  */
 
-export const LOGIN_GET_USERINFO = 'LOGIN_GET_USERINFO'
-export const HOME_GET_COURSE_DATA = 'HOME_GET_COURSE_DATA'
+export const LOGIN_GET_USERINFO = "LOGIN_GET_USERINFO";
+export const HOME_GET_COURSE_DATA = "HOME_GET_COURSE_DATA";

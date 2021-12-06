@@ -34,9 +34,10 @@ urlpatterns = [
     path('author/<pk>/', views.AuthorDetail.as_view()),
     # view all of an author's followers
     path('author/<pk>/followers', views.FollowerList.as_view()),
+    path('author/<pk>/friends', views.FriendList.as_view()),
 
     path('author/<pk>/followers/<fpk>', views.FollowerDetail.as_view()),
-    path('author/<pk>/friends', views.FriendList.as_view()),
+    path('author/<pk>/friends/<fpk>', views.FriendDetail.as_view()),
 
     path('author/<pk>/posts/', views.AuthorPostList.as_view()),
     path('author/<pk>/posts/<pid>', views.AuthorPostDetail.as_view()),

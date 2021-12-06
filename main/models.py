@@ -73,39 +73,6 @@ class Author(models.Model):
         }
 
 
-class FriendRequest(models.Model):
-    # https://medium.com/analytics-vidhya/add-friends-with-689a2fa4e41d
-
-    option = (
-        ('Accept', 'Accept'),
-        ('Decline', 'Decline'),
-        ('Pending', 'Pending'),
-    )
-
-    reqId = models.UUIDField(primary_key=True,
-                             default=uuid.uuid4,
-                             editable=False)
-    friend = models.ForeignKey(Author,
-                               related_name='from_user',
-                               on_delete=models.CASCADE,
-                               editable=False)
-    author = models.ForeignKey(Author,
-                               related_name='to_user',
-                               on_delete=models.CASCADE,
-                               editable=False)
-    status = models.CharField(max_length=50,
-                              choices=option,
-                              default='Pending')
-
-    class Meta:
-        unique_together = ('author', 'friend',)
-
-    def __str__(self):
-        return (str(self.friend.displayName) +
-                " wants to follow " +
-                str(self.author.displayName))
-
-
 class Following(models.Model):
     follower = models.ForeignKey(Author,
                                  related_name='followed_set',
@@ -117,7 +84,6 @@ class Following(models.Model):
                                  editable=False)
 
     class Meta:
-        unique_together = ('follower', 'followee')
         constraints = [models.CheckConstraint(
             name='follower_ne_followee',
             check=~models.Q(follower=models.F('followee')),
@@ -136,8 +102,7 @@ class Post(models.Model):
     visibilityOptions = (
         ("public", "PUBLIC"),
         ("friends", "FRIENDS ONLY"),
-        ("fof", "FRIENDS OF FRIENDS"),
-        ("toAuthor", "AUTHOR ONLY"),  # not sure how to implement this
+        ("toAuthor", "AUTHOR ONLY"),
     )
 
     postId = models.UUIDField(primary_key=True,
@@ -202,6 +167,7 @@ class Post(models.Model):
             'commentCount': self.commentCount,
             'likeCount': self.likeCount,
             'comments': deploy_host + '/service/post/' + str(self.postId) + '/comments/' if not self.foreign_node_id else self.comments,
+            'visibility': self.visibility,
             'published': self.publishedOn.isoformat(),
             'foreignNodeId': self.foreign_node_id,
             'foreignNodeHost': self.foreign_node_host

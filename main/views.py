@@ -20,7 +20,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, MediaFile, FriendRequest
+from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, MediaFile
 from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
@@ -82,12 +82,29 @@ class PostList(APIView):
         r_a = basic_auth(request)
         if r_a != AUTH_SUCCESS:
             return no_auth()
-        all_posts = (Post.objects.all()
-                     .order_by('-publishedOn'))
-        paged_posts = paginate(all_posts, request.query_params)
+        fetcher_id = request.GET.get('fid', None)
 
+        public_posts = Post.objects.filter(visibility='PUBLIC')
+        all_posts = public_posts.order_by('-publishedOn')
+
+        if fetcher_id is not None:
+            private_posts = Post.objects.filter(visibility='AUTHOR ONLY', author__id=fetcher_id)
+
+            author = Author.objects.get(pk=uuid.UUID(fetcher_id))
+            followers = (author.follower_set.all()
+                    .values_list('follower__id'))
+            friends = (author.followed_set
+                    .filter(followee__id__in=followers)
+                    .order_by('followee__displayName')
+                    .values('followee'))
+            friend_posts = Post.objects.filter(visibility='FRIENDS ONLY', author__in=friends)
+
+            all_posts = (all_posts | private_posts | friend_posts).order_by('-publishedOn')
+
+        # not to spec, but cannot change for fear of breaking connections with
+        #  other groups
         data = []
-        for post in paged_posts:
+        for post in all_posts:
             data.append(post.dict())
         foreign_posts = fetch_posts()
         data = data + foreign_posts

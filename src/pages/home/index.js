@@ -100,9 +100,10 @@ const App = (_) => {
     const result = await client.get("posts");
     if (result.status === 200) {
       console.log(result.data);
+      const myId = store.getState().login?.id;
       let filteredData = [];
       for (const item of result.data) {
-        if (!(await visCheck(item, store.getState().login.id))) {
+        if (myId !== null && !(await visCheck(item, myId))) {
           break;
         }
 

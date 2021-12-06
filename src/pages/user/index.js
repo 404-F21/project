@@ -47,7 +47,7 @@ const User = (_) => {
     setIsModalVisible(true);
   };
 
-  const userId = store.getState().login.id;
+  const userId = store.getState().login?.id;
   const loginUserInfo = JSON.parse(localStorage.getItem("userinfo"));
 
   const loadUser = async () => {
@@ -88,7 +88,7 @@ const User = (_) => {
     if (result.status === 200) {
       let filteredData = [];
       for (const item of result.data.items) {
-        if (!(await visCheck(item, store.getState().login.id))) {
+        if (userId !== null && !(await visCheck(item, userId))) {
           break;
         }
 

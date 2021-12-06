@@ -40,8 +40,6 @@ const App = (_) => {
   const [isLoading, setIsLoading] = useState(false);
   const [contentEnable, setContentEnable] = useState(true);
 
-  const loginUserInfo = JSON.parse(localStorage.getItem('userinfo'))
-
   // create a post
   const sendPost = async (data) => {
     setIsLoading(true);
@@ -94,7 +92,7 @@ const App = (_) => {
 
   // get post list function
   const getPostList = useCallback(async () => {
-    const result = await client.get("posts?fid=" + loginUserInfo.id);
+    const result = await client.get("posts");
     if (result.status === 200) {
       console.log(result.data);
       result.data.map((item) => {

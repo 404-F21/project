@@ -104,7 +104,7 @@ const App = (_) => {
       let filteredData = [];
       for (const item of result.data) {
         if (myId !== null && !(await visCheck(item, myId))) {
-          break;
+          continue;
         }
 
         if (

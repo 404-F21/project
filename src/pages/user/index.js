@@ -28,7 +28,7 @@ const layout = {
   wrapperCol: { span: 16 },
 };
 
-const User = (_) => {
+const User = (props) => {
   const history = useHistory();
   const [postList, setPostList] = useState([]);
   const [userinfo, setUserinfo] = useState();
@@ -47,7 +47,7 @@ const User = (_) => {
     setIsModalVisible(true);
   };
 
-  const userId = store.getState().login?.id;
+  const userId = props.match?.params?.id
   const loginUserInfo = JSON.parse(localStorage.getItem("userinfo"));
 
   const loadUser = async () => {

@@ -123,9 +123,41 @@ const User = (props) => {
     }
   };
 
+  const checkFollowing = async () => {
+    const current_user = store.getState().login.id;
+    const result = await client.get(
+      `author/${userId}/followers/` + current_user
+    );
+    if (result.data.isFollower === true) {
+      document.querySelector("#followButton").textContent = "Unfollow";
+      return true;
+    } else {
+      return false;
+    }
+  };
+
+  const followUser = async () => {
+    const current_user = store.getState().login.id;
+    const result = await client.get(
+      `author/${userId}/followers/` + current_user
+    );
+    if (result.data.isFollower === true) {
+      await client.delete(`author/${userId}/followers/` + current_user);
+      message.success("Unfollowed user!");
+      document.querySelector("#followButton").textContent = "Follow";
+    } else {
+      const result = await client.put(
+        `author/${userId}/followers/` + current_user
+      );
+      message.success("Now following user!");
+      document.querySelector("#followButton").textContent = "Unfollow";
+    }
+  };
+
   useEffect(async () => {
     await loadData();
     await loadUser();
+    await checkFollowing();
   }, []);
 
   // need this or ordered lists render all screwy
@@ -143,6 +175,18 @@ const User = (props) => {
           <h2>{userinfo?.displayName}</h2>
           <p>{userinfo?.github}</p>
         </div>
+        {loginUserInfo && userId !== loginUserInfo.id ? (
+          <div>
+            <Button
+              type={"primary"}
+              id="followButton"
+              style={{ width: "150px", marginLeft: "20px" }}
+              onClick={followUser}
+            >
+              Follow
+            </Button>
+          </div>
+        ) : null}
         {loginUserInfo && userId === loginUserInfo.id ? (
           <a className="edit" onClick={edit}>
             <i className="iconfont icon-bianji">

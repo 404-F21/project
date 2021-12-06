@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-from main.models import Author, Comment, Following, Post # , LikePost
+from main.models import Author, Comment, Following, Post, PostNotification, FollowNotification  # , LikePost
 from rest_framework import serializers
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -36,6 +36,16 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Comment
+        fields = '__all__'
+
+class PostNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PostNotification
+        fields = '__all__'
+
+class FollowNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FollowNotification
         fields = '__all__'
 
 

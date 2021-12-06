@@ -92,7 +92,7 @@ class App extends Component {
   componentDidMount() {
     const protocol = window.location.protocol;
     const host = window.location.host;
-    const baseURL = `${protocol}//${host}/service/`;
+    const baseURL = `${protocol}//${host}/service`;
     const current_user = store.getState().login.id;
 
     fetch(baseURL + "/inbox_posts/" + current_user)

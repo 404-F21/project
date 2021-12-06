@@ -612,10 +612,6 @@ def like_post(request, pk):
     front_end_text = f'{author.displayName} has liked your post.'
     like_notification.front_end_text = front_end_text
     like_notification.save()
-    #print(f"\n\n\nNOTIFICATION DATA: authorId (post owner):{like_notification.authorId}, sender_display_name: {like_notification.sender_display_name}\n\n\n")
-    #print(f"\n\nLIKE REQUEST DATA: {request.data}\n\n")
-    #print(f"\n\nPOST AUTHOR ID: {post_author_id}, AUTHOR ID (LIKER): {author_id}\n\n")
-    # let likecount update with itself + 1
     post.likeCount += 1
     post.save()
     return Response({

@@ -15,7 +15,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useHistory } from "react-router-dom";
 
 import { Card } from "antd-mobile";
-import { Button, Form, Input, message, Switch, Upload } from "antd";
+import {Button, Form, Input, message, Radio, Switch, Upload} from "antd";
 import "./index.css";
 import { client } from "../../http";
 import store from "../../store/store";
@@ -39,6 +39,8 @@ const App = (_) => {
   const [hasContent, setHasContent] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [contentEnable, setContentEnable] = useState(true);
+
+  const loginUserInfo = JSON.parse(localStorage.getItem('userinfo'))
 
   // create a post
   const sendPost = async (data) => {
@@ -92,7 +94,7 @@ const App = (_) => {
 
   // get post list function
   const getPostList = useCallback(async () => {
-    const result = await client.get("posts");
+    const result = await client.get("posts?fid=" + loginUserInfo.id);
     if (result.status === 200) {
       console.log(result.data);
       result.data.map((item) => {
@@ -205,6 +207,15 @@ const App = (_) => {
             </Card>
           </Form.Item>
         ) : null}
+
+        <Form.Item label="Visibility" name={'visibility'} rules={[{required: true}]}>
+          <Radio.Group>
+            <Radio value={'public'}>Public</Radio>
+            <Radio value={'friends'}>Friends</Radio>
+            <Radio value={'fof'}>Friends of Friends</Radio>
+            <Radio value={'toAuthor'}>Private</Radio>
+          </Radio.Group>
+        </Form.Item>
 
         <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
           <Button type="primary" htmlType="submit" loading={isLoading}>

@@ -252,9 +252,8 @@ const App = (_) => {
               thumb={
                 <img
                   style={{ width: 35, borderRadius: 10 }}
-                  src={require("../../assets/default.png").default}
-                />
-              }
+                  src={item.author.profilePic ? item.author.profilePic : require("../../assets/default.png").default}
+                />}
               thumbStyle={{ width: 35, borderRadius: 10 }}
             />
             <Card.Body>

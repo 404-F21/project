@@ -14,6 +14,10 @@
 import { client } from "./http";
 
 const visCheck = async (postData, userId) => {
+  // support foreign posts(because foreign posts we fetched are all PUBLIC)
+  if (postData.foreignNodeId) {
+    return true
+  }
   const visibility = postData.visibility.toLowerCase();
   const authorIsYou = postData.author.id === userId;
 

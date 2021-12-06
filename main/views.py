@@ -214,12 +214,15 @@ class FollowerDetail(APIView):
         if r_a != AUTH_SUCCESS:
             return no_auth()
         try:
-            follower = Author.objects.get(pk=uuid.UUID(pk))
-            followee = Author.objects.get(pk=uuid.UUID(fpk))
+            followee = Author.objects.get(pk=uuid.UUID(pk))
+            follower = Author.objects.get(pk=uuid.UUID(fpk))
+            
             #author.followed_set.get(follower=uuid.UUID(fpk))
             follow_query= Following.objects.filter(follower=follower, followee=followee)
+            #print(f"follow_query: {follow_query}")
+            #print(f"follow_query str: {str(follow_query)}")
+            if str(follow_query) == '<QuerySet []>':
             
-            if str(follow_query) == '<QuerySet[]>':
                 return Response({ 'isFollower': False })
             else:
                 return Response({ 'isFollower': True })

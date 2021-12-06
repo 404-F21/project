@@ -41,7 +41,7 @@ urlpatterns = [
     path('author/<pk>/friends', views.FriendList.as_view()),
 
     # add friends: (<d> stands for decision)
-    path('author/<pk>/friends/<fpk>/<d>', views.FriendDetail.as_view()),
+    #path('author/<pk>/friends/<fpk>/<d>', views.FriendDetail.as_view()),
     
     path('author/<pk>/posts/', views.AuthorPostList.as_view()),
     path('author/<pk>/posts/<pid>', views.AuthorPostDetail.as_view()),

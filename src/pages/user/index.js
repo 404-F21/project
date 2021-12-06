@@ -18,16 +18,17 @@ import { useDispatch } from "react-redux";
 import {Button, Form, Input, message, Modal, Upload} from "antd";
 import "./index.css";
 import { client } from "../../http";
+import store from "../../store/store";
 import { Remark } from "react-remark";
 import remarkGemoji from "remark-gemoji";
+import visCheck from '../../posts';
 
 const layout = {
   labelCol: { span: 6 },
   wrapperCol: { span: 16 },
 };
 
-const User = (props) => {
-  const dispatch = useDispatch();
+const User = (_) => {
   const history = useHistory();
   const [postList, setPostList] = useState([]);
   const [userinfo, setUserinfo] = useState();
@@ -46,7 +47,7 @@ const User = (props) => {
     setIsModalVisible(true);
   };
 
-  const userId = props.match?.params?.id;
+  const userId = store.getState().login.id;
   const loginUserInfo = JSON.parse(localStorage.getItem("userinfo"));
 
   const loadUser = async () => {
@@ -101,7 +102,7 @@ const User = (props) => {
           item.imgSrc = item.content;
         }
         return item;
-      });
+      }).filter(item => visCheck(item, store.getState().login.id));
       setPostList(result.data.items);
     } else {
       message.error("Something wrong");

@@ -19,6 +19,7 @@ import {Button, Form, Input, message, Radio, Switch, Upload} from "antd";
 import "./index.css";
 import { client } from "../../http";
 import store from "../../store/store";
+import visCheck from '../../posts';
 import { Remark, useRemark } from "react-remark";
 import remarkGemoji from "remark-gemoji";
 
@@ -95,7 +96,7 @@ const App = (_) => {
     const result = await client.get("posts");
     if (result.status === 200) {
       console.log(result.data);
-      result.data.map((item) => {
+      result.data.map(item => {
         if (
           item.contentType === "image/png" ||
           item.contentType === "image/jpeg" ||
@@ -112,7 +113,7 @@ const App = (_) => {
           item.imgSrc = item.content;
         }
         return item;
-      });
+      }).filter(item => visCheck(item, store.getState().login.id));
       setPostList(result.data);
     }
   }, []);

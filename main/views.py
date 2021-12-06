@@ -21,8 +21,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import Author, FriendRequest, Comment, Following, FollowNotification, Post, LikePost, Admin, Node, MediaFile, PostNotification
-from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, NotificationSerializer, PostSerializer
+from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, MediaFile, PostNotification
+from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostNotificationSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from main.decorator import need_admin
@@ -512,11 +512,28 @@ class CommentList(APIView):
             post.commentCount += 1
             post.save()
             comment.save()
-            comment_notification = PostNotification(type='comment', postId = post, senderId=author, authorId=post.author, sender_display_name=author.displayName)
+
+            '''
+            liker = Author.objects.get(id=author_id)
+            post_author = Author.objects.get(id=post.author.id)
+
+            #post_author_id = Author.objects.get(id=post.author)
+            liker_display_name = liker.displayName
+            like_notification = PostNotification(type = 'like', authorId=post_author, senderId=liker, postId = post, sender_display_name=liker_display_name)
+            
+            front_end_text = f'{author.displayName} has liked your post.'
+            like_notification.front_end_text = front_end_text
+            like_notification.save()'''
+            post_author = Author.objects.get(id=post.author.id)
+            comment_notification = PostNotification(type='comment', postId = post, senderId=author, authorId=post_author, sender_display_name=author.displayName)
             front_end_text = f'{author.displayName} has commented on your post.'
             comment_notification.front_end_text = front_end_text
             comment_notification.comment_text = request.data['text']
             comment_notification.save()
+            print(f"comment notification: {comment_notification}")
+            serializer = PostNotificationSerializer(comment_notification)
+            print(f"data: {serializer.data}")
+            return HttpResponse(str(comment))
             return HttpResponse(str(comment))
 
         else:
@@ -685,12 +702,25 @@ def like_post(request, pk):
         return Response({ 'succ': False })
     likepost = LikePost(postId=post, authorId=author)
     likepost.save()
-    post_author_id = post.author
-    liker_display_name = Author.objects.get(id=author_id).displayName
-    like_notification = PostNotification(type = 'like', authorId=post_author_id, sender_id=author_id, postId = post, sender_display_name=liker_display_name)
+    author_id = uuid.UUID(request.data['authorId'])
+    #print(f"authorID from request: {author_id}")
+    #print(f"POST: {post}")
+    #print(f"POST AUTHOR: {post.author.id}")
+    liker = Author.objects.get(id=author_id)
+    post_author = Author.objects.get(id=post.author.id)
+
+    #post_author_id = Author.objects.get(id=post.author)
+    liker_display_name = liker.displayName
+    like_notification = PostNotification(type = 'like', authorId=post_author, senderId=liker, postId = post, sender_display_name=liker_display_name)
+    
     front_end_text = f'{author.displayName} has liked your post.'
     like_notification.front_end_text = front_end_text
     like_notification.save()
+    #serializer = PostNotificationSerializer(like_notification)
+    #data = serializer.data
+    #print(f"DATA: {data}")
+    #like_notification.save()
+    #print(f"lIKE NOTIFICAITON: {like_notification}")
     post.likeCount += 1
     post.save()
     return Response({
@@ -795,9 +825,9 @@ def post_notifications(request, pk):
     List all post notification items
     """
     author = Author.objects.filter(id=uuid.UUID(pk))
-    author_notifications = PostNotification.objects.filter(authorId=author).order_by('-publishedOn')
-    serializer = NotificationSerializer(author_notifications, many=True)
-    return JsonResponse(serializer.data)
+    #author_notifications = PostNotification.objects.filter(authorId=author).order_by('-publishedOn')
+    #serializer = NotificationSerializer(author_notifications, many=True)
+    #return JsonResponse(serializer.data)
 
 @api_view(['GET'])
 def follow_notifications(request, pk):
@@ -805,9 +835,9 @@ def follow_notifications(request, pk):
     List all post notification items
     """
     author = Author.objects.filter(id=uuid.UUID(pk))
-    author_notifications = FollowNotification.objects.filter(authorId=author).order_by('-sentOn')
-    serializer = NotificationSerializer(author_notifications, many=True)
-    return JsonResponse(serializer.data)
+    #author_notifications = FollowNotification.objects.filter(authorId=author).order_by('-sentOn')
+    #serializer = NotificationSerializer(author_notifications, many=True)
+    #return JsonResponse(serializer.data)
 
 
 @csrf_exempt

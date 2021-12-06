@@ -11,6 +11,7 @@
  * limitations under the License.
  */
 
+/*
 import React from "react";
 import { List, Badge, NavBar, Icon } from "antd-mobile";
 import { Button, Form, Input, message, Modal } from "antd";
@@ -57,3 +58,57 @@ const Inbox = (props) => {
 };
 
 export default Inbox;
+*/
+
+import React, { Component } from "react";
+import { List, Badge, NavBar, Icon } from "antd-mobile";
+import { Button, Form, Input, message, Modal } from "antd";
+import store from "../../store/store";
+import "./index.css";
+import { client } from "../../http";
+
+class App extends Component {
+
+    constructor(props) {
+        super(props);
+        this.state = {
+          items: [],
+          isLoaded: false,
+        }
+    }
+
+    componentDidMount() {
+      fetch('http://jsonplaceholder.typicode.com/users')
+        .then(res => res.json())
+        .then(json => {
+          this.setState({
+            isLoaded: true,
+            items: json,
+          })
+        });
+
+    }
+
+    render() {
+
+      var { isLoaded, items } = this.state;
+      if (!isLoaded) {
+        return <div>Loading</div>
+      }
+      else {
+      return (
+      
+          <div className="App">
+              <u1>
+                {items.map(item => (
+                    
+                ))};
+              </u1>
+            </div>
+        );
+      }
+  }
+}
+
+
+export default App;

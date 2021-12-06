@@ -72,7 +72,6 @@ class Author(models.Model):
             'profilePic': self.profilePic
         }
 
-
 class FriendRequest(models.Model):
     # https://medium.com/analytics-vidhya/add-friends-with-689a2fa4e41d
 
@@ -241,6 +240,7 @@ class LikePost(models.Model):
 # Notification object for Posts - likes, comments, and private posts
 class PostNotification(models.Model):
     
+    #id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     type = models.CharField(max_length=20, default='') # Either 'like', 'comment', 'private post'
     # front_end_text makes it easier for notification to be implemented on front end:
     front_end_text = models.CharField(max_length=120, default='') # E.g.: ____ liked your post.
@@ -253,8 +253,7 @@ class PostNotification(models.Model):
     sender_display_name = models.CharField(max_length=100, default='')
     postId = models.ForeignKey(Post, on_delete=models.CASCADE)
 
-    class Meta:
-        unique_together = ('authorId', 'senderId',)
+
 
 # Notification object for friend requests
 class FollowNotification(models.Model):

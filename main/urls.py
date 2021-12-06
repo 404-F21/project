@@ -40,6 +40,9 @@ urlpatterns = [
     path('author/<pk>/followed/<fpk>', views.FollowedDetail.as_view()),
     path('author/<pk>/friends', views.FriendList.as_view()),
 
+    # add friends: (<d> stands for decision)
+    path('author/<pk>/friends/<fpk>/<d>', views.FriendDetail.as_view()),
+    
     path('author/<pk>/posts/', views.AuthorPostList.as_view()),
     path('author/<pk>/posts/<pid>', views.AuthorPostDetail.as_view()),
     # Reshare post
@@ -59,7 +62,7 @@ urlpatterns = [
     path('foreign-data/<str:node_id>/<str:url_base64>', views.get_foreign_data),
 
     # get the post inbox notifications of a user
-    path('inbox_posts', views.post_notifications),
+    path('inbox_posts/<pk>', views.post_notifications),
 
     # get the post inbox notifications of a user
     path('inbox_friends', views.friend_notifications),

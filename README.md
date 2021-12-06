@@ -9,7 +9,7 @@
 * xingjie1
 * ywu18
 
-## Running Instructions:
+## Running Instructions (Local):
 
 * Make sure that you have `pipenv` and `pyenv` installed.
   * If not: run `python3 -m pip install pipenv pyenv`
@@ -33,14 +33,14 @@
 * **drapeza** worked on the connecting the frontend with the database using a REST API.
 * **wstix** worked on project setup, helped everyone out in combining their parts, GitHub management, and bugfixing.
 ### Part 2
-* **xingjie1** and **ywu18** worked on connecting the nodes with other groups.
-* **kanishk** worked on basic Auth and minor fixing in the backend.
-* **wstix** worked on bugfixing and majority backend fixing along with friends/follower backend.
+* **xingjie1** and **ywu18** worked on creating and connecting nodes with other groups.
+* **kanishk** worked on basic auth and minor backend fixes.
+* **wstix** worked on bugfixing and an overhaul of the backend, including friend/follower functionality.
 ### Part 3
-* **xingjie1** and **ywu18** worked on connecting comments/likes with different teams and images support.
-* **kanishk** worked on images support, documentation, presentation and code clean up.
-* **drapeza** worked on inbox notifications and follow request frontend.
-* **wstix** worked on Common Mark and finished up the friends/followers.
+* **xingjie1** and **ywu18** worked on connecting comments/likes with different teams, and image support.
+* **kanishk** worked on image support, documentation, led the presentation work, and cleaned up the code.
+* **drapeza** worked on inbox notifications and friend/follower functionality on the frontend.
+* **wstix** worked on CommonMark functionality and finished up frontend friend/follower functionality.
 
 ## Design Principles:
 
@@ -51,12 +51,13 @@
 * Upload images/profile pictures - store the image url to refer
 * Can be from different host - store the host url
 
-### 2) Friend Request
+### 2) Follow
 #### Keynotes - Database Implications:
-* Can be one-sided (becomes a follow) - store if x follows y
-* Can be two-sided (become a friend if accepted from both sides) - store if the
-  x follows y and if y follow x separately and uniquely
+* Can be one-sided (just normal) - store if x follows y
+* Can be two-sided (becomes a friend pair if accepted from both sides) - store
+  x following y and y following x separately and uniquely
 * Is unique - store an identifier
+* Friends are implemented through views and serializers rather than models
 
 ### 3) Post
 #### Keynotes - Database Implications:

@@ -136,8 +136,7 @@ class Post(models.Model):
     visibilityOptions = (
         ("public", "PUBLIC"),
         ("friends", "FRIENDS ONLY"),
-        ("fof", "FRIENDS OF FRIENDS"),
-        ("toAuthor", "AUTHOR ONLY"),  # not sure how to implement this
+        ("toAuthor", "AUTHOR ONLY"),
     )
 
     postId = models.UUIDField(primary_key=True,

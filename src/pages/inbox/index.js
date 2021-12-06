@@ -11,49 +11,49 @@
  * limitations under the License.
  */
 
-import React from 'react'
-import { List, Badge, NavBar, Icon } from 'antd-mobile';
-import {Button, Form, Input, message, Modal} from 'antd';
-import store from '../../store/store';
-import './index.css';
-import {client} from "../../http";
+import React from "react";
+import { List, Badge, NavBar, Icon } from "antd-mobile";
+import { Button, Form, Input, message, Modal } from "antd";
+import store from "../../store/store";
+import "./index.css";
+import { client } from "../../http";
 
 const getPostNotifications = async () => {
-    const current_user = store.getState().login.id;
-    const result = await client.get(`inbox_posts/` + current_user)
-    message.success('Sent a friend request!')
-}
+  const current_user = store.getState().login.id;
+  const result = await client.get(`inbox_posts/` + current_user);
+  message.success("Sent a friend request!");
+};
 
 const Inbox = (props) => {
-    return (
-        <div className='inbox w1200'>
-            <h1>Follow Notifications:</h1>
-            <List style={{ marginTop: 10 }}>
-                <List.Item extra="12:00" arrow="horizontal">
-                    <Badge dot>
-                        <img
-                            style={{ height: '100%', borderRadius: '50%' }}
-                            src={require('../../assets/user.jpg').default}
-                        />
-                    </Badge>
-                    <span style={{ marginLeft: 12 }}>username</span>
-                </List.Item>
-            </List>
-            <br></br>
-            <h1>Like and Comment Notifications:</h1>
-            <List style={{ marginTop: 10 }}>
-                <List.Item extra="12:00" arrow="horizontal">
-                    <Badge dot>
-                        <img
-                            style={{ height: '100%', borderRadius: '50%' }}
-                            src={require('../../assets/user.jpg').default}
-                        />
-                    </Badge>
-                    <span style={{ marginLeft: 12 }}>username</span>
-                </List.Item>
-            </List>
-        </div>
-    )
-}
+  return (
+    <div className="inbox w1200">
+      <h1>Follow Notifications:</h1>
+      <List style={{ marginTop: 10 }}>
+        <List.Item extra="12:00" arrow="horizontal">
+          <Badge dot>
+            <img
+              style={{ height: "100%", borderRadius: "50%" }}
+              src={require("../../assets/default.png").default}
+            />
+          </Badge>
+          <span style={{ marginLeft: 12 }}>username</span>
+        </List.Item>
+      </List>
+      <br></br>
+      <h1>Like and Comment Notifications:</h1>
+      <List style={{ marginTop: 10 }}>
+        <List.Item extra="12:00" arrow="horizontal">
+          <Badge dot>
+            <img
+              style={{ height: "100%", borderRadius: "50%" }}
+              src={require("../../assets/default.png").default}
+            />
+          </Badge>
+          <span style={{ marginLeft: 12 }}>username</span>
+        </List.Item>
+      </List>
+    </div>
+  );
+};
 
 export default Inbox;

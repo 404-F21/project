@@ -83,23 +83,6 @@ const User = (_) => {
     loadData();
   };
 
-	const followUser = async () => {
-		const result = await client.put(`author/${userId}/followers/a464d46a-6bc2-458b-abd0-71228e88565f`)
-		message.success('user page:' + {userId} + ", follower: ")
-	}
-
-	const onFinish = async (values) => {
-		console.log(values);
-		const result = await client.post(`author/${userId}/`, values)
-		if (result.status === 200) {
-			message.success('Edit successfully')
-			loadUser()
-		} else {
-			message.error('Something wrong')
-		}
-		setIsModalVisible(false);
-	};
-
   const loadData = async () => {
     const result = await client.get(`author/${userId}/posts/`);
     if (result.status === 200) {
@@ -131,43 +114,36 @@ const User = (_) => {
     }
   };
 
-    const checkFollowing = async () => {
-        const current_user = store.getState().login.id;
-        const result = await client.get(`author/${userId}/followers/` + current_user)
-        if (result.data.isFollower === true) {
-            document.querySelector('#followButton').textContent = 'Unfollow';
-            return true;
-        }
-        else {
-            return false;
-        }
-
+  const checkFollowing = async () => {
+    const current_user = store.getState().login.id;
+    const result = await client.get(
+      `author/${userId}/followers/` + current_user
+    );
+    if (result.data.isFollower === true) {
+      document.querySelector("#followButton").textContent = "Unfollow";
+      return true;
+    } else {
+      return false;
     }
+  };
 
-    const followUser = async () => {
-        const current_user = store.getState().login.id;
-        const result = await client.get(`author/${userId}/followers/` + current_user)
-        if (result.data.isFollower === true) {
-            await client.delete(`author/${userId}/followers/` + current_user)
-            message.success('Unfollowed user!')
-            document.querySelector('#followButton').textContent = 'Follow';
-        }
-        else {
-            const result = await client.put(`author/${userId}/followers/` + current_user)
-            message.success('Now following user!')
-            document.querySelector('#followButton').textContent = 'Unfollow';
-        }
+  const followUser = async () => {
+    const current_user = store.getState().login.id;
+    const result = await client.get(
+      `author/${userId}/followers/` + current_user
+    );
+    if (result.data.isFollower === true) {
+      await client.delete(`author/${userId}/followers/` + current_user);
+      message.success("Unfollowed user!");
+      document.querySelector("#followButton").textContent = "Follow";
+    } else {
+      const result = await client.put(
+        `author/${userId}/followers/` + current_user
+      );
+      message.success("Now following user!");
+      document.querySelector("#followButton").textContent = "Unfollow";
     }
-    
-
-    const onFinish = async (values) => {
-        console.log(values);
-        const result = await client.post(`author/${userId}/`, values)
-        if (result.status === 200) {
-            message.success('Edit successfully')
-            loadUser()
-        } else {
-            message.error('Something wrong')
+  };
 
   useEffect(async () => {
     await loadData();

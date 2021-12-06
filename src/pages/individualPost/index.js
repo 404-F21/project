@@ -95,9 +95,9 @@ const IndividualPost = (props) => {
         }
       } else {
         const result = await client.post(`post/${postData.id}/comments/`, {
-            authorId: store.getState().login.id,
-            postId: postData.postId,
-            text: commentInput,
+          authorId: store.getState().login.id,
+          postId: postData.postId,
+          text: commentInput,
         });
 
         if (result.status == 200) {

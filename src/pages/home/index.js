@@ -206,15 +206,6 @@ const App = (_) => {
           </Form.Item>
         ) : null}
 
-        <Form.Item label="Visibility" name={'visibility'} rules={[{required: true}]}>
-          <Radio.Group>
-            <Radio value={'public'}>Public</Radio>
-            <Radio value={'friends'}>Friends</Radio>
-            <Radio value={'fof'}>Friends of Friends</Radio>
-            <Radio value={'toAuthor'}>Private</Radio>
-          </Radio.Group>
-        </Form.Item>
-
         <Form.Item wrapperCol={{ ...layout.wrapperCol, offset: 8 }}>
           <Button type="primary" htmlType="submit" loading={isLoading}>
             Post

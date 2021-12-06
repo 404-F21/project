@@ -137,76 +137,6 @@ const User = (props) => {
 
     }
 
-    const nuke = async () => {
-        const current_user = store.getState().login.id;
-        const result = await client.delete(`author/` + current_user + `/friends/${userId}/NUKE`)
-        message.success('NUKED')
-    }
-    const checkFriendStatus = async () => {
-        const current_user = store.getState().login.id;
-        const result = await client.get(`author/${userId}/friends/` + current_user + '/null')
-        if (result.data.status === 'pendingmydecision') {
-            document.querySelector('#friendButton').style.visibility = "hidden";
-            document.querySelector('#acceptButton').style.visibility = "visible";
-            document.querySelector('#declineButton').style.visibility = "visible";
-        }
-        else if (result.data.status === 'pendingtheirdecision') {
-            document.querySelector('#friendButton').style.visibility = "hidden";
-            document.querySelector('#declineButton').style.visibility = "visible";
-            document.querySelector('#declineButton').textContent = "Undo Friend Request";
-        }
-        else if (result.data.status === 'accepted') {
-            document.querySelector('#declineButton').style.visibility = "visible";
-            document.querySelector('#declineButton').textContent = "Remove Friend";
-            message.success('WTF!')
-        }
-        else if (result.data.status === 'non'){}
-        return true;
-    }
-
-    const addFriend = async () => {
-        const current_user = store.getState().login.id;
-        const result = await client.put(`author/` + current_user + `/friends/${userId}/send`)
-        message.success('Sent a friend request!')
-        document.querySelector('#friendButton').style.visibility = "hidden";
-        document.querySelector('#acceptButton').style.visibility = "hidden";
-        document.querySelector('#declineButton').style.visibility = "visible";
-        document.querySelector('#declineButton').textContent = "Undo Friend Request";
-        return true;
-    }
-
-    const acceptFriend = async () => {
-        const current_user = store.getState().login.id;
-        const result = await client.put(`author/${userId}/friends/` + current_user + `/accept`)
-        document.querySelector('#acceptButton').style.visibility = "hidden";
-        document.querySelector('#declineButton').style.visibility = "visible";
-        document.querySelector('#declineButton').textContent = "Delete Friend";
-        message.success('Accepted friend request!')
-        return true;
-    }
-
-    const deleteFriend = async () => {
-        const current_user = store.getState().login.id;
-        const result = await client.delete(`author/${userId}/friends/` + current_user + `/null`)
-        document.querySelector('#acceptButton').style.visibility = "visible";
-        document.querySelector('#declineButton').style.visibility = "hidden";
-        message.success('Bye :(!')
-        return true;
-    }
-
-    /*
-    const nuke = async () => {
-        const current_user = store.getState().login.id;
-        const result = await client.delete(`author/${userId}/followers/` + current_user)
-        if (result.data.success === true) {
-            message.success('lebron')
-        }
-        else {
-            message.success('fail')
-        }
-
-    }
-    */
     const followUser = async () => {
         const current_user = store.getState().login.id;
         const result = await client.get(`author/${userId}/followers/` + current_user)
@@ -235,8 +165,7 @@ const User = (props) => {
   useEffect(async () => {
     await loadData();
     await loadUser();
-		await checkFollowing();
-		await checkFriendStatus()
+    await checkFollowing();
   }, []);
 
   // need this or ordered lists render all screwy
@@ -259,10 +188,6 @@ const User = (props) => {
                     <div>
                     
                     <Button type={'primary'} id='followButton' style={{width: '150px', marginLeft: '20px'}} onClick={followUser}>Follow</Button>
-                    <Button type={'primary'} id='friendButton' style={{width: '150px', marginLeft: '20px', visibility: 'visible'}} onClick={addFriend}>Add Friend</Button>
-                    <Button type={'primary'} id='acceptButton' style={{width: '150px', marginLeft: '20px', visibility: 'hidden'}} onClick={acceptFriend}>Accept Friend</Button>
-                    <Button  id='declineButton' style={{width: '150px', marginLeft: '20px', visibility: 'hidden'}} onClick={deleteFriend}>Decline Friend</Button>
-                    <Button  id='declineButton' style={{width: '150px', marginLeft: '20px'}} onClick={nuke}>nuke</Button>
                     </div>
                         :
                         null

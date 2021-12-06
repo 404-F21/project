@@ -151,6 +151,9 @@ const IndividualPost = (props) => {
       console.log(item)
       setPostData(item)
       if (item.foreignNodeId) {
+        if (item.foreignNodeHost.indexOf('social-dis') !== -1) {
+          setLikeCount(item.likeCount)
+        }
         if (item.foreignNodeHost.indexOf('linkedspace') !== -1) {
           // get like count from linkedspace node
           const authorId = item.author.url.split('/').pop()

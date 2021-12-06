@@ -21,8 +21,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from main.models import Author, Comment, Following, Post, LikePost, Admin, Node, MediaFile, PostNotification
-from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostNotificationSerializer, PostSerializer
+from main.models import Author, Comment, Following, FollowNotification, Post, LikePost, Admin, Node, MediaFile, PostNotification
+from main.serializers import AuthorSerializer, CommentSerializer, FollowingSerializer, PostNotificationSerializer, FollowNotificationSerializer, PostSerializer
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from main.decorator import need_admin
@@ -200,7 +200,9 @@ class FollowerDetail(APIView):
 
         follower_display_name = follower.displayName
         front_end_text = f'{follower_display_name} has started following you.'
-        #notification = FollowNotification(front_end_text=front_end_text, sender)
+        #comment_notification = PostNotification(type='comment', postId = post, senderId=author, authorId=post_author, sender_display_name=author.displayName)
+        follow_notification = FollowNotification(front_end_text=front_end_text, senderId=follower, authorId=followee, sender_display_name=follower_display_name)
+        follow_notification.save()
         serializer = FollowingSerializer(follow_pair)
 
         return Response(serializer.data)
@@ -212,9 +214,14 @@ class FollowerDetail(APIView):
         if r_a != AUTH_SUCCESS:
             return no_auth()
         try:
-            author = Author.objects.get(pk=uuid.UUID(pk))
-            author.followed_set.get(follower=uuid.UUID(fpk))
-            return Response({ 'isFollower': True })
+            follower = Author.objects.get(pk=uuid.UUID(pk))
+            followee = Author.objects.get(pk=uuid.UUID(fpk))
+            #author.followed_set.get(follower=uuid.UUID(fpk))
+            follow_query= Following.objects.filter(follower=follower, followee=followee)
+            if follow_query == '<QuerySet[]>':
+                return Response({ 'isFollower': False })
+            else:
+                return Response({ 'isFollower': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
 
@@ -712,7 +719,6 @@ def like_post(request, pk):
     #post_author_id = Author.objects.get(id=post.author)
     liker_display_name = liker.displayName
     like_notification = PostNotification(type = 'like', authorId=post_author, senderId=liker, postId = post, sender_display_name=liker_display_name)
-    
     front_end_text = f'{author.displayName} has liked your post.'
     like_notification.front_end_text = front_end_text
     like_notification.save()
@@ -824,20 +830,20 @@ def post_notifications(request, pk):
     """
     List all post notification items
     """
-    author = Author.objects.filter(id=uuid.UUID(pk))
-    #author_notifications = PostNotification.objects.filter(authorId=author).order_by('-publishedOn')
-    #serializer = NotificationSerializer(author_notifications, many=True)
-    #return JsonResponse(serializer.data)
+    author = Author.objects.get(id=uuid.UUID(pk))
+    author_notifications = PostNotification.objects.filter(authorId=author).order_by('-publishedOn')
+    serializer = PostNotificationSerializer(author_notifications, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 @api_view(['GET'])
 def follow_notifications(request, pk):
     """
     List all post notification items
     """
-    author = Author.objects.filter(id=uuid.UUID(pk))
-    #author_notifications = FollowNotification.objects.filter(authorId=author).order_by('-sentOn')
-    #serializer = NotificationSerializer(author_notifications, many=True)
-    #return JsonResponse(serializer.data)
+    author = Author.objects.get(id=uuid.UUID(pk))
+    author_notifications = FollowNotification.objects.filter(authorId=author).order_by('-sentOn')
+    serializer = FollowNotificationSerializer(author_notifications, many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 
 @csrf_exempt

@@ -43,6 +43,11 @@ class PostNotificationSerializer(serializers.ModelSerializer):
         model = PostNotification
         fields = '__all__'
 
+class FollowNotificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FollowNotification
+        fields = '__all__'
+
 
 class FollowingSerializer(serializers.ModelSerializer):
     # rather than using the `depth` field, must do this or the password shows

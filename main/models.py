@@ -265,8 +265,6 @@ class FollowNotification(models.Model):
     senderId = models.ForeignKey(Author, related_name='follow_by_senderId', on_delete=models.CASCADE)
     sender_display_name = models.CharField(max_length=100, default='')
 
-    class Meta:
-        unique_together = ('authorId', 'senderId',)
 
 # https://djangocentral.com/creating-comments-system-with-django/
 class LikeComment(models.Model):

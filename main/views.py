@@ -933,7 +933,7 @@ def get_public_post(request):
                     if not node.if_approved or node.password_md5 != password_md5:
                         # Password is incorrect
                         return no_auth()
-                    public_posts = Post.objects.filter(visibility='public')
+                    public_posts = Post.objects.filter(visibility='public').order_by('-publishedOn')
                     result = []
                     for post in public_posts:
                         p = post.dict()

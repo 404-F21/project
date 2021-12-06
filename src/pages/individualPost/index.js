@@ -71,6 +71,28 @@ const IndividualPost = (props) => {
             updateCommentList();
           }
         }
+        if (postData.foreignNodeHost.indexOf("cmput404-team13-socialapp") !== 1) {
+          // team 13
+          const authorId = postData.author.url.split('/').pop()
+          const url = window.btoa(
+            `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/posts/${postData.remoteId}/comments/`
+          )
+          const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
+            type: "comment",
+            author: {
+              ...userinfoLocal,
+              type: "author",
+              password: "###",
+            },
+            "comment": commentInput,
+            "contentType": "PLAIN"
+          })
+          if (result.status === 200 && result.data.success === 'Updated Successfully') {
+            message.success("comment posted successfully!");
+            setCommentInput("");
+            updateCommentList();
+          }
+        }
       } else {
         const result = await client.post(`post/${postData.id}/comments/`, {
           authorId: userinfoLocal.id,
@@ -162,7 +184,13 @@ const IndividualPost = (props) => {
         if (res.status === 200) {
           if (postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
             // team13 comments
-            setCommentList(res.data)
+            if (res.data.item !== undefined) {
+              // they have no comment
+              setCommentList([])
+            } else {
+              // they do have comment
+              setCommentList(res.data)
+            }
           } else {
             // social-dis, linkedspace, api-404 team comments
             setCommentList(res.data.comments)
@@ -277,7 +305,9 @@ const IndividualPost = (props) => {
       // team 13
       if (postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
         const authorId = postData.author.url.split('/').pop()
-        const url = `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/inbox/`
+        const url = window.btoa(
+          `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/inbox/`
+        )
         const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
           "summary": "Team17 likes your post.",
           "type": "like",
@@ -290,8 +320,14 @@ const IndividualPost = (props) => {
             "github": "http://github.com",
             "avatar": null
           },
-          "object": "d9ef0b98-6aa3-48cf-a736-103ee007ff7c"
+          "object": postData.remoteId
         })
+        if (result.status === 200 && result.data.message === 'success') {
+          message.success('liked!')
+          setLikeCount(likeCount + 1)
+        } else {
+          message.warn('something wrong!')
+        }
       }
     } else {
       result = await client.post(`post/${postData.id}/like/`, {

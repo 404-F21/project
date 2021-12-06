@@ -11,19 +11,19 @@
  * limitations under the License.
  */
 
-import React, {useCallback, useEffect, useState} from "react";
-import {useHistory} from "react-router-dom";
+import React, { useCallback, useEffect, useState } from "react";
+import { useHistory } from "react-router-dom";
 
-import {Button, Input, message} from "antd";
+import { Button, Input, message } from "antd";
 import "./index.css";
-import {client} from "../../http";
+import { client } from "../../http";
 import store from "../../store/store";
-import {Remark} from "react-remark";
+import { Remark } from "react-remark";
 import remarkGemoji from "remark-gemoji";
 
 const layout = {
-  labelCol: {span: 2},
-  wrapperCol: {span: 22},
+  labelCol: { span: 2 },
+  wrapperCol: { span: 22 },
 };
 
 const IndividualPost = (props) => {
@@ -71,23 +71,31 @@ const IndividualPost = (props) => {
             updateCommentList();
           }
         }
-        if (postData.foreignNodeHost.indexOf("cmput404-team13-socialapp") !== 1) {
+        if (
+          postData.foreignNodeHost.indexOf("cmput404-team13-socialapp") !== 1
+        ) {
           // team 13
-          const authorId = postData.author.url.split('/').pop()
+          const authorId = postData.author.url.split("/").pop();
           const url = window.btoa(
             `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/posts/${postData.remoteId}/comments/`
-          )
-          const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
-            type: "comment",
-            author: {
-              ...userinfoLocal,
-              type: "author",
-              password: "###",
-            },
-            "comment": commentInput,
-            "contentType": "PLAIN"
-          })
-          if (result.status === 200 && result.data.success === 'Updated Successfully') {
+          );
+          const result = await client.post(
+            `foreign-data/${postData.foreignNodeId}/${url}`,
+            {
+              type: "comment",
+              author: {
+                ...userinfoLocal,
+                type: "author",
+                password: "###",
+              },
+              comment: commentInput,
+              contentType: "PLAIN",
+            }
+          );
+          if (
+            result.status === 200 &&
+            result.data.success === "Updated Successfully"
+          ) {
             message.success("comment posted successfully!");
             setCommentInput("");
             updateCommentList();
@@ -95,10 +103,11 @@ const IndividualPost = (props) => {
         }
       } else {
         const result = await client.post(`post/${postData.id}/comments/`, {
-          authorId: userinfoLocal.id,
+          authorId: store.getState().login.id,
           postId: postData.postId,
           text: commentInput,
         });
+
         if (result.status == 200) {
           message.success("comment posted successfully!");
           setCommentInput("");
@@ -114,42 +123,46 @@ const IndividualPost = (props) => {
 
   // fetch post data from server
   useEffect(async () => {
-    let id = props.match?.params?.id
+    let id = props.match?.params?.id;
     if (id) {
       // let result = await client.get(`post/${id}`)
       // setPostData(result.data)
-      const jsonString = localStorage.getItem(id)
-      const item = JSON.parse(jsonString)
-      console.log(item)
-      setPostData(item)
+      const jsonString = localStorage.getItem(id);
+      const item = JSON.parse(jsonString);
+      console.log(item);
+      setPostData(item);
       if (item.foreignNodeId) {
-        if (item.foreignNodeHost.indexOf('linkedspace') !== -1) {
+        if (item.foreignNodeHost.indexOf("linkedspace") !== -1) {
           // get like count from linkedspace node
-          const authorId = item.author.url.split('/').pop()
-          const urlSplit = item.remoteId.split('/')
-          urlSplit.pop()
-          const postId = urlSplit.pop()
+          const authorId = item.author.url.split("/").pop();
+          const urlSplit = item.remoteId.split("/");
+          urlSplit.pop();
+          const postId = urlSplit.pop();
           const url = window.btoa(
             `https://linkedspace-staging.herokuapp.com/api/author/${authorId}/posts/${postId}/likes/`
-          )
-          const result = await client.get(`foreign-data/${item.foreignNodeId}/${url}`)
+          );
+          const result = await client.get(
+            `foreign-data/${item.foreignNodeId}/${url}`
+          );
           if (result.status === 200) {
-            setLikeCount(result.data.items.length)
+            setLikeCount(result.data.items.length);
           }
         }
-        if (item.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
+        if (item.foreignNodeHost.indexOf("cmput404-team13-socialapp") !== -1) {
           // get like count from team13
-          const authorId = item.author.url.split('/').pop()
+          const authorId = item.author.url.split("/").pop();
           const url = window.btoa(
             `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/posts/${item.remoteId}/likes/`
-          )
-          const result = await client.get(`foreign-data/${item.foreignNodeId}/${url}`)
+          );
+          const result = await client.get(
+            `foreign-data/${item.foreignNodeId}/${url}`
+          );
           if (result.status === 200) {
-            setLikeCount(result.data.length)
+            setLikeCount(result.data.length);
           }
         }
       } else {
-        setLikeCount(item.likeCount)
+        setLikeCount(item.likeCount);
       }
     }
   }, []);
@@ -159,47 +172,61 @@ const IndividualPost = (props) => {
   // update comment list function
   const updateCommentList = useCallback(async () => {
     if (postData) {
-      let res = {status: 0};
+      let res = { status: 0 };
       if (postData.foreignNodeId) {
-        let urlBase64
+        let urlBase64;
         // linkedspace comments
-        if (postData.foreignNodeHost.indexOf('linkedspace-staging.herokuapp.com') !== -1) {
+        if (
+          postData.foreignNodeHost.indexOf(
+            "linkedspace-staging.herokuapp.com"
+          ) !== -1
+        ) {
           const url = postData.comments.replace(
-            'linkedspace-staging.herokuapp.com/author', 'linkedspace-staging.herokuapp.com/api/author')
-          urlBase64 = window.btoa(url)
+            "linkedspace-staging.herokuapp.com/author",
+            "linkedspace-staging.herokuapp.com/api/author"
+          );
+          urlBase64 = window.btoa(url);
         }
-        if (postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1) {
-          urlBase64 = window.btoa(postData.comments)
+        if (
+          postData.foreignNodeHost.indexOf("social-dis.herokuapp.com") !== -1
+        ) {
+          urlBase64 = window.btoa(postData.comments);
         }
-        if (postData.foreignNodeHost.indexOf('project-api-404') !== -1) {
-          urlBase64 = window.btoa(postData.comments)
+        if (postData.foreignNodeHost.indexOf("project-api-404") !== -1) {
+          urlBase64 = window.btoa(postData.comments);
         }
-        if (postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
-          const authorId = postData.author.url.split('/').pop()
+        if (
+          postData.foreignNodeHost.indexOf("cmput404-team13-socialapp") !== -1
+        ) {
+          const authorId = postData.author.url.split("/").pop();
           urlBase64 = window.btoa(
             `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/posts/${postData.remoteId}/comments/`
-          )
+          );
         }
-        res = await client.get(`foreign-data/${postData.foreignNodeId}/${urlBase64}`)
+        res = await client.get(
+          `foreign-data/${postData.foreignNodeId}/${urlBase64}`
+        );
         if (res.status === 200) {
-          if (postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
+          if (
+            postData.foreignNodeHost.indexOf("cmput404-team13-socialapp") !== -1
+          ) {
             // team13 comments
             if (res.data.item !== undefined) {
               // they have no comment
-              setCommentList([])
+              setCommentList([]);
             } else {
               // they do have comment
-              setCommentList(res.data)
+              setCommentList(res.data);
             }
           } else {
             // social-dis, linkedspace, api-404 team comments
-            setCommentList(res.data.comments)
+            setCommentList(res.data.comments);
           }
         }
       } else {
-        res = await client.get(`post/${postData.id}/comments/`)
+        res = await client.get(`post/${postData.id}/comments/`);
         if (res.status === 200) {
-          setCommentList(res.data)
+          setCommentList(res.data);
         }
       }
     }
@@ -211,122 +238,135 @@ const IndividualPost = (props) => {
   }, [postData]);
 
   // need this or ordered lists render all screwy
-  const customLi = (props) => <li style={{marginLeft: "2em"}} {...props} />;
+  const customLi = (props) => <li style={{ marginLeft: "2em" }} {...props} />;
 
   const likePost = async () => {
     if (!postData) {
-      message.success('please waitting!')
-      return
+      message.success("please waitting!");
+      return;
     }
-    let result
+    let result;
     if (postData.foreignNodeId) {
       // social-dis
-      if (postData.foreignNodeHost.indexOf('social-dis') !== -1) {
-        const postId = postData.remoteId.split('/').pop()
-        const authorId = postData.author.url.split('/').pop()
+      if (postData.foreignNodeHost.indexOf("social-dis") !== -1) {
+        const postId = postData.remoteId.split("/").pop();
+        const authorId = postData.author.url.split("/").pop();
         const url = window.btoa(
           `https://social-dis.herokuapp.com/author/${authorId}/posts/${postId}/likes`
-        )
+        );
         result = await client.post(
-          `foreign-data/${postData.foreignNodeId}/${url}`, {
+          `foreign-data/${postData.foreignNodeId}/${url}`,
+          {
             author: {
               ...userinfoLocal,
               id: userinfoLocal.url,
-              type: 'author',
-              password: '###'
-            }
-          })
-        console.log(result.data)
-        if (result.status === 200) {
-          if (result.data.type === 'Like') {
-            message.success('liked!')
-            setLikeCount(likeCount + 1)
+              type: "author",
+              password: "###",
+            },
           }
-          if (result.data.message[0].indexOf('duplicate key') !== -1) {
-            message.warn('already liked!')
+        );
+        console.log(result.data);
+        if (result.status === 200) {
+          if (result.data.type === "Like") {
+            message.success("liked!");
+            setLikeCount(likeCount + 1);
+          }
+          if (result.data.message[0].indexOf("duplicate key") !== -1) {
+            message.warn("already liked!");
           }
         } else {
-          message.warn('something wrong!')
+          message.warn("something wrong!");
         }
       }
       // linked-space
-      if (postData.foreignNodeHost.indexOf('linkedspace') !== -1) {
-        const authorId = postData.author.url.split('/').pop()
+      if (postData.foreignNodeHost.indexOf("linkedspace") !== -1) {
+        const authorId = postData.author.url.split("/").pop();
         const url = window.btoa(
           `https://linkedspace-staging.herokuapp.com/api/author/${authorId}/inbox/`
-        )
-        const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
-          type: 'like',
-          object: postData.remoteId,
-          '@context': "https://www.w3.org/ns/activitystreams",
-          author: {
-            type: 'author',
-            ...userinfoLocal,
-            // id: 'https://cmput404f21t17.herokuapp.com/service/author/4e9deafd-29bf-4f18-92d7-954c3322bd53',
-            id: userinfoLocal.url,
-            password: '###'
+        );
+        const result = await client.post(
+          `foreign-data/${postData.foreignNodeId}/${url}`,
+          {
+            type: "like",
+            object: postData.remoteId,
+            "@context": "https://www.w3.org/ns/activitystreams",
+            author: {
+              type: "author",
+              ...userinfoLocal,
+              // id: 'https://cmput404f21t17.herokuapp.com/service/author/4e9deafd-29bf-4f18-92d7-954c3322bd53',
+              id: userinfoLocal.url,
+              password: "###",
+            },
           }
-        })
-        if (result.status === 200 && result.data.type === 'inbox') {
+        );
+        if (result.status === 200 && result.data.type === "inbox") {
           if (result.data.items.length === likeCount) {
-            message.warn('already liked!')
+            message.warn("already liked!");
           } else {
-            message.success('liked!')
-            setLikeCount(likeCount + 1)
+            message.success("liked!");
+            setLikeCount(likeCount + 1);
           }
         } else {
-          message.warn('something wrong!')
+          message.warn("something wrong!");
         }
       }
       // project-404-api
-      if (postData.foreignNodeHost.indexOf('project-api-404') !== -1) {
-        const authorId = postData.author.url.split('/').pop()
+      if (postData.foreignNodeHost.indexOf("project-api-404") !== -1) {
+        const authorId = postData.author.url.split("/").pop();
         const url = window.btoa(
           `https://project-api-404.herokuapp.com/api/author/${authorId}/inbox/`
-        )
-        const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
-          type: "like",
-          author: {
-            type: 'author',
-            ...userinfoLocal,
-            // id: 'https://cmput404f21t17.herokuapp.com/service/author/4e9deafd-29bf-4f18-92d7-954c3322bd53',
-            id: userinfoLocal.url,
-            password: '###'
-          },
-          object: postData.remoteId
-        })
+        );
+        const result = await client.post(
+          `foreign-data/${postData.foreignNodeId}/${url}`,
+          {
+            type: "like",
+            author: {
+              type: "author",
+              ...userinfoLocal,
+              // id: 'https://cmput404f21t17.herokuapp.com/service/author/4e9deafd-29bf-4f18-92d7-954c3322bd53',
+              id: userinfoLocal.url,
+              password: "###",
+            },
+            object: postData.remoteId,
+          }
+        );
         if (result.status === 200) {
-          message.success('liked!')
-          setLikeCount(likeCount + 1)
+          message.success("liked!");
+          setLikeCount(likeCount + 1);
         } else {
-          message.warn('something wrong!')
+          message.warn("something wrong!");
         }
       }
       // team 13
-      if (postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
-        const authorId = postData.author.url.split('/').pop()
+      if (
+        postData.foreignNodeHost.indexOf("cmput404-team13-socialapp") !== -1
+      ) {
+        const authorId = postData.author.url.split("/").pop();
         const url = window.btoa(
           `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/inbox/`
-        )
-        const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
-          "summary": "Team17 likes your post.",
-          "type": "like",
-          "author": {
-            "type": "author",
-            "id": "40aec04a-a040-412b-b77d-a2c6744d9d7e",
-            "url": "https://cmput404f21t17.herokuapp.com/service/author/40aec04a-a040-412b-b77d-a2c6744d9d7e",
-            "host": "https://cmput404f21t17.herokuapp.com/",
-            "displayName": "NewUser",
-            "github": "http://github.com",
-            "avatar": null
-          },
-          "object": postData.remoteId
-        })
-        if (result.status === 200 && result.data.message === 'success') {
-          message.success('liked!')
-          setLikeCount(likeCount + 1)
+        );
+        const result = await client.post(
+          `foreign-data/${postData.foreignNodeId}/${url}`,
+          {
+            summary: "Team17 likes your post.",
+            type: "like",
+            author: {
+              type: "author",
+              id: "40aec04a-a040-412b-b77d-a2c6744d9d7e",
+              url: "https://cmput404f21t17.herokuapp.com/service/author/40aec04a-a040-412b-b77d-a2c6744d9d7e",
+              host: "https://cmput404f21t17.herokuapp.com/",
+              displayName: "NewUser",
+              github: "http://github.com",
+              avatar: null,
+            },
+            object: postData.remoteId,
+          }
+        );
+        if (result.status === 200 && result.data.message === "success") {
+          message.success("liked!");
+          setLikeCount(likeCount + 1);
         } else {
-          message.warn('something wrong!')
+          message.warn("something wrong!");
         }
       }
     } else {
@@ -334,7 +374,7 @@ const IndividualPost = (props) => {
         authorId: store.getState().login.id,
       });
       if (result.status == 200) {
-        let {succ, count} = result.data;
+        let { succ, count } = result.data;
         if (succ) {
           message.success("liked!");
           setLikeCount(count);
@@ -386,7 +426,7 @@ const IndividualPost = (props) => {
             <div className="comments-item">
               <div className="user-title">
                 <img
-                  style={{width: 30, height: 30, borderRadius: "50%"}}
+                  style={{ width: 30, height: 30, borderRadius: "50%" }}
                   src={require("../../assets/default.png").default}
                 />
                 <div className="username">
@@ -401,12 +441,12 @@ const IndividualPost = (props) => {
                 postData?.contentType === "image" ||
                 postData?.contentType === "image/png;base64" ||
                 postData?.contentType === "image/jpeg;base64" ? (
-                  <img src={postData?.imgSrc} width={"100%"}/>
+                  <img src={postData?.imgSrc} width={"100%"} />
                 ) : postData?.contentType === "text/markdown" ? (
                   <Remark
                     remarkPlugins={[remarkGemoji]}
                     rehypeReactOptions={{
-                      components: {li: customLi},
+                      components: { li: customLi },
                     }}
                   >
                     {postData?.content}
@@ -442,9 +482,9 @@ const IndividualPost = (props) => {
                   <span onClick={resharePost}>
                     <i
                       className="iconfont icon-fenxiang"
-                      style={{marginLeft: "10px"}}
+                      style={{ marginLeft: "10px" }}
                     ></i>
-                    <span style={{marginLeft: 5}}>Reshare</span>
+                    <span style={{ marginLeft: 5 }}>Reshare</span>
                   </span>
                 </div>
               </div>
@@ -459,7 +499,7 @@ const IndividualPost = (props) => {
           </div>
           <div>
             <b>URL: </b>
-            <span style={{color: "blue"}}>
+            <span style={{ color: "blue" }}>
               {postData?.foreignNodeId ? (
                 <a href={postData?.author.url} target={"_blank"}>
                   Click to visit
@@ -487,51 +527,51 @@ const IndividualPost = (props) => {
       </div>
 
       <div className="comment-list">
-        {commentList.map(item => (
+        {commentList.map((item) => (
           <div className="comment-item" key={item.commentId}>
-            {
-              postData.foreignNodeId ?
-                postData.foreignNodeHost.indexOf('linkedspace-staging.herokuapp.com') !== -1 ?
-                  <>
-                    {/* Foreign format(linkedspace) */}
-                    <div>{item.content}</div>
-                    <div>
-                      {
-                        item.author.displayName}
-                      @ {item.author.host}
-                      @ {new Date(item.published).toLocaleString()
-                    }
-                    </div>
-                  </>
-                  :
-                  postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1
-                  || postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1 ?
-                    <>
-                      {/* Foreign format(social-dis, team13) */}
-                      <div>{item.comment}</div>
-                      <div>
-                        {item.author.displayName}
-                        @ {item.author.host}
-                        @ {new Date(item.published).toLocaleString()}
-                      </div>
-                    </>
-                    :
-                    null
-                :
+            {postData.foreignNodeId ? (
+              postData.foreignNodeHost.indexOf(
+                "linkedspace-staging.herokuapp.com"
+              ) !== -1 ? (
                 <>
-                  {/* Internal format */}
-                  <div>{item.text}</div>
+                  {/* Foreign format(linkedspace) */}
+                  <div>{item.content}</div>
                   <div>
-                    {item.authorId.displayName}
-                    @ {item.authorId.host}
-                    @ {new Date(item.publishedOn).toLocaleString()}
+                    {item.author.displayName}@ {item.author.host}@{" "}
+                    {new Date(item.published).toLocaleString()}
                   </div>
                 </>
-            }
+              ) : postData.foreignNodeHost.indexOf(
+                  "social-dis.herokuapp.com"
+                ) !== -1 ||
+                postData.foreignNodeHost.indexOf(
+                  "cmput404-team13-socialapp"
+                ) !== -1 ? (
+                <>
+                  {/* Foreign format(social-dis, team13) */}
+                  <div>{item.comment}</div>
+                  <div>
+                    {item.author.displayName}@ {item.author.host}@{" "}
+                    {new Date(item.published).toLocaleString()}
+                  </div>
+                </>
+              ) : null
+            ) : (
+              <>
+                {/* Internal format */}
+                <div>{item.text}</div>
+                <div>
+                  {item.authorId.displayName}@ {item.authorId.host}@{" "}
+                  {new Date(item.publishedOn).toLocaleString()}
+                </div>
+              </>
+            )}
           </div>
         ))}
         {commentList.length === 0 ? (
-          <div style={{color: '#999'}}>Oop! It seems that no one has commented</div>
+          <div style={{ color: "#999" }}>
+            Oop! It seems that no one has commented
+          </div>
         ) : null}
       </div>
 

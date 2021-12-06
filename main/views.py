@@ -145,7 +145,6 @@ class PostList(APIView):
 
         return HttpResponse("post created")
 
-
 class Register(APIView):
     def post(self, request, format=None):
         author = Author.objects.create(
@@ -293,7 +292,6 @@ class FollowedList(APIView):
 
         return Response({ 'type': 'followees', 'items': items })
 
-
 class FollowedDetail(APIView):
     def delete(self, request, pk, fpk, format=None):
         try:
@@ -316,19 +314,12 @@ class FollowedDetail(APIView):
         return Response(serializer.data)
 
     def get(self, request, pk, fpk, format=None):
-        try: #
-            #author = Author.objects.get(pk=uuid.UUID(pk))
-            #author.follower_set.get(followee=uuid.UUID(fpk))
-            follower = Author.objects.get(pk=uuid.UUID(pk))
-            followee = Author.objects.get(pk=uuid.UUID(fpk))
-            #if Following.objects.filter(followee=followee, follower=follower) is not None:
-             #   return Response({ 'isFollower': True })
-            #else: return Response({ 'isFollower': False })
-            print(f'QUERY: {Following.objects.filter(followee=followee, follower=follower)}')
-            return Response({ 'isFollower': False })  
+        try:
+            author = Author.objects.get(pk=uuid.UUID(pk))
+            author.follower_set.get(followee=uuid.UUID(fpk))
+            return Response({ 'isFollower': True })
         except (Author.DoesNotExist, Following.DoesNotExist):
             return Response({ 'isFollower': False })
-
 
 class FriendList(APIView):
     def get(self, request, pk, format=None):

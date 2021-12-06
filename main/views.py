@@ -454,7 +454,7 @@ def get_foreign_data(request, node_id, url_base64):
     if request.method == 'GET':
         # GET
         result = requests.get(url, auth=(username, password))
-        return JsonResponse(result.json())
+        return JsonResponse(result.json(), safe=False)
     elif request.method == 'POST':
         # POST
         try:
@@ -585,7 +585,7 @@ class AuthorList(APIView):
         r_a = basic_auth(request)
         if r_a != AUTH_SUCCESS:
             return no_auth()
-        authors = paginate(Author.objects.all().order_by('displayName'), request.query_params)
+        authors = paginate(Author.objects.filter(if_foreign=False).order_by('displayName'), request.query_params)
         serializer = AuthorSerializer(authors, many=True)
 
         data = { 'type': 'authors', 'items': serializer.data }

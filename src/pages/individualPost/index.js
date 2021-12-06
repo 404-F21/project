@@ -97,16 +97,29 @@ const IndividualPost = (props) => {
             const item = JSON.parse(jsonString)
             console.log(item)
             setPostData(item)
-            if (item.foreignNodeId && item.foreignNodeHost.indexOf('linkedspace') !== -1) {
-                // get like count from linkedspace node
-                const authorId = item.author.url.split('/').pop()
-                const urlSplit = item.remoteId.split('/')
-                urlSplit.pop()
-                const postId = urlSplit.pop()
-                const url = window.btoa(`https://linkedspace-staging.herokuapp.com/api/author/${authorId}/posts/${postId}/likes/`)
-                const result = await client.get(`foreign-data/${item.foreignNodeId}/${url}`)
-                if (result.status === 200) {
-                    setLikeCount(result.data.items.length)
+            if (item.foreignNodeId) {
+                if (item.foreignNodeHost.indexOf('linkedspace') !== -1) {
+                    // get like count from linkedspace node
+                    const authorId = item.author.url.split('/').pop()
+                    const urlSplit = item.remoteId.split('/')
+                    urlSplit.pop()
+                    const postId = urlSplit.pop()
+                    const url = window.btoa(`https://linkedspace-staging.herokuapp.com/api/author/${authorId}/posts/${postId}/likes/`)
+                    const result = await client.get(`foreign-data/${item.foreignNodeId}/${url}`)
+                    if (result.status === 200) {
+                        setLikeCount(result.data.items.length)
+                    }
+                }
+                if (item.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
+                    // get like count from team13
+                    const authorId = item.author.url.split('/').pop()
+                    const url = window.btoa(
+                        `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/posts/${item.remoteId}/likes/`
+                    )
+                    const result = await client.get(`foreign-data/${item.foreignNodeId}/${url}`)
+                    if (result.status === 200) {
+                        setLikeCount(result.data.length)
+                    }
                 }
             } else {
                 setLikeCount(item.likeCount)
@@ -133,10 +146,21 @@ const IndividualPost = (props) => {
                 if (postData.foreignNodeHost.indexOf('project-api-404') !== -1) {
                     urlBase64 = window.btoa(postData.comments)
                 }
+                if (postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
+                    const authorId = postData.author.url.split('/').pop()
+                    urlBase64 = window.btoa(
+                        `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/posts/${postData.remoteId}/comments/`
+                    )
+                }
                 res = await client.get(`foreign-data/${postData.foreignNodeId}/${urlBase64}`)
                 if (res.status === 200) {
-                    // social-dis group comments
-                    setCommentList(res.data.comments)
+                    if (postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
+                        // team13 comments
+                        setCommentList(res.data)
+                    } else {
+                        // social-dis, linkedspace, api-404 team comments
+                        setCommentList(res.data.comments)
+                    }
                 }
             } else {
                 res = await client.get(`post/${postData.id}/comments/`)
@@ -239,6 +263,25 @@ const IndividualPost = (props) => {
                 } else {
                     message.warn('something wrong!')
                 }
+            }
+            // team 13
+            if (postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1) {
+                const authorId = postData.author.url.split('/').pop()
+                const url = `https://cmput404-team13-socialapp.herokuapp.com/api/author/${authorId}/inbox/`
+                const result = await client.post(`foreign-data/${postData.foreignNodeId}/${url}`, {
+                    "summary": "Team17 likes your post.",
+                    "type": "like",
+                    "author": {
+                        "type": "author",
+                        "id": "40aec04a-a040-412b-b77d-a2c6744d9d7e",
+                        "url": "https://cmput404f21t17.herokuapp.com/service/author/40aec04a-a040-412b-b77d-a2c6744d9d7e",
+                        "host": "https://cmput404f21t17.herokuapp.com/",
+                        "displayName": "NewUser",
+                        "github": "http://github.com",
+                        "avatar": null
+                    },
+                    "object": "d9ef0b98-6aa3-48cf-a736-103ee007ff7c"
+                })
             }
         } else {
             result = await client.post(`post/${postData.id}/like/`, {
@@ -374,9 +417,9 @@ const IndividualPost = (props) => {
                                         <div>{item.author.displayName} @ {item.author.host} @ {new Date(item.published).toLocaleString()}</div>
                                     </>
                                     :
-                                    postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1 ?
+                                    postData.foreignNodeHost.indexOf('social-dis.herokuapp.com') !== -1 || postData.foreignNodeHost.indexOf('cmput404-team13-socialapp') !== -1?
                                         <>
-                                            {/* Foreign format(social-dis) */}
+                                            {/* Foreign format(social-dis, team13) */}
                                             <div>{item.comment}</div>
                                             <div>{item.author.displayName} @ {item.author.host} @ {new Date(item.published).toLocaleString()}</div>
                                         </>

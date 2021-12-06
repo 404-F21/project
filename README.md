@@ -21,6 +21,7 @@
 * Activate the virtual env: `pipenv shell`
 * Migrate all the migrations: `python manage.py migrate`
 * Navigate to `front_end/`, and run `npm ci` followed by `npm start`
+  * If `npm start` fails, run `export NODE_OPTIONS=--openssl-legacy-provider`
 * In another tty, run `python manage.py runserver` in the repository's root directory
   * OPTIONAL: Before running the server, create a local superuser to access the admin page - `python manage.py createsuperuser`
 
@@ -31,6 +32,15 @@
 * **kanishk** worked on designing the database (models.py) and the README.
 * **drapeza** worked on the connecting the frontend with the database using a REST API.
 * **wstix** worked on project setup, helped everyone out in combining their parts, GitHub management, and bugfixing.
+### Part 2
+* **xingjie1** and **ywu18** worked on connecting the nodes with other groups.
+* **kanishk** worked on basic Auth and minor fixing in the backend.
+* **wstix** worked on bugfixing and majority backend fixing along with friends/follower backend.
+### Part 3
+* **xingjie1** and **ywu18** worked on connecting comments/likes with different teams and images support.
+* **kanishk** worked on images support, documentation, presentation and code clean up.
+* **drapeza** worked on inbox notifications and follow request frontend.
+* **wstix** worked on Common Mark and finished up the friends/followers.
 
 ## Design Principles:
 
@@ -73,7 +83,7 @@ Copyright 2021 Kanishk Chawla, Nathan Drapeza, Xingjie He, Warren Stix, Yifan Wu
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
- 	http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0
 Unless required by applicable law or agreed to in writing, software distributed
 under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
 CONDITIONS OF ANY KIND, either express or implied.

@@ -40,6 +40,20 @@ from django.views.decorators.csrf import csrf_exempt
 import hashlib
 from typing import Dict
 
+def admin_page_logo(request):
+    """
+    Redirect request for logo to correct path
+    """
+    return redirect('/static/ant-design-pro/logo.svg')
+
+# Create your views here.
+def render_html(request):
+    # create default super user
+    if User.objects.count() == 0:
+        user = User.objects.create_user('admin', 'test@test.com', 'admin123456')
+        user.is_stuff = True
+        user.save()
+    return render(request, 'index.html')
 
 def paginate(objects: QuerySet, params: Dict[str, str]) -> QuerySet:
     page = int(params.get('page', '1'))
@@ -630,14 +644,6 @@ def like(request, pk):
 
 '''
 
-# Create your views here.
-def render_html(request):
-    # create default super user
-    if User.objects.count() == 0:
-        user = User.objects.create_user('admin', 'test@test.com', 'admin123456')
-        user.is_stuff = True
-        user.save()
-    return render(request, 'index.html')
 
 
 # APIs for admin functions
@@ -1005,10 +1011,3 @@ def get_public_author(request):
         return no_auth()
     else:
         return failure('GET')
-
-
-def admin_page_logo(request):
-    """
-    Redirect request for logo to correct path
-    """
-    return redirect('/static/ant-design-pro/logo.svg')

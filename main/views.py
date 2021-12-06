@@ -195,8 +195,9 @@ class FollowerDetail(APIView):
 
 class FriendDetail(APIView):
     def delete(self, request, pk, fpk, d, format=None):
-        #NUKE
+        #NUKe
         #FriendRequest.objects.all().delete()
+        
         request_sender = Author.objects.get(pk=uuid.UUID(pk))
         request_reciever = Author.objects.get(pk=uuid.UUID(fpk))
 
@@ -222,6 +223,7 @@ class FriendDetail(APIView):
         elif d == 'accept':
             friend_request = FriendRequest.objects.get(sender=request_sender, reciever=request_reciever)
             friend_request.status = 'Accept'
+            friend_request.save()
             return Response({ 'status': 'accept' })
 
     # Checking the status of a friend request, or if one exists:
@@ -233,12 +235,22 @@ class FriendDetail(APIView):
             friend_request_sent_to_me = FriendRequest.objects.filter(sender=request_sender, reciever=request_reciever)
             friend_request_sent_from_me = FriendRequest.objects.filter(sender=request_reciever, reciever=request_sender)
             #print(f"query: {query}, strquery: {str(query)}")
+            response = {}
+            print(f"FR TO ME : {friend_request_sent_to_me} \n FR FROM ME: {friend_request_sent_from_me}\n")
             if (str(friend_request_sent_to_me) == '<QuerySet []>') and (str(friend_request_sent_from_me) == '<QuerySet []>'): # Sorta cheese way of doing it
                 return Response({ 'status': 'nonexistent' }) # No friend request exists, either way
-            elif friend_request_sent_to_me == 'Pending': # in other words, the other user sent ME, the current user, a friend request
-                return Response({ 'status': 'pendingmydecision' })
-            elif friend_request_sent_from_me == 'Pending':
+            #elif friend_request_sent_to_me == 'Pending': # in other words, the other user sent ME, the current user, a friend request
+            #    return Response({ 'status': 'pendingmydecision' })
+            #elif friend_request_sent_from_me == 'Pending':
+            #    return Response({ 'status': 'pendingtheirdecision' })
+            elif (str(friend_request_sent_to_me) == '<QuerySet []>') and (str(friend_request_sent_from_me) != '<QuerySet []>'):
+                friend_request_sent_from_me = FriendRequest.objects.get(sender=request_reciever, reciever=request_sender)
+                friend_request_sent_from_me.status = 'Pending'
                 return Response({ 'status': 'pendingtheirdecision' })
+            elif (str(friend_request_sent_to_me) != '<QuerySet []>') and (str(friend_request_sent_from_me) == '<QuerySet []>'):
+                friend_request_sent_to_me = FriendRequest.objects.get(sender=request_reciever, reciever=request_sender)
+                friend_request_sent_to_me.status = 'Pending'
+                return Response({ 'status': 'pendingmydecision' })    
             else:
                 return Response({ 'status': 'accepted' })
 

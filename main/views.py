@@ -639,7 +639,10 @@ def like_post(request, pk):
         return Response({ 'succ': False })
     likepost = LikePost(postId=post, authorId=author)
     likepost.save()
-    author_id = uuid.UUID(request.data['authorId'])
+    if request.data.get('authorId', None) is not None:
+        author_id = uuid.UUID(request.data['authorId'])
+    else:
+        author_id = author.id
     #print(f"authorID from request: {author_id}")
     #print(f"POST: {post}")
     #print(f"POST AUTHOR: {post.author.id}")
